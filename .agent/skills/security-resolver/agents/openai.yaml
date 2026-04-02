@@ -1,0 +1,20 @@
+interface:
+  display_name: "Security resolver"
+  short_description: "Help with Security resolver tasks"
+  default_prompt: "Use $security-resolver to execute this skill with deterministic and auditable outputs for this task."
+
+runtime:
+  activation:
+    enabled: true
+    tags: []
+    keywords: []
+    goals: []
+    min_confidence: 0.6
+    priority: 50
+    critical: false
+  execution:
+    mode: write
+  llm:
+    requires_llm: false
+    tier: 0
+    estimated_tokens: 15000

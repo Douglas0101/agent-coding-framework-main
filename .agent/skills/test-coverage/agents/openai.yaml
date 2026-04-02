@@ -1,0 +1,19 @@
+interface:
+  display_name: "Test Coverage"
+  short_description: "Help with Test Coverage tasks"
+  default_prompt: "Use $test-coverage to execute this skill with deterministic and auditable outputs for this task."
+runtime:
+  activation:
+    enabled: true
+    tags: [tests, coverage]
+    keywords: [pytest, coverage, gaps]
+    goals: [ci-fast, ci-stabilize, release-gate]
+    min_confidence: 0.62
+    priority: 88
+    critical: true
+  execution:
+    mode: read
+  llm:
+    requires_llm: false
+    tier: 0
+    estimated_tokens: 5000

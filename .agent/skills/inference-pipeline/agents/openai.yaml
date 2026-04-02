@@ -1,0 +1,19 @@
+interface:
+  display_name: "Inference pipeline"
+  short_description: "Help with Inference pipeline tasks"
+  default_prompt: "Use $inference-pipeline to execute this skill with deterministic and auditable outputs for this task."
+runtime:
+  activation:
+    enabled: true
+    tags: [inference, serving, mlops]
+    keywords: [inference, serving, fastapi, calibration, caching, pipeline]
+    goals: [ci-stabilize, release-gate]
+    min_confidence: 0.52
+    priority: 74
+    critical: false
+  execution:
+    mode: advisory
+  llm:
+    requires_llm: false
+    tier: 0
+    estimated_tokens: 30000

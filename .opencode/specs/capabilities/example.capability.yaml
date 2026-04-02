@@ -1,0 +1,41 @@
+spec_id: capability.example
+version: 1.0.0
+status: approved
+domain: example
+objective: >
+  Demonstrar a estrutura de uma capability spec dentro do framework
+  spec-driven de deep agents.
+
+inputs:
+  - name: request_payload
+    type: object
+    required: true
+    description: Payload principal da requisição
+  - name: context
+    type: object
+    required: false
+    description: Contexto adicional do solicitante
+
+outputs:
+  - name: result
+    type: object
+    description: Resultado processado com status e dados
+  - name: audit_record
+    type: object
+    description: Registro imutável para trilha de auditoria
+
+invariants:
+  - toda decisão deve gerar trilha auditável
+  - requisições idempotentes devem produzir o mesmo resultado lógico
+  - nenhum output sem producer_agent identificado
+
+non_functional:
+  latency_p95_ms: 300
+  availability_slo: 99.9
+  max_retries: 3
+
+traceability:
+  owner_technical: platform-team
+  owner_domain: engineering
+  requirement_refs:
+    - req://RFC-001

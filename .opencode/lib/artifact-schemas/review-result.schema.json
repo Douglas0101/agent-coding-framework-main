@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "review-result.schema.json",
+  "title": "ReviewResult",
+  "description": "Structured output from the reviewer agent with severity classification.",
+  "type": "object",
+  "required": ["schema_version", "artifact_type", "producer_agent", "spec_id", "spec_version", "run_id", "timestamp", "risk_level", "verdict", "findings"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "artifact_type": { "type": "string", "enum": ["review-result"] },
+    "producer_agent": { "type": "string", "enum": ["reviewer"] },
+    "spec_id": { "type": "string" },
+    "spec_version": { "type": "string" },
+    "run_id": { "type": "string" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "risk_level": { "type": "string", "enum": ["low", "medium", "high", "critical"] },
+    "verdict": { "type": "string", "enum": ["pass", "pass_with_notes", "fail"] },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["severity", "category", "description"],
+        "properties": {
+          "severity": { "type": "string", "enum": ["info", "minor", "major", "critical"] },
+          "category": { "type": "string" },
+          "description": { "type": "string" },
+          "file_ref": { "type": "string" },
+          "line_ref": { "type": "integer" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "evidence_refs": { "type": "array", "items": { "type": "string" } },
+    "trace_links": { "type": "array", "items": { "type": "string" } }
+  }
+}

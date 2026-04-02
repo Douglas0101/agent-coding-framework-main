@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "impact-report.schema.json",
+  "title": "ImpactReport",
+  "description": "Blast radius analysis measuring how a change propagates across services, contracts, datastores and SLOs.",
+  "type": "object",
+  "required": ["schema_version", "artifact_type", "producer_agent", "spec_id", "spec_version", "run_id", "timestamp", "compatibility_assessment", "payload", "trace_links", "evidence_refs"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "artifact_type": { "type": "string", "enum": ["impact-report"] },
+    "producer_agent": { "type": "string" },
+    "spec_id": { "type": "string" },
+    "spec_version": { "type": "string" },
+    "run_id": { "type": "string" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "compatibility_assessment": {
+      "type": "string",
+      "enum": ["additive-compatible", "behavior-compatible", "risky-compatible", "breaking"]
+    },
+    "payload": {
+      "type": "object",
+      "required": ["impact_scope", "risk_level", "blast_radius"],
+      "properties": {
+        "impact_scope": {
+          "type": "object",
+          "properties": {
+            "services": { "type": "array", "items": { "type": "string" } },
+            "contracts": { "type": "array", "items": { "type": "string" } },
+            "datastores": { "type": "array", "items": { "type": "string" } },
+            "slos": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "risk_level": { "type": "string", "enum": ["low", "medium", "high", "critical"] },
+        "blast_radius": {
+          "type": "object",
+          "properties": {
+            "files": { "type": "integer", "minimum": 0 },
+            "apis": { "type": "integer", "minimum": 0 },
+            "consumers": { "type": "integer", "minimum": 0 },
+            "databases": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    },
+    "trace_links": { "type": "array", "items": { "type": "string" } },
+    "evidence_refs": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+    "checksum": { "type": "string" }
+  }
+}

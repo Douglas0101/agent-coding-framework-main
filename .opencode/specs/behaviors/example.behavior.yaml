@@ -1,0 +1,52 @@
+behavior_id: example.processing-flow
+version: 1.0.0
+capability_ref: capability.example
+description: >
+  Define os estados válidos e as transições permitidas para o fluxo
+  de processamento de exemplo.
+
+states:
+  - received
+  - validated
+  - processing
+  - completed
+  - failed
+  - rejected
+
+initial_state: received
+terminal_states:
+  - completed
+  - failed
+  - rejected
+
+transitions:
+  - from: received
+    to: validated
+    guard: request_schema_valid == true
+    action: validate_payload
+  - from: received
+    to: rejected
+    guard: request_schema_valid == false
+    action: emit_rejection_event
+  - from: validated
+    to: processing
+    guard: context_available == true
+    action: start_processing
+  - from: processing
+    to: completed
+    guard: processing_result_valid == true
+    action: persist_audit_record
+  - from: processing
+    to: failed
+    guard: processing_error == true
+    action: emit_failure_event
+
+forbidden:
+  - from: received
+    to: completed
+    reason: processamento não pode ser pulado
+  - from: received
+    to: failed
+    reason: falha sem validação não é permitida
+
+timeout_ms: 5000

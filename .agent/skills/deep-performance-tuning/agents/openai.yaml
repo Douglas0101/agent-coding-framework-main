@@ -1,0 +1,20 @@
+interface:
+  display_name: "Deep model performance tuning"
+  short_description: "Help with Deep model performance tuning tasks"
+  default_prompt: "Use $deep-performance-tuning to execute this skill with deterministic and auditable outputs for this task."
+
+runtime:
+  activation:
+    enabled: true
+    tags: []
+    keywords: []
+    goals: []
+    min_confidence: 0.6
+    priority: 50
+    critical: false
+  execution:
+    mode: advisory
+  llm:
+    requires_llm: false
+    tier: 0
+    estimated_tokens: 30000

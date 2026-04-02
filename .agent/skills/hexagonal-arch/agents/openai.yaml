@@ -1,0 +1,19 @@
+interface:
+  display_name: "Hexagonal Arch"
+  short_description: "Help with Hexagonal Arch tasks"
+  default_prompt: "Use $hexagonal-arch to execute this skill with deterministic and auditable outputs for this task."
+runtime:
+  activation:
+    enabled: true
+    tags: [architecture, hexagonal, ports-and-adapters]
+    keywords: [hexagonal, architecture, ports, adapters, boundaries]
+    goals: [ci-stabilize, release-gate, security-hardening]
+    min_confidence: 0.5
+    priority: 68
+    critical: false
+  execution:
+    mode: advisory
+  llm:
+    requires_llm: false
+    tier: 0
+    estimated_tokens: 15000

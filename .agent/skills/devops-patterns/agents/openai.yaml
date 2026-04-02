@@ -1,0 +1,19 @@
+interface:
+  display_name: "Devops patterns"
+  short_description: "Help with Devops patterns tasks"
+  default_prompt: "Use $devops-patterns to execute this skill with deterministic and auditable outputs for this task."
+runtime:
+  activation:
+    enabled: true
+    tags: [devops, cicd, deployment]
+    keywords: [devops, ci, cd, docker, deployment, pipeline]
+    goals: [ci-fast, ci-stabilize, release-gate]
+    min_confidence: 0.48
+    priority: 70
+    critical: false
+  execution:
+    mode: advisory
+  llm:
+    requires_llm: false
+    tier: 0
+    estimated_tokens: 15000

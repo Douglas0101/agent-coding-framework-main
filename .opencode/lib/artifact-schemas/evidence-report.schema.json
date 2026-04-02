@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "evidence-report.schema.json",
+  "title": "EvidenceReport",
+  "description": "Verifiable evidence collected from the codebase, linked to spec and supporting agent decisions.",
+  "type": "object",
+  "required": ["schema_version", "artifact_type", "producer_agent", "spec_id", "spec_version", "run_id", "timestamp", "risk_level", "confidence", "evidence_items"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "artifact_type": { "type": "string", "enum": ["evidence-report"] },
+    "producer_agent": { "type": "string" },
+    "spec_id": { "type": "string" },
+    "spec_version": { "type": "string" },
+    "run_id": { "type": "string" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "risk_level": { "type": "string", "enum": ["low", "medium", "high", "critical"] },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "evidence_items": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["ref", "type", "description"],
+        "properties": {
+          "ref": { "type": "string", "description": "URI-style reference, e.g. evidence://repo/path#L10-L20" },
+          "type": { "type": "string", "enum": ["code_ref", "test_ref", "openapi_ref", "log_ref", "trace_ref", "document_ref"] },
+          "description": { "type": "string" },
+          "checksum": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "coverage_gaps": { "type": "array", "items": { "type": "string" } },
+    "trace_links": { "type": "array", "items": { "type": "string" } }
+  }
+}

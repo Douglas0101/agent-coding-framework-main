@@ -1,0 +1,203 @@
+/**
+ * @component Button
+ * @description Enterprise-grade button component with multiple variants,
+ * sizes, loading states, and full accessibility support.
+ *
+ * @example
+ * ```tsx
+ * <Button variant="primary" size="md" onClick={handleClick}>
+ *   Save Changes
+ * </Button>
+ *
+ * <Button variant="danger" loading>
+ *   <TrashIcon />
+ *   Delete
+ * </Button>
+ * ```
+ */
+
+import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from "react";
+
+// Types
+type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "outline";
+type ButtonSize = "sm" | "md" | "lg";
+
+interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+    /** Button visual variant */
+    variant?: ButtonVariant;
+    /** Button size */
+    size?: ButtonSize;
+    /** Loading state - shows spinner and disables interaction */
+    loading?: boolean;
+    /** Icon to display before text */
+    leftIcon?: ReactNode;
+    /** Icon to display after text */
+    rightIcon?: ReactNode;
+    /** Full width button */
+    fullWidth?: boolean;
+    /** Button content */
+    children: ReactNode;
+}
+
+// Variant styles
+const variantStyles: Record<ButtonVariant, string> = {
+    primary: `
+    bg-[var(--accent-teal)]
+    text-[#06151a]
+    hover:bg-[var(--accent-teal)]/80
+    active:bg-[var(--accent-teal)]/70
+    shadow-[0_2px_8px_rgba(49,198,178,0.25)]
+  `,
+    secondary: `
+    bg-[var(--surface-2)]
+    text-[var(--text-primary)]
+    hover:bg-[var(--surface-3)]
+    active:bg-[var(--surface-3)]/80
+    border
+    border-[var(--border-soft)]
+  `,
+    ghost: `
+    bg-transparent
+    text-[var(--text-secondary)]
+    hover:bg-[var(--surface-2)]
+    hover:text-[var(--text-primary)]
+    active:bg-[var(--surface-2)]/80
+  `,
+    danger: `
+    bg-[var(--accent-red)]
+    text-white
+    hover:bg-[var(--accent-red)]/80
+    active:bg-[var(--accent-red)]/70
+    shadow-[0_2px_8px_rgba(226,77,77,0.25)]
+  `,
+    outline: `
+    bg-transparent
+    text-[var(--accent-teal)]
+    border
+    border-[var(--accent-teal)]
+    hover:bg-[var(--accent-teal-soft)]
+    active:bg-[var(--accent-teal-soft)]/80
+  `,
+};
+
+// Size styles
+const sizeStyles: Record<ButtonSize, string> = {
+    sm: "px-3 py-1.5 text-xs gap-1.5 rounded-lg",
+    md: "px-4 py-2 text-sm gap-2 rounded-xl",
+    lg: "px-6 py-3 text-base gap-2.5 rounded-xl",
+};
+
+// Loading spinner component
+function Spinner({ size }: { size: ButtonSize }) {
+    const spinnerSize = {
+        sm: "h-3 w-3",
+        md: "h-4 w-4",
+        lg: "h-5 w-5",
+    };
+
+    return (
+        <svg
+            className={`animate-spin ${spinnerSize[size]}`}
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+        >
+            <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+            />
+            <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            />
+        </svg>
+    );
+}
+
+/**
+ * Button component with comprehensive variant system and accessibility
+ */
+const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+    (
+        {
+            variant = "primary",
+            size = "md",
+            loading = false,
+            leftIcon,
+            rightIcon,
+            fullWidth = false,
+            disabled = false,
+            children,
+            className = "",
+            ...props
+        },
+        ref
+    ) => {
+        const isDisabled = disabled || loading;
+
+        const baseStyles = `
+      inline-flex
+      items-center
+      justify-center
+      font-medium
+      transition-all
+      duration-[var(--transition-fast)]
+      focus-visible:outline-2
+      focus-visible:outline-[var(--accent-teal)]
+      focus-visible:outline-offset-2
+      disabled:opacity-50
+      disabled:cursor-not-allowed
+      disabled:pointer-events-none
+      select-none
+    `;
+
+        return (
+            <button
+                ref={ref}
+                disabled={isDisabled}
+                aria-busy={loading}
+                aria-disabled={isDisabled}
+                className={`
+          ${baseStyles}
+          ${variantStyles[variant]}
+          ${sizeStyles[size]}
+          ${fullWidth ? "w-full" : ""}
+          ${className}
+        `.replace(/\s+/g, " ").trim()}
+                {...props}
+            >
+                {loading ? (
+                    <>
+                        <Spinner size={size} />
+                        <span className="sr-only">Loading...</span>
+                    </>
+                ) : (
+                    <>
+                        {leftIcon && (
+                            <span className="flex-shrink-0" aria-hidden="true">
+                                {leftIcon}
+                            </span>
+                        )}
+                        {children}
+                        {rightIcon && (
+                            <span className="flex-shrink-0" aria-hidden="true">
+                                {rightIcon}
+                            </span>
+                        )}
+                    </>
+                )}
+            </button>
+        );
+    }
+);
+
+Button.displayName = "Button";
+
+export default Button;
+export type { ButtonProps, ButtonVariant, ButtonSize };

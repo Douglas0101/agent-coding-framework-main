@@ -1,0 +1,48 @@
+policy_bundle: default
+version: "1.0.0"
+description: >
+  Policy bundle padrão do framework. Define restrições de execução
+  obrigatórias que se aplicam a todos os domínios salvo override explícito.
+
+rules:
+  - id: require-spec-before-dag
+    description: Toda run que altera código ou contratos exige spec_id vinculada
+    when:
+      change_surface: [code, api, data, auth]
+    action: require_field
+    field: spec_id
+    error: "Run bloqueada: mudança sem spec_id vinculada não é permitida"
+
+  - id: forbid-unbounded-retries
+    description: Nenhum nó do DAG pode ter retries ilimitados
+    when:
+      node_type: [implementation, validation]
+    action: require
+    constraint:
+      retry_policy.max_attempts_lte: 3
+    error: "Política de retry sem limite máximo rejeitada"
+
+  - id: require-evidence-refs
+    description: Outputs de agentes críticos devem ter evidence_refs resolvíveis
+    when:
+      risk_level: [high, critical]
+    action: require_field
+    field: evidence_refs
+    error: "Output de agente crítico sem evidence_refs não é aceito"
+
+  - id: require-rollback-plan-for-destructive
+    description: Mudanças destrutivas exigem rollback plan
+    when:
+      change_kind: [destructive_migration, schema_drop, api_removal]
+    action: require_evidence
+    evidence_types: [rollback_plan, dry_run_result]
+    error: "Mudança destrutiva sem rollback_plan bloqueada"
+
+  - id: block-critical-path-without-approval
+    description: Paths críticos exigem aprovação explícita
+    when:
+      paths: ["/auth/**", "/billing/**", "/security/**"]
+      risk_level: [high, critical]
+    action: require_approval
+    approvers: [tech-lead]
+    error: "Path crítico requer aprovação de tech-lead"

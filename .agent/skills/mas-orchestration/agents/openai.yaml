@@ -1,0 +1,20 @@
+interface:
+  display_name: "Multi Agent orchestration"
+  short_description: "Help with Multi Agent orchestration tasks"
+  default_prompt: "Use $mas-orchestration to execute this skill with deterministic and auditable outputs for this task."
+
+runtime:
+  activation:
+    enabled: true
+    tags: []
+    keywords: []
+    goals: []
+    min_confidence: 0.6
+    priority: 50
+    critical: false
+  execution:
+    mode: advisory
+  llm:
+    requires_llm: false
+    tier: 0
+    estimated_tokens: 15000

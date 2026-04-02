@@ -1,0 +1,19 @@
+interface:
+  display_name: "Ml Guardian"
+  short_description: "Help with Ml Guardian tasks"
+  default_prompt: "Use $ml-guardian to execute this skill with deterministic and auditable outputs for this task."
+runtime:
+  activation:
+    enabled: true
+    tags: [ml, validation, calibration]
+    keywords: [ml, guardian, calibration, artifacts, gradcam, drift, outputs_prod]
+    goals: [ci-stabilize, release-gate, security-hardening]
+    min_confidence: 0.55
+    priority: 90
+    critical: true
+  execution:
+    mode: read
+  llm:
+    requires_llm: false
+    tier: 0
+    estimated_tokens: 30000

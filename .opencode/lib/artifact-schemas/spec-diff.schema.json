@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "spec-diff.schema.json",
+  "title": "SpecDiff",
+  "description": "Classifies changes between spec versions as additive-compatible, behavior-compatible, risky-compatible, or breaking.",
+  "type": "object",
+  "required": ["schema_version", "artifact_type", "spec_id", "from_version", "to_version", "classification", "changes", "requires_human_approval"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "artifact_type": { "type": "string", "enum": ["spec-diff"] },
+    "spec_id": { "type": "string" },
+    "from_version": { "type": "string" },
+    "to_version": { "type": "string" },
+    "run_id": { "type": "string" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "classification": {
+      "type": "string",
+      "enum": ["additive-compatible", "behavior-compatible", "risky-compatible", "breaking"]
+    },
+    "changes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "change_type", "classification"],
+        "properties": {
+          "path": { "type": "string" },
+          "change_type": { "type": "string", "enum": ["added", "removed", "modified"] },
+          "classification": {
+            "type": "string",
+            "enum": ["additive-compatible", "behavior-compatible", "risky-compatible", "breaking"]
+          },
+          "before": {},
+          "after": {},
+          "impact_note": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "requires_human_approval": { "type": "boolean" },
+    "migration_plan_required": { "type": "boolean" },
+    "affected_consumers": { "type": "array", "items": { "type": "string" } },
+    "blocking_reason": { "type": "string" }
+  }
+}

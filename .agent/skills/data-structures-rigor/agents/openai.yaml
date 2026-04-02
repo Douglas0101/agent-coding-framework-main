@@ -1,0 +1,19 @@
+interface:
+  display_name: "Data Structures Rigor"
+  short_description: "Help with Data Structures Rigor tasks"
+  default_prompt: "Use $data-structures-rigor to execute this skill with deterministic and auditable outputs for this task."
+runtime:
+  activation:
+    enabled: true
+    tags: [algorithms, complexity]
+    keywords: [complexity, loop depth, data structures]
+    goals: [ci-stabilize, release-gate]
+    min_confidence: 0.55
+    priority: 68
+    critical: false
+  execution:
+    mode: read
+  llm:
+    requires_llm: false
+    tier: 0
+    estimated_tokens: 5000

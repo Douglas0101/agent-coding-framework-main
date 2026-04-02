@@ -1,0 +1,31 @@
+# OS and editor cruft
+.DS_Store
+Thumbs.db
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+env/
+
+# JetBrains
+.idea/shelf/
+.idea/workspace.xml
+.idea/httpRequests/
+.idea/queries/
+.idea/dataSources/
+.idea/dataSources.local.xml
+.idea/ZeppelinRemoteNotebooks/
+
+# OpenCode runtime artifacts
+.opencode/node_modules/
+.opencode/evidence/*
+!.opencode/evidence/.keep
+.opencode/manifests/*.json
+!.opencode/manifests/.keep
+.opencode/memory/

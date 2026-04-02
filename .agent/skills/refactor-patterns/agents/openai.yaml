@@ -1,0 +1,19 @@
+interface:
+  display_name: "Refactor Patterns"
+  short_description: "Enforce design-pattern governance and refactoring rules"
+  default_prompt: "Use $refactor-patterns to execute this skill with deterministic and auditable outputs for this task."
+runtime:
+  activation:
+    enabled: true
+    tags: [architecture, design-patterns, governance]
+    keywords: [design patterns, refactor, code smell, dp900, deletion impact]
+    goals: [ci-fast, ci-stabilize, security-hardening, release-gate]
+    min_confidence: 0.7
+    priority: 100
+    critical: true
+  execution:
+    mode: read
+  llm:
+    requires_llm: false
+    tier: 0
+    estimated_tokens: 5000

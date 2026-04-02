@@ -1,0 +1,19 @@
+interface:
+  display_name: "Security Audit"
+  short_description: "Help with Security Audit tasks"
+  default_prompt: "Use $security-audit to execute this skill with deterministic and auditable outputs for this task."
+runtime:
+  activation:
+    enabled: true
+    tags: [security, sast]
+    keywords: [bandit, sast, hardening]
+    goals: [ci-fast, ci-stabilize, security-hardening, release-gate]
+    min_confidence: 0.6
+    priority: 80
+    critical: false
+  execution:
+    mode: read
+  llm:
+    requires_llm: false
+    tier: 0
+    estimated_tokens: 5000

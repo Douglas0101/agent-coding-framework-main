@@ -1,0 +1,19 @@
+interface:
+  display_name: "Code Quality"
+  short_description: "Help with Code Quality tasks"
+  default_prompt: "Use $code-quality to execute this skill with deterministic and auditable outputs for this task."
+runtime:
+  activation:
+    enabled: true
+    tags: [quality, static-analysis]
+    keywords: [ruff, black, isort, lint, complexity]
+    goals: [ci-fast, ci-stabilize, release-gate]
+    min_confidence: 0.6
+    priority: 85
+    critical: false
+  execution:
+    mode: read
+  llm:
+    requires_llm: false
+    tier: 0
+    estimated_tokens: 5000

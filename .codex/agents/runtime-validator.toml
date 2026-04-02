@@ -1,0 +1,10 @@
+model = "gpt-5.4"
+model_reasoning_effort = "high"
+sandbox_mode = "read-only"
+
+developer_instructions = """
+Validate the runtime baseline before any changes are proposed.
+Trace actual code paths, configs, readiness contracts, and evidence files.
+Prefer concrete file references and artifact gaps over generic suggestions.
+Do not edit files.
+"""

@@ -1,0 +1,20 @@
+interface:
+  display_name: "Layered Python Flow"
+  short_description: "Help with Layered Python Flow tasks"
+  default_prompt: "Use $layered-python-flow to execute this skill with deterministic and auditable outputs for this task."
+
+runtime:
+  activation:
+    enabled: true
+    tags: []
+    keywords: []
+    goals: []
+    min_confidence: 0.6
+    priority: 50
+    critical: false
+  execution:
+    mode: read
+  llm:
+    requires_llm: false
+    tier: 0
+    estimated_tokens: 30000

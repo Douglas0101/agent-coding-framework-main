@@ -1,0 +1,19 @@
+interface:
+  display_name: "Vp Ai Strategy"
+  short_description: "Help with Vp Ai Strategy tasks"
+  default_prompt: "Use $vp-ai-strategy to execute this skill with deterministic and auditable outputs for this task."
+runtime:
+  activation:
+    enabled: true
+    tags: [strategy, governance, platform]
+    keywords: [strategy, governance, architecture, roadmap, platform]
+    goals: [ci-stabilize, release-gate, security-hardening]
+    min_confidence: 0.46
+    priority: 66
+    critical: false
+  execution:
+    mode: advisory
+  llm:
+    requires_llm: false
+    tier: 0
+    estimated_tokens: 50000

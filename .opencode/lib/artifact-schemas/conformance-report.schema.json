@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "conformance-report.schema.json",
+  "title": "ConformanceReport",
+  "description": "Output of the conformance engine measuring alignment between observed behavior and spec.",
+  "type": "object",
+  "required": ["schema_version", "artifact_type", "spec_id", "spec_version", "run_id", "timestamp", "asserts", "spec_coverage_score", "runtime_to_spec_alignment"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "artifact_type": { "type": "string", "enum": ["conformance-report"] },
+    "spec_id": { "type": "string" },
+    "spec_version": { "type": "string" },
+    "run_id": { "type": "string" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "asserts": {
+      "type": "object",
+      "required": ["passed", "failed"],
+      "properties": {
+        "passed": { "type": "array", "items": { "type": "string" } },
+        "failed": { "type": "array", "items": {
+          "type": "object",
+          "required": ["assert", "reason"],
+          "properties": {
+            "assert": { "type": "string" },
+            "reason": { "type": "string" },
+            "severity": { "type": "string", "enum": ["low", "medium", "high", "critical"] }
+          }
+        }}
+      }
+    },
+    "observed_transitions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "from": { "type": "string" },
+          "to": { "type": "string" },
+          "allowed": { "type": "boolean" }
+        }
+      }
+    },
+    "spec_coverage_score": { "type": "number", "minimum": 0, "maximum": 1 },
+    "runtime_to_spec_alignment": { "type": "number", "minimum": 0, "maximum": 1 },
+    "evidence_sufficiency_score": { "type": "number", "minimum": 0, "maximum": 1 },
+    "missing_evidence": { "type": "array", "items": { "type": "string" } },
+    "drift_detected": { "type": "boolean" },
+    "drift_types": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["spec-to-code", "code-to-test", "spec-to-runtime", "intent-to-spec"]
+      }
+    }
+  }
+}

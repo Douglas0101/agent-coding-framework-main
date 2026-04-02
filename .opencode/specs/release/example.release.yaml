@@ -1,0 +1,56 @@
+release_id: release.example
+version: 1.0.0
+capability_ref: capability.example
+slo_ref: slo.example
+description: >
+  Release spec para o fluxo de exemplo. Define estratégia de rollout,
+  bake times e condições de rollback vinculadas ao SLO spec.
+
+strategy: canary
+
+stages:
+  - name: canary-1pct
+    percentage: 1
+    bake_minutes: 15
+    validation:
+      - latency_p95_ms <= 300
+      - error_rate <= 0.1
+      - runtime_to_spec_alignment >= 0.97
+
+  - name: canary-10pct
+    percentage: 10
+    bake_minutes: 30
+    validation:
+      - latency_p95_ms <= 300
+      - error_rate <= 0.1
+
+  - name: canary-50pct
+    percentage: 50
+    bake_minutes: 60
+    validation:
+      - latency_p95_ms <= 300
+      - error_rate <= 0.1
+
+  - name: full
+    percentage: 100
+    bake_minutes: 120
+    validation:
+      - latency_p95_ms <= 300
+      - error_rate <= 0.1
+
+rollback:
+  trigger_conditions:
+    - latency_p95_ms > 300
+    - error_rate > 0.5
+    - runtime_to_spec_alignment < 0.97
+  max_rollback_minutes: 10
+  requires_evidence: [conformance_report, incident_ticket]
+
+gates:
+  pre_deploy:
+    - conformance_report_generated
+    - contract_tests_passed
+    - property_tests_passed
+  post_deploy:
+    - slo_objectives_met
+    - no_forbidden_transitions_observed

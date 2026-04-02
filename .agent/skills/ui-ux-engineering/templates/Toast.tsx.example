@@ -1,0 +1,286 @@
+/**
+ * @component Toast
+ * @description Toast notification system with multiple variants, auto-dismiss,
+ * stacking, and accessibility announcements.
+ *
+ * @example
+ * ```tsx
+ * // Setup provider in layout
+ * <ToastProvider>
+ *   <App />
+ * </ToastProvider>
+ *
+ * // Use in components
+ * const { toast } = useToast();
+ *
+ * toast({
+ *   title: "Success!",
+ *   description: "Your changes have been saved.",
+ *   variant: "success",
+ * });
+ * ```
+ */
+
+"use client";
+
+import {
+    createContext,
+    useContext,
+    useState,
+    useCallback,
+    useEffect,
+    type ReactNode,
+} from "react";
+import { createPortal } from "react-dom";
+
+// Types
+type ToastVariant = "success" | "error" | "warning" | "info";
+
+interface ToastData {
+    id: string;
+    title: string;
+    description?: string;
+    variant: ToastVariant;
+    duration?: number;
+}
+
+interface ToastContextType {
+    toasts: ToastData[];
+    toast: (data: Omit<ToastData, "id">) => void;
+    dismiss: (id: string) => void;
+}
+
+// Context
+const ToastContext = createContext<ToastContextType | null>(null);
+
+// Variant styles
+const variantStyles: Record<ToastVariant, { bg: string; icon: string; border: string }> = {
+    success: {
+        bg: "bg-[var(--accent-teal-soft)]",
+        icon: "text-[var(--accent-teal)]",
+        border: "border-[var(--accent-teal)]/30",
+    },
+    error: {
+        bg: "bg-[var(--accent-red-soft)]",
+        icon: "text-[var(--accent-red)]",
+        border: "border-[var(--accent-red)]/30",
+    },
+    warning: {
+        bg: "bg-[var(--accent-amber-soft)]",
+        icon: "text-[var(--accent-amber)]",
+        border: "border-[var(--accent-amber)]/30",
+    },
+    info: {
+        bg: "bg-[var(--surface-2)]",
+        icon: "text-[var(--accent-lilac)]",
+        border: "border-[var(--border-soft)]",
+    },
+};
+
+// Icons for each variant
+const icons: Record<ToastVariant, ReactNode> = {
+    success: (
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+        </svg>
+    ),
+    error: (
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+    ),
+    warning: (
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+    ),
+    info: (
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+    ),
+};
+
+// Generate unique ID
+function generateId(): string {
+    return `toast-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+}
+
+/**
+ * Individual Toast component
+ */
+function Toast({
+    data,
+    onDismiss,
+}: {
+    data: ToastData;
+    onDismiss: () => void;
+}) {
+    const styles = variantStyles[data.variant];
+
+    // Auto-dismiss
+    useEffect(() => {
+        if (data.duration === 0) return; // Persistent toast
+
+        const timeout = setTimeout(() => {
+            onDismiss();
+        }, data.duration ?? 5000);
+
+        return () => clearTimeout(timeout);
+    }, [data.duration, onDismiss]);
+
+    return (
+        <div
+            role="alert"
+            aria-live="assertive"
+            aria-atomic="true"
+            className={`
+        flex items-start gap-3
+        w-full max-w-sm
+        p-4
+        ${styles.bg}
+        border ${styles.border}
+        rounded-[var(--radius-md)]
+        shadow-[var(--shadow-soft)]
+        animate-[slideInRight_300ms_ease-out]
+      `}
+        >
+            {/* Icon */}
+            <div className={`flex-shrink-0 ${styles.icon}`} aria-hidden="true">
+                {icons[data.variant]}
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-[var(--text-primary)]">
+                    {data.title}
+                </p>
+                {data.description && (
+                    <p className="mt-1 text-sm text-[var(--text-secondary)]">
+                        {data.description}
+                    </p>
+                )}
+            </div>
+
+            {/* Dismiss button */}
+            <button
+                onClick={onDismiss}
+                aria-label="Dismiss notification"
+                className={`
+          flex-shrink-0
+          p-1
+          -mr-1
+          rounded-lg
+          text-[var(--text-muted)]
+          hover:text-[var(--text-primary)]
+          hover:bg-[var(--surface-3)]
+          focus-visible:outline-2
+          focus-visible:outline-[var(--accent-teal)]
+          transition-colors
+        `}
+            >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+    );
+}
+
+/**
+ * Toast container - renders all active toasts
+ */
+function ToastContainer({ toasts, dismiss }: { toasts: ToastData[]; dismiss: (id: string) => void }) {
+    if (toasts.length === 0) return null;
+
+    return createPortal(
+        <div
+            aria-label="Notifications"
+            className={`
+        fixed
+        bottom-4 right-4
+        z-[100]
+        flex flex-col-reverse
+        gap-3
+        pointer-events-none
+        max-h-[calc(100vh-2rem)]
+        overflow-hidden
+      `}
+        >
+            {toasts.map((toast) => (
+                <div key={toast.id} className="pointer-events-auto">
+                    <Toast
+                        data={toast}
+                        onDismiss={() => dismiss(toast.id)}
+                    />
+                </div>
+            ))}
+        </div>,
+        document.body
+    );
+}
+
+/**
+ * Toast Provider - wrap your app with this
+ */
+export function ToastProvider({ children }: { children: ReactNode }) {
+    const [toasts, setToasts] = useState<ToastData[]>([]);
+
+    const toast = useCallback((data: Omit<ToastData, "id">) => {
+        const id = generateId();
+        setToasts((prev) => [...prev, { ...data, id }]);
+    }, []);
+
+    const dismiss = useCallback((id: string) => {
+        setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, []);
+
+    return (
+        <ToastContext.Provider value={{ toasts, toast, dismiss }}>
+            {children}
+            <ToastContainer toasts={toasts} dismiss={dismiss} />
+        </ToastContext.Provider>
+    );
+}
+
+/**
+ * Hook to use toast functionality
+ */
+export function useToast() {
+    const context = useContext(ToastContext);
+    if (!context) {
+        throw new Error("useToast must be used within a ToastProvider");
+    }
+    return context;
+}
+
+export type { ToastData, ToastVariant };
+
+// Add keyframes to your globals.css:
+/*
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+*/
+
+// Quick toast helpers (optional):
+/*
+export const toastSuccess = (title: string, description?: string) =>
+  toast({ title, description, variant: "success" });
+
+export const toastError = (title: string, description?: string) =>
+  toast({ title, description, variant: "error" });
+
+export const toastWarning = (title: string, description?: string) =>
+  toast({ title, description, variant: "warning" });
+
+export const toastInfo = (title: string, description?: string) =>
+  toast({ title, description, variant: "info" });
+*/

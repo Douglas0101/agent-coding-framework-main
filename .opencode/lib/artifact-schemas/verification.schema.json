@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "verification.schema.json",
+  "title": "VerificationSpec",
+  "description": "Defines machine-verifiable acceptance criteria derived from invariants and state machines.",
+  "type": "object",
+  "required": ["verification_id", "version", "capability_ref", "acceptance_criteria", "properties", "generated_tests"],
+  "additionalProperties": false,
+  "properties": {
+    "verification_id": { "type": "string" },
+    "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "capability_ref": { "type": "string" },
+    "behavior_ref": { "type": "string" },
+    "description": { "type": "string" },
+    "acceptance_criteria": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 5 }
+    },
+    "properties": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "statement", "test_type"],
+        "properties": {
+          "name": { "type": "string" },
+          "statement": { "type": "string" },
+          "test_type": {
+            "type": "string",
+            "enum": ["property_based", "invariant", "model_check", "contract", "golden_trace", "metamorphic"]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "model_checks": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "generated_tests": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["contract_tests", "property_tests", "state_transition_tests", "replay_tests", "negative_spec_tests", "golden_trace_tests"]
+      }
+    },
+    "negative_specs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["description"],
+        "properties": {
+          "description": { "type": "string" },
+          "forbidden_sequence": { "type": "array", "items": { "type": "string" } },
+          "forbidden_condition": { "type": "string" }
+        }
+      }
+    },
+    "required_evidence": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}
