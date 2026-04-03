@@ -1,6 +1,23 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "default_agent": "autocoder",
+  "maxSteps": 6,
+  "routing": {
+    "commands": {
+      "autocode": "autocoder",
+      "analyze": "explore",
+      "review": "reviewer",
+      "ship": "orchestrator"
+    },
+    "agents": {
+      "autocoder": {
+        "maxSteps": 6
+      },
+      "general": {
+        "maxSteps": 50
+      }
+    }
+  },
   "note": "Public sanitized interface. private repository only for operational config.",
   "template_refs": [
     ".opencode.example/opencode.json.example",
