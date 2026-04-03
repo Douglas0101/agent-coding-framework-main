@@ -1,24 +1,42 @@
 /**
  * Tree-sitter parser initialization and grammar loading.
  *
- * Uses web-tree-sitter (WASM) with prebuilt grammars from tree-sitter-typescript
- * and tree-sitter-rust packages.
- * Lazy-initializes on first use; falls back gracefully to null on failure.
+ * Uses optional web-tree-sitter (WASM) with prebuilt grammars from
+ * tree-sitter-typescript and tree-sitter-rust packages.
+ * Lazy-initializes on first use and degrades gracefully when the dependency
+ * is unavailable in the runtime environment.
  *
  * Per execucao.md Phase 2: tree-sitter as primary parser, regex as fallback.
  */
-import * as ParserNS from "web-tree-sitter"
 import { readFile } from "node:fs/promises"
 import { createRequire } from "node:module"
 
 type SupportedLanguage = "typescript" | "tsx" | "rust"
+type TreeSitterModule = Awaited<typeof import("web-tree-sitter")>
+type TreeSitterParser = InstanceType<TreeSitterModule["Parser"]>
 
 let initialized = false
-const parsers = new Map<SupportedLanguage, ParserNS.Parser | null>()
+let parserModule: TreeSitterModule | null = null
+const parsers = new Map<SupportedLanguage, TreeSitterParser | null>()
+
+async function getParserModule(): Promise<TreeSitterModule | null> {
+  if (parserModule) return parserModule
+  try {
+    parserModule = await import("web-tree-sitter")
+    return parserModule
+  } catch {
+    return null
+  }
+}
 
 async function ensureInit(): Promise<boolean> {
   if (initialized) return true
   try {
+    const ParserNS = await getParserModule()
+    if (!ParserNS) {
+      initialized = false
+      return false
+    }
     await ParserNS.Parser.init()
     initialized = true
     return true
@@ -43,7 +61,7 @@ async function loadWasmBytes(lang: SupportedLanguage): Promise<Uint8Array | null
   }
 }
 
-export async function getParser(lang: SupportedLanguage): Promise<ParserNS.Parser | null> {
+export async function getParser(lang: SupportedLanguage): Promise<TreeSitterParser | null> {
   if (parsers.has(lang)) {
     return parsers.get(lang) ?? null
   }
@@ -61,6 +79,11 @@ export async function getParser(lang: SupportedLanguage): Promise<ParserNS.Parse
   }
 
   try {
+    const ParserNS = await getParserModule()
+    if (!ParserNS) {
+      parsers.set(lang, null)
+      return null
+    }
     const language = await ParserNS.Language.load(wasmBytes)
     const parser = new ParserNS.Parser()
     parser.setLanguage(language)
@@ -77,4 +100,4 @@ export function resolveTsVariant(filePath: string | null): "typescript" | "tsx" 
   return "typescript"
 }
 
-export type { SupportedLanguage }
+export type { SupportedLanguage, TreeSitterParser }
