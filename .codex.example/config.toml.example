@@ -1,4 +1,9 @@
 # Example only
 # Fill in local/private operational repository.
+# private repository only for real runtime values.
 default_agent = "autocoder"
 max_steps = 6
+
+[providers.openai]
+api_key = "${OPENAI_API_KEY_PLACEHOLDER}"
+base_url = "https://api.example.com/v1"

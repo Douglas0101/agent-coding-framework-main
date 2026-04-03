@@ -13,13 +13,40 @@ if disallowed_paths=$(git ls-files | rg -n '(^|/)\.(agent|codex|opencode)(/|$)' 
 fi
 
 echo "[boundary] Checking sensitive operational keywords..."
-keyword_pattern='OPENAI_API_KEY|ANTHROPIC_API_KEY|AWS_SECRET_ACCESS_KEY|BEGIN (RSA|OPENSSH|EC) PRIVATE KEY|ghp_[A-Za-z0-9]{20,}|xox[baprs]-[A-Za-z0-9-]{10,}'
-if keyword_hits=$(git grep -nEI "$keyword_pattern" -- . ':(exclude)*.example' || true); then
-  if [[ -n "$keyword_hits" ]]; then
-    echo "Found disallowed sensitive keywords in tracked files:"
-    echo "$keyword_hits"
-    fail=1
-  fi
+if ! python - <<'PY'
+import re
+import subprocess
+from pathlib import Path
+
+from scripts.security_patterns import PROHIBITED_SECRET_PATTERNS, REPO_ROOT, compile_patterns
+
+tracked_files = subprocess.check_output(["git", "ls-files"], cwd=REPO_ROOT, text=True).splitlines()
+patterns = compile_patterns(PROHIBITED_SECRET_PATTERNS)
+hits = []
+
+for rel_path in tracked_files:
+    if rel_path.endswith(".example"):
+        continue
+    file_path = REPO_ROOT / rel_path
+    if not file_path.is_file():
+        continue
+    try:
+        content = file_path.read_text(encoding="utf-8")
+    except UnicodeDecodeError:
+        continue
+    for line_no, line in enumerate(content.splitlines(), start=1):
+        for pattern in patterns:
+            if pattern.search(line):
+                hits.append(f"{rel_path}:{line_no}:{line.strip()}")
+
+if hits:
+    print("Found disallowed sensitive keywords in tracked files:")
+    for hit in hits:
+        print(hit)
+    raise SystemExit(1)
+PY
+then
+  fail=1
 fi
 
 if [[ "$fail" -ne 0 ]]; then

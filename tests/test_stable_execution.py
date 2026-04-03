@@ -1,15 +1,24 @@
 """Public repository boundary tests."""
 
+import subprocess
 from pathlib import Path
 
+from scripts.security_patterns import PRIVATE_REPOSITORY_ONLY_PHRASE
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
 
 class TestPublicVsInternalBoundary:
     def test_internal_directories_not_tracked(self):
-        for path in (".agent", ".codex", ".opencode"):
-            assert not (REPO_ROOT / path).exists(), f"{path} must stay out of public repo"
+        tracked_files = subprocess.check_output(
+            ["git", "ls-files"],
+            cwd=REPO_ROOT,
+            text=True,
+        ).splitlines()
+        for path in (".agent/", ".codex/", ".opencode/"):
+            assert not any(file_path.startswith(path) for file_path in tracked_files), (
+                f"{path} must stay out of public repo"
+            )
 
     def test_sanitized_templates_exist(self):
         required = [
@@ -28,4 +37,4 @@ class TestPublicVsInternalBoundary:
 
     def test_public_config_is_sanitized(self):
         config = (REPO_ROOT / "opencode.json").read_text(encoding="utf-8")
-        assert "private repository" in config.lower()
+        assert PRIVATE_REPOSITORY_ONLY_PHRASE in config.lower()

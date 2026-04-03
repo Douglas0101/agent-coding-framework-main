@@ -46,7 +46,30 @@ Este repositorio existe para:
 ```
 
 ## Politica de publicacao
-=======
+
+Este repositório segue o contrato de **configuração sanitizada** para todos os templates e arquivos públicos.
+Qualquer valor operacional real é **private repository only**.
+
+### Matriz de configuração sanitizada (permitido vs proibido)
+
+| Categoria | Permitido (público) | Proibido (público) |
+|-----------|----------------------|--------------------|
+| API keys | `${OPENAI_API_KEY_PLACEHOLDER}` / `${ANTHROPIC_API_KEY_PLACEHOLDER}` | Tokens reais (`sk-...`, `ghp_...`, `xox...`) |
+| Endpoints | `https://api.example.com/v1` | Hosts internos (`localhost`, `*.internal`, IPs RFC1918) |
+| Chaves criptográficas | Texto explicativo e placeholders | Blocos `BEGIN ... PRIVATE KEY` |
+| Config runtime | Notas de interface e exemplos mínimos | IDs internos, manifests operacionais, estado de sessão |
+
+### Exemplos de credenciais
+
+**Seguro (template público):**
+- `OPENAI_API_KEY=${OPENAI_API_KEY_PLACEHOLDER}`
+- `ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY_PLACEHOLDER}`
+
+**Proibido (somente no repositório privado):**
+- `OPENAI_API_KEY=sk-live-...`
+- `AWS_SECRET_ACCESS_KEY=...`
+- Qualquer chave privada PEM/OpenSSH completa.
+
 ## Skills Disponiveis (57)
 
 ### Engenharia de Codigo
