@@ -57,7 +57,7 @@ This project now enforces stable execution through a comprehensive specification
 - 6 validation rules: no_partial_payload, no_missing_provenance, evidence_refs_resolvable, versioning_required, write_scope_disjoint, verifier_gate
 
 ### Test Coverage
-- 38 Python tests in 7 suites: ConfigIntegrity, CommandRouting, SpecStructure, Invariants, HandoffContract, AgentsMdConsistency, NegativePatterns
+- 8 Python tests in 2 suites: TestCommandRoutingRegression, TestStableExecutionGuardrails
 - Run: `python -m pytest .internal/tests/test_stable_execution.py -v`
 
 ### CI Integration
