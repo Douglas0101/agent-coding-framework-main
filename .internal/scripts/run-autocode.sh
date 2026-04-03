@@ -4,7 +4,7 @@
 # Problema: /autocode (agent: autocoder) roteia para general com maxSteps=50
 # Workaround: --agent autocoder força o roteamento correto com maxSteps=6
 #
-# Tracking: .opencode/skills/self-bootstrap-opencode/debug_autocode.log
+# Tracking: .internal/artifacts/codex-swarm/run-stable-execution/debug_autocode.log
 # Issue: AGENTS.md → Known Issues → Routing Bug: /autocode command
 # SDD: capability.stable-execution@1.0.0
 

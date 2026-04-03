@@ -362,7 +362,7 @@ opencode run --agent autocoder --command autocode "sua tarefa aqui"
 
 ### Tracking
 
-O bug está sendo rastreado em `.opencode/skills/self-bootstrap-opencode/debug_autocode.log`.
+O bug está sendo rastreado em `.internal/artifacts/codex-swarm/run-stable-execution/debug_autocode.log` (artefato sanitizado e versionável).
 
 ---
 
