@@ -227,6 +227,20 @@ Antes de publicar:
 2. manter apenas templates sanitizados (`*.example` + READMEs de interface);
 3. executar o check de boundary no CI.
 
+## Topologia de validacao no CI
+
+Para reduzir redundancia e evitar divergencia de regras, o check de boundary agora tem **workflow unico** como fonte da verdade:
+
+- Workflow: `.github/workflows/public-artifacts-guard.yml`
+- Nome exibido no GitHub Checks: `Public Boundary Check`
+- Job exibido no GitHub Checks: `Public Boundary Check`
+- Script executado: `./scripts/check-public-boundary.sh`
+- Eventos obrigatorios:
+  - `push` para branches protegidas (`main` e `master`);
+  - `pull_request` com destino a branches protegidas (`main` e `master`).
+
+O workflow `.github/workflows/routing-regression.yml` permanece dedicado aos testes de regressao e nao executa mais o boundary check.
+
 ## Pre-commit local (segredos + padrões proibidos)
 
 Para alinhar validação local com o CI e reduzir divergência de regras:
