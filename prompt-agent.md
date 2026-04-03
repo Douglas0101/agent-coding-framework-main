@@ -13,7 +13,7 @@ Considere como base o trabalho já realizado localmente para `run-stable-executi
 - correção do roteamento incorreto do `/autocode`
 - criação de `.opencode/opencode.json`
 - criação das specs de `stable-execution`
-- suíte local `tests/test_stable_execution.py`
+- suíte local `.internal/tests/test_stable_execution.py`
 - conformance report com aceite local
 
 Seu trabalho agora **não é reabrir o diagnóstico**, e sim **fechar as lacunas finais de promoção**.
@@ -89,7 +89,7 @@ Garanta que o que passou localmente também seja bloqueio de promoção no pipel
 
 Verifique e implemente, se faltar:
 
-- execução da suíte `tests/test_stable_execution.py` no CI
+- execução da suíte `.internal/tests/test_stable_execution.py` no CI
 - execução do teste de paridade `root ↔ .opencode`
 - execução dos gates mínimos de conformance
 - falha explícita do pipeline em caso de drift, fallback silencioso ou regressão de routing
@@ -108,7 +108,7 @@ O bug upstream do runtime ainda deve ser tratado como risco real.
 
 Garanta que:
 
-- `scripts/run-autocode.sh` continue funcional
+- `.internal/scripts/run-autocode.sh` continue funcional
 - o pre-flight probe detecte agente inesperado
 - fallback silencioso seja proibido
 - haja logging e evidência em caso de desvio

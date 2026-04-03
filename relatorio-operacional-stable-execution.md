@@ -88,7 +88,7 @@
 | `.opencode/specs/policies/stable-execution.policy.yaml` | Criado | Políticas de retry, timeout, circuit breaker, write_scope, routing |
 | `.opencode/specs/verification/stable-execution.verification.yaml` | Criado | 10 acceptance criteria + 6 test suites |
 | `.opencode/specs/release/stable-execution.release.yaml` | Criado | Rollout em 3 fases + 6 rollback triggers + monitoring |
-| `tests/test_stable_execution.py` | Criado | Suite de regressão com 38 testes em 7 classes |
+| `.internal/tests/test_stable_execution.py` | Criado | Suite de regressão com 38 testes em 7 classes |
 
 ---
 
@@ -190,7 +190,7 @@
 
 | Risco | Severidade | Mitigação |
 |-------|------------|-----------|
-| OpenCode v1.3.13 routing bug (runtime) | Medium | Workaround `--agent autocoder` via `scripts/run-autocode.sh` |
+| OpenCode v1.3.13 routing bug (runtime) | Medium | Workaround `--agent autocoder` via `.internal/scripts/run-autocode.sh` |
 | Config drift entre root e `.opencode/` | Low | Teste `test_root_and_dot_opencode_configs_match` |
 | Spec-to-runtime alignment < 1.0 | Low | Monitoring via conformance report |
 
@@ -216,8 +216,8 @@
 .opencode/specs/policies/stable-execution.policy.yaml            (policy)
 .opencode/specs/verification/stable-execution.verification.yaml  (verification)
 .opencode/specs/release/stable-execution.release.yaml            (release)
-tests/test_stable_execution.py                                   (38 tests)
-artifacts/codex-swarm/run-stable-execution/conformance-report.json
+.internal/tests/test_stable_execution.py                                   (38 tests)
+.internal/artifacts/codex-swarm/run-stable-execution/conformance-report.json
 relatorio-operacional-stable-execution.md                        (este arquivo)
 ```
 

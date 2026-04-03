@@ -13,10 +13,17 @@ if disallowed_paths=$(git ls-files | grep -nE '(^|/)\.(agent|codex|opencode)(/|$
 fi
 
 echo "[boundary] Checking sensitive operational keywords..."
-if ! python - <<'PY'
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+INTERNAL_ROOT="$(dirname "$SCRIPT_DIR")"
+if ! INTERNAL_ROOT="$INTERNAL_ROOT" python - <<'PY'
+import os
 import re
 import subprocess
+import sys
 from pathlib import Path
+
+INTERNAL_ROOT = Path(os.environ["INTERNAL_ROOT"])
+sys.path.insert(0, str(INTERNAL_ROOT))
 
 from scripts.security_patterns import PROHIBITED_SECRET_PATTERNS, REPO_ROOT, compile_patterns
 

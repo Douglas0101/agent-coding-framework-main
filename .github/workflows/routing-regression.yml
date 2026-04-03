@@ -25,4 +25,4 @@ jobs:
           python -m pip install pytest
 
       - name: Run tests
-        run: python -m pytest tests/test_stable_execution.py -v
+        run: python -m pytest .internal/tests/test_stable_execution.py -v

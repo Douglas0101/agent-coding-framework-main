@@ -3,6 +3,14 @@
 from __future__ import annotations
 
 import re
+import sys
+from pathlib import Path
+
+INTERNAL_ROOT = Path(__file__).resolve().parent.parent
+if str(INTERNAL_ROOT) not in sys.path:
+    sys.path.insert(0, str(INTERNAL_ROOT))
+
+REPO_ROOT = INTERNAL_ROOT.parent
 
 from scripts.security_patterns import (
     HIGH_ENTROPY_CANDIDATE_PATTERN,
@@ -21,7 +29,9 @@ from scripts.security_patterns import (
 class TestSanitizedPublicConfigurationContract:
     def test_inventory_files_exist(self):
         for rel_path in (*PUBLIC_CONFIG_FILES, *PUBLIC_DOC_FILES):
-            assert (REPO_ROOT / rel_path).exists(), f"Missing public contract file: {rel_path}"
+            assert (REPO_ROOT / rel_path).exists(), (
+                f"Missing public contract file: {rel_path}"
+            )
 
     def test_no_prohibited_secret_or_internal_endpoint_patterns(self):
         prohibited_patterns = compile_patterns(
@@ -60,7 +70,9 @@ class TestSanitizedPublicConfigurationContract:
         for rel_path, placeholders in required_placeholders_by_file.items():
             content = (REPO_ROOT / rel_path).read_text(encoding="utf-8")
             for placeholder in placeholders:
-                assert placeholder in content, f"Missing safe placeholder {placeholder} in {rel_path}"
+                assert placeholder in content, (
+                    f"Missing safe placeholder {placeholder} in {rel_path}"
+                )
 
         # Keep canonical placeholder regexes actively consumed by tests.
         compiled_safe_placeholders = compile_patterns(SAFE_PLACEHOLDER_PATTERNS)

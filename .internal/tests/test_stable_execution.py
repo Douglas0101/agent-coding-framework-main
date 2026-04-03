@@ -1,11 +1,16 @@
 """Public repository boundary tests."""
 
 import subprocess
+import sys
 from pathlib import Path
+
+INTERNAL_ROOT = Path(__file__).resolve().parent.parent
+if str(INTERNAL_ROOT) not in sys.path:
+    sys.path.insert(0, str(INTERNAL_ROOT))
 
 from scripts.security_patterns import PRIVATE_REPOSITORY_ONLY_PHRASE
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+REPO_ROOT = INTERNAL_ROOT.parent
 
 
 class TestPublicVsInternalBoundary:

@@ -156,7 +156,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Scan for sensitive operational config patterns
-        run: python scripts/scan_sensitive_patterns.py
+        run: python .internal/scripts/scan_sensitive_patterns.py
 
   precommit-integrity:
     name: Pre-commit Integrity (Optional)

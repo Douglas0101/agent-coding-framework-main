@@ -15,4 +15,4 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Validate public/internal boundary
-        run: ./scripts/check-public-boundary.sh
+        run: ./.internal/scripts/check-public-boundary.sh

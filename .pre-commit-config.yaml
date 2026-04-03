@@ -16,7 +16,7 @@ repos:
           - --force-use-all-plugins
         exclude: |
           (?x)^(
-            \.opencode/tests/.*|
+            \.internal/tests/.*|
             \.agent/skills/.*
           )$
 
@@ -24,7 +24,7 @@ repos:
     hooks:
       - id: sensitive-patterns-scan
         name: sensitive-patterns-scan
-        entry: python scripts/scan_sensitive_patterns.py
+        entry: python .internal/scripts/scan_sensitive_patterns.py
         language: system
         pass_filenames: true
         types: [text]

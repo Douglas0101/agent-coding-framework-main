@@ -6,7 +6,7 @@ import re
 from pathlib import Path
 
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 
 # Public files that represent the supported sanitized configuration surface.
 PUBLIC_CONFIG_FILES = (

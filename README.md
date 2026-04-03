@@ -14,8 +14,8 @@ Este repositorio existe para:
 
 ### Publico por padrao (este repositorio)
 - `README.md`, `AGENTS.md` e documentacao de alto nivel.
-- `scripts/` com utilitarios publicos sem detalhes de runtime interno.
-- `tests/` e workflows de CI voltados a conformidade publica.
+- `.internal/scripts/` com utilitarios publicos sem detalhes de runtime interno.
+- `.internal/tests/` e workflows de CI voltados a conformidade publica.
 - Templates sanitizados:
   - `.agent.example/`
   - `.codex.example/`
@@ -38,8 +38,10 @@ Este repositorio existe para:
 ├── .codex.example/
 ├── .opencode.example/
 ├── .github/workflows/
-├── scripts/
-├── tests/
+├── .internal/
+│   ├── scripts/
+│   ├── tests/
+│   └── artifacts/
 ├── AGENTS.md
 ├── README.md
 └── opencode.json
@@ -234,7 +236,7 @@ Para reduzir redundancia e evitar divergencia de regras, o check de boundary ago
 - Workflow: `.github/workflows/public-artifacts-guard.yml`
 - Nome exibido no GitHub Checks: `Public Boundary Check`
 - Job exibido no GitHub Checks: `Public Boundary Check`
-- Script executado: `./scripts/check-public-boundary.sh`
+- Script executado: `./.internal/scripts/check-public-boundary.sh`
 - Eventos obrigatorios:
   - `push` para branches protegidas (`main` e `master`);
   - `pull_request` com destino a branches protegidas (`main` e `master`).
@@ -261,7 +263,7 @@ Para alinhar validação local com o CI e reduzir divergência de regras:
 ### Hooks configurados
 
 - `detect-secrets` com baseline versionada em `.secrets.baseline`.
-- `sensitive-patterns-scan` (script local `scripts/scan_sensitive_patterns.py`) usando o mesmo arquivo de allowlist do CI: `.github/security/public-repo-allowlist.json`.
+- `sensitive-patterns-scan` (script local `.internal/scripts/scan_sensitive_patterns.py`) usando o mesmo arquivo de allowlist do CI: `.github/security/public-repo-allowlist.json`.
 
 ### Atualizando baseline de segredos
 

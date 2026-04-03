@@ -26,15 +26,15 @@
   ],
   "pattern_scan_exceptions": [
     {
-      "pattern": ".opencode/tests/**",
-      "justification": "Fixtures de teste com segredos sintéticos para validação de filtros.",
+      "pattern": ".internal/tests/**",
+      "justification": "Test fixtures com segredos sintéticos para validação de filtros.",
       "owner": "maintainers",
       "expires_on": "2026-12-31",
       "ticket_ref": "SEC-1004"
     },
     {
-      "pattern": ".agent/skills/**",
-      "justification": "Exemplos didáticos podem conter placeholders de configuração (não credenciais reais).",
+      "pattern": ".internal/scripts/**",
+      "justification": "Scripts de segurança com padrões de referência (não credenciais reais).",
       "owner": "maintainers",
       "expires_on": "2026-12-31",
       "ticket_ref": "SEC-1005"

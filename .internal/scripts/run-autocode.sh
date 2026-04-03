@@ -72,7 +72,7 @@ PY
         echo "[ERROR] Unexpected parity-check failure: $result"
         ;;
     esac
-    echo "[ERROR] Run: python -m pytest tests/test_stable_execution.py -k test_root_and_dot_opencode -v"
+    echo "[ERROR] Run: python -m pytest .internal/tests/test_stable_execution.py -k test_root_and_dot_opencode -v"
     exit 1
   fi
 

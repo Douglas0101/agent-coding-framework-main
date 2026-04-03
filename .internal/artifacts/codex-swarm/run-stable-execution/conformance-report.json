@@ -48,9 +48,9 @@
     }
   },
   "golden_traces": [
-    "artifacts/codex-swarm/run-stable-execution/golden-traces/config-parity.json",
-    "artifacts/codex-swarm/run-stable-execution/golden-traces/routing-validation.json",
-    "artifacts/codex-swarm/run-stable-execution/golden-traces/verifier-gate.json"
+    ".internal/artifacts/codex-swarm/run-stable-execution/golden-traces/config-parity.json",
+    ".internal/artifacts/codex-swarm/run-stable-execution/golden-traces/routing-validation.json",
+    ".internal/artifacts/codex-swarm/run-stable-execution/golden-traces/verifier-gate.json"
   ],
   "specs_created": [
     ".opencode/specs/capabilities/stable-execution.capability.yaml",
@@ -70,22 +70,22 @@
     ".opencode/specs/verification/stable-execution.verification.yaml",
     ".opencode/specs/release/stable-execution.release.yaml",
     ".opencode/specs/slos/stable-execution.slo.yaml",
-    "tests/test_stable_execution.py",
-    "artifacts/codex-swarm/run-stable-execution/golden-traces/config-parity.json",
-    "artifacts/codex-swarm/run-stable-execution/golden-traces/routing-validation.json",
-    "artifacts/codex-swarm/run-stable-execution/golden-traces/verifier-gate.json"
+    ".internal/tests/test_stable_execution.py",
+    ".internal/artifacts/codex-swarm/run-stable-execution/golden-traces/config-parity.json",
+    ".internal/artifacts/codex-swarm/run-stable-execution/golden-traces/routing-validation.json",
+    ".internal/artifacts/codex-swarm/run-stable-execution/golden-traces/verifier-gate.json"
   ],
   "files_modified": [
     "README.md",
     "AGENTS.md",
     ".github/workflows/routing-regression.yml",
-    "scripts/run-autocode.sh"
+    ".internal/scripts/run-autocode.sh"
   ],
   "known_issues": [
     {
       "issue": "OpenCode v1.3.13 routing bug",
       "description": "Comando /autocode com agent: autocoder no frontmatter nao e roteado corretamente pelo runtime sem flag --agent explicito",
-      "workaround": "scripts/run-autocode.sh com --agent autocoder e pre-flight config parity check",
+      "workaround": ".internal/scripts/run-autocode.sh com --agent autocoder e pre-flight config parity check",
       "severity": "medium",
       "status": "documented_and_mitigated"
     }
@@ -99,20 +99,20 @@
     "evidence://repo/.opencode/specs/verification/stable-execution.verification.yaml",
     "evidence://repo/.opencode/specs/release/stable-execution.release.yaml",
     "evidence://repo/.opencode/specs/slos/stable-execution.slo.yaml",
-    "evidence://repo/tests/test_stable_execution.py",
+    "evidence://repo/.internal/tests/test_stable_execution.py",
     "evidence://repo/.opencode/skills/self-bootstrap-opencode/debug_autocode.log",
     "evidence://repo/AGENTS.md",
-    "evidence://repo/scripts/run-autocode.sh",
+    "evidence://repo/.internal/scripts/run-autocode.sh",
     "evidence://repo/.github/workflows/routing-regression.yml",
-    "evidence://repo/artifacts/codex-swarm/run-stable-execution/golden-traces/config-parity.json",
-    "evidence://repo/artifacts/codex-swarm/run-stable-execution/golden-traces/routing-validation.json",
-    "evidence://repo/artifacts/codex-swarm/run-stable-execution/golden-traces/verifier-gate.json"
+    "evidence://repo/.internal/artifacts/codex-swarm/run-stable-execution/golden-traces/config-parity.json",
+    "evidence://repo/.internal/artifacts/codex-swarm/run-stable-execution/golden-traces/routing-validation.json",
+    "evidence://repo/.internal/artifacts/codex-swarm/run-stable-execution/golden-traces/verifier-gate.json"
   ],
   "trace_links": [
     "trace://requirement/prompt-agent.md",
     "trace://requirement/AGENTS.md#native-swarm-rules",
     "trace://requirement/AGENTS.md#stable-execution-guarantees",
-    "trace://test/tests/test_stable_execution.py",
+    "trace://test/.internal/tests/test_stable_execution.py",
     "trace://bug/debug_autocode.log",
     "trace://ci/.github/workflows/routing-regression.yml",
     "trace://golden-trace/config-parity",

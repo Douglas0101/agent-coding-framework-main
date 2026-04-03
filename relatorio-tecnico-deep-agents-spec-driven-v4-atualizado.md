@@ -190,7 +190,7 @@ Além disso, as regras de validação já incluem:
 
 ### 3.7 Testes de regressão já sustentam as invariantes do framework
 
-A suíte `tests/test_stable_execution.py` é particularmente importante porque transforma a arquitetura em disciplina verificável. Os testes já cobrem:
+A suíte `.internal/tests/test_stable_execution.py` é particularmente importante porque transforma a arquitetura em disciplina verificável. Os testes já cobrem:
 
 - paridade entre `opencode.json` e `.opencode/opencode.json`
 - roteamento de comandos para agentes corretos
@@ -431,7 +431,7 @@ Com base no material inspecionado, a estrutura efetivamente comprovada inclui pe
 - `.opencode/tools/spec-linker.ts`
 - `.opencode/tools/spec-compiler.ts`
 - `.opencode/tools/run-manifest.ts`
-- `tests/test_stable_execution.py`
+- `.internal/tests/test_stable_execution.py`
 - `opencode.json` e `.opencode/opencode.json` (referenciados pela suíte e por AGENTS.md)
 
 ### 6.3 Implicação prática
