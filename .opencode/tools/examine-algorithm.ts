@@ -14,8 +14,7 @@ import {
 } from "../lib/shared"
 
 import { analysisCache, AnalysisCache } from "../lib/cache"
-import { getParser, resolveTsVariant } from "../lib/tree-sitter-parsers"
-import type * as ParserNS from "web-tree-sitter"
+import { getParser, resolveTsVariant, type TreeSitterParser } from "../lib/tree-sitter-parsers"
 
 const MAX_INLINE_CODE_SIZE = 50_000 // 50KB limit for inline code analysis
 
@@ -33,7 +32,7 @@ const PATTERN_CATALOG: Record<string, { regex: RegExp; lc: string }> = {
 // === Tree-sitter entity extraction (primary) ===
 
 function entitiesFromTreeSitter(
-  parser: ParserNS.Parser,
+  parser: TreeSitterParser,
   code: string,
   nodeTypes: string[],
   nameField: string | null,
