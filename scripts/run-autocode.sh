@@ -32,21 +32,58 @@ if [[ ! -f "$DOT_CONFIG" ]]; then
   exit 1
 fi
 
-# Quick parity check: compare default_agent and autocoder maxSteps
-ROOT_AGENT=$(python3 -c "import json; c=json.load(open('$ROOT_CONFIG')); print(c.get('default_agent',''))" 2>/dev/null || echo "")
-DOT_AGENT=$(python3 -c "import json; c=json.load(open('$DOT_CONFIG')); print(c.get('default_agent',''))" 2>/dev/null || echo "")
+validate_config_parity() {
+  local result
+  if ! result="$(python3 - "$ROOT_CONFIG" "$DOT_CONFIG" <<'PY'
+import json
+import sys
+from pathlib import Path
 
-if [[ "$ROOT_AGENT" != "$DOT_AGENT" ]]; then
-  echo "[ERROR] Config drift detected: root default_agent='$ROOT_AGENT' vs .opencode default_agent='$DOT_AGENT'"
-  echo "[ERROR] Run: python -m pytest tests/test_stable_execution.py -k test_root_and_dot_opencode -v"
-  exit 1
-fi
+root_path = Path(sys.argv[1])
+dot_path = Path(sys.argv[2])
 
-if [[ "$ROOT_AGENT" != "autocoder" ]]; then
-  echo "[WARNING] default_agent is '$ROOT_AGENT' (expected 'autocoder')"
-  echo "[WARNING] This may indicate config drift. Continuing with explicit --agent autocoder."
-fi
+try:
+    root_cfg = json.loads(root_path.read_text())
+    dot_cfg = json.loads(dot_path.read_text())
+except Exception as exc:  # explicit pre-flight failure with context
+    print(f"ERROR:invalid_json:{exc}")
+    raise SystemExit(1)
 
+root_agent = str(root_cfg.get("default_agent", ""))
+dot_agent = str(dot_cfg.get("default_agent", ""))
+
+if root_agent != dot_agent:
+    print(f"ERROR:default_agent_mismatch:{root_agent}:{dot_agent}")
+    raise SystemExit(1)
+
+# Keep shell output parsing stable and machine-friendly.
+print(f"OK:{root_agent}")
+PY
+)"; then
+    case "$result" in
+      ERROR:invalid_json:*)
+        echo "[ERROR] Invalid JSON in config: ${result#ERROR:invalid_json:}"
+        ;;
+      ERROR:default_agent_mismatch:*)
+        IFS=':' read -r _ _ root_agent dot_agent <<< "$result"
+        echo "[ERROR] Config drift detected: root default_agent='$root_agent' vs .opencode default_agent='$dot_agent'"
+        ;;
+      *)
+        echo "[ERROR] Unexpected parity-check failure: $result"
+        ;;
+    esac
+    echo "[ERROR] Run: python -m pytest tests/test_stable_execution.py -k test_root_and_dot_opencode -v"
+    exit 1
+  fi
+
+  ROOT_AGENT="${result#OK:}"
+  if [[ "$ROOT_AGENT" != "autocoder" ]]; then
+    echo "[WARNING] default_agent is '$ROOT_AGENT' (expected 'autocoder')"
+    echo "[WARNING] This may indicate config drift. Continuing with explicit --agent autocoder."
+  fi
+}
+
+validate_config_parity
 echo "[run-autocode] Pre-flight: config parity OK | default_agent=$ROOT_AGENT"
 
 # ============================================================
