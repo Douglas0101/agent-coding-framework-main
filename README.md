@@ -96,9 +96,10 @@ Scripts, testes e artefatos de validação:
 │   ├── check-public-boundary.sh   # Verificação de boundary público
 │   └── run-autocode.sh            # Wrapper para /autocode
 ├── tests/
-│   ├── test_stable_execution.py           # Suite de execução estável (38 testes)
-│   ├── test_public_config_sanitization.py # Testes de configuração sanitizada
-│   └── test_public_repo_allowlist.py      # Testes de allowlist
+│   ├── test_stable_execution.py           # Regressão de routing + guardrails (8 testes)
+│   ├── test_public_boundary.py            # Boundary público vs interno (4 testes)
+│   ├── test_public_config_sanitization.py # Contrato de config/doc sanitizados (5 testes)
+│   └── test_public_repo_allowlist.py      # Governança de allowlist pública (3 testes)
 └── artifacts/
     └── codex-swarm/
         ├── run-stable-execution/   # Relatórios de conformidade
@@ -251,7 +252,7 @@ O framework implementa um sistema robusto de garantias de execução:
 
 ### Garantias Implementadas
 
-1. **Paridade de Configuração**: `opencode.json` (raiz) e `.opencode/opencode.json` devem ser equivalentes
+1. **Fail-fast de Configuração**: o wrapper `.internal/scripts/run-autocode.sh` falha imediatamente quando `.opencode/opencode.json` está ausente (evita fallback silencioso)
 2. **Invariantes de Execução**:
    - Sem retry ilimitado (`max_attempts ≤ 3`)
    - Sem fallback silencioso de agente
@@ -265,20 +266,25 @@ O framework implementa um sistema robusto de garantias de execução:
 
 ### Testes de Conformidade
 
-Execute a suite de testes de execução estável:
+Execute a suite dedicada de stable execution:
 
 ```bash
 python -m pytest .internal/tests/test_stable_execution.py -v
 ```
 
-A suite inclui:
-- **ConfigIntegrity**: Testes de paridade de configuração
-- **CommandRouting**: Testes de roteamento de comandos
-- **SpecStructure**: Testes de estrutura de especificações
-- **Invariants**: Testes de invariantes de execução
-- **HandoffContract**: Testes de contrato de handoff
-- **AgentsMdConsistency**: Testes de consistência do AGENTS.md
-- **NegativePatterns**: Testes de padrões negativos
+Classes e foco atuais:
+- **TestCommandRoutingRegression** (4): casos mínimos para `/autocode` sem `--agent`, com `--agent autocoder` e ausência de fallback silencioso.
+- **TestStableExecutionGuardrails** (4): asserts de verifier gate, write_scope disjoint e fail-fast em drift de config.
+
+---
+
+## Public vs Internal Artifacts
+
+Este repositório público publica apenas interfaces e templates sanitizados.
+Toda configuração/runtime operacional real permanece em **private repository only**.
+
+- Superfície pública: `opencode.json`, `.opencode.example/`, `.codex.example/`, `.agent.example/`.
+- Superfície interna: `.opencode/`, `.codex/`, `.agent/` (não versionadas neste repositório público).
 
 ---
 

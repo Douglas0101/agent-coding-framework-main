@@ -72,7 +72,7 @@
 | 4 | localize | reproduce | identifica ponto de fallback | trace |
 | 5 | patch | localize | cria arquivo ou ajusta merge logic | code change |
 | 6 | validate | patch | verifica roteamento correto | test suite |
-| 7 | regress | validate | cobertura de casos de borda | 38 testes |
+| 7 | regress | validate | cobertura de casos mínimos de routing + guardrails | 8 testes |
 | 8 | verify | regress | conformance com spec | report |
 
 ---
@@ -88,7 +88,7 @@
 | `.opencode/specs/policies/stable-execution.policy.yaml` | Criado | Políticas de retry, timeout, circuit breaker, write_scope, routing |
 | `.opencode/specs/verification/stable-execution.verification.yaml` | Criado | 10 acceptance criteria + 6 test suites |
 | `.opencode/specs/release/stable-execution.release.yaml` | Criado | Rollout em 3 fases + 6 rollback triggers + monitoring |
-| `.internal/tests/test_stable_execution.py` | Criado | Suite de regressão com 38 testes em 7 classes |
+| `.internal/tests/test_stable_execution.py` | Atualizado | Suite de regressão com 8 testes em 2 classes |
 
 ---
 
@@ -96,23 +96,17 @@
 
 | Suite | Testes | Resultado |
 |-------|--------|-----------|
-| `TestConfigIntegrity` | 6 | ✅ 6 passed |
-| `TestCommandRouting` | 7 | ✅ 7 passed |
-| `TestSpecStructure` | 10 | ✅ 10 passed |
-| `TestInvariants` | 5 | ✅ 5 passed |
-| `TestHandoffContract` | 2 | ✅ 2 passed |
-| `TestAgentsMdConsistency` | 4 | ✅ 4 passed |
-| `TestNegativePatterns` | 3 | ✅ 3 passed |
-| **Total** | **38** | **✅ 38 passed (0.16s)** |
+| `TestCommandRoutingRegression` | 4 | ✅ 4 passed |
+| `TestStableExecutionGuardrails` | 4 | ✅ 4 passed |
+| **Total** | **8** | **✅ 8 passed** |
 
 ### Propriedades verificadas
-- `no_unbounded_retry` — retry_count ≤ 3
-- `forbidden_transitions_defined` — 7 transições proibidas listadas
-- `verifier_gate_in_behavior` — synthesized antes de verified bloqueado
-- `write_scope_disjoint_policy` — scopes disjuntos entre workers
-- `no_silent_fallback_policy` — fallback requer evidência
-- `no_doom_loop_allow` — doom_loop negado em todos os agentes
-- `command_routing_correct` — 7 comandos mapeados corretamente
+- `autocode_without_agent_observed` — comportamento observado documentado (fallback para `general`)
+- `autocode_with_agent_supported` — caminho suportado exige `--agent autocoder`
+- `no_silent_fallback_guardrail` — ausência de fallback silencioso declarada como invariante
+- `verifier_gate_required` — verifier permanece gate obrigatório
+- `write_scope_disjoint_required` — write_scope disjunto entre workers paralelos
+- `config_drift_fail_fast` — wrapper falha imediatamente sem `.opencode/opencode.json`
 
 ### Falhas prevenidas
 - Loop de retry sem limite
@@ -182,7 +176,7 @@
 | Agente | Função | Veredicto | Confidence |
 |--------|--------|-----------|------------|
 | `orchestrator` | Coordenação, specs, conformance | Completo | 0.95 |
-| `tester` (pytest) | Validação automatizada | 38/38 passed | 1.0 |
+| `tester` (pytest) | Validação automatizada | 8/8 passed | 1.0 |
 
 ---
 
@@ -191,7 +185,7 @@
 | Risco | Severidade | Mitigação |
 |-------|------------|-----------|
 | OpenCode v1.3.13 routing bug (runtime) | Medium | Workaround `--agent autocoder` via `.internal/scripts/run-autocode.sh` |
-| Config drift entre root e `.opencode/` | Low | Teste `test_root_and_dot_opencode_configs_match` |
+| Config drift entre root e `.opencode/` | Low | Teste `TestStableExecutionGuardrails::test_config_drift_is_fail_fast_in_wrapper` |
 | Spec-to-runtime alignment < 1.0 | Low | Monitoring via conformance report |
 
 ---
@@ -216,7 +210,7 @@
 .opencode/specs/policies/stable-execution.policy.yaml            (policy)
 .opencode/specs/verification/stable-execution.verification.yaml  (verification)
 .opencode/specs/release/stable-execution.release.yaml            (release)
-.internal/tests/test_stable_execution.py                                   (38 tests)
+.internal/tests/test_stable_execution.py                                   (8 tests)
 .internal/artifacts/codex-swarm/run-stable-execution/conformance-report.json
 relatorio-operacional-stable-execution.md                        (este arquivo)
 ```
