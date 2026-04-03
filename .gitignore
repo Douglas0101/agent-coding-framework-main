@@ -14,13 +14,7 @@ venv/
 env/
 
 # JetBrains
-.idea/shelf/
-.idea/workspace.xml
-.idea/httpRequests/
-.idea/queries/
-.idea/dataSources/
-.idea/dataSources.local.xml
-.idea/ZeppelinRemoteNotebooks/
+.idea/
 
 # OpenCode runtime artifacts
 .opencode/node_modules/

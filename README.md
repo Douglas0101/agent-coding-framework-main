@@ -252,6 +252,34 @@ O Codex usara `.codex/config.toml` para configurar o swarm multi-agent.
 - **OpenCode** CLI
 - **Node.js** 20+ (para tree-sitter parsers)
 
+
+## Padrao de IDE e Configuracoes Locais
+
+Para manter o repositorio limpo e reproduzivel entre ferramentas:
+
+- **Metadados pessoais de IDE nao sao versionados** (por exemplo, toda a pasta `.idea/` e ignorada no Git).
+- **Configuracoes compartilhadas do time** devem ser registradas em arquivos neutros e portaveis, como `.editorconfig`.
+- **Padrao suportado**: qualquer IDE/editor que respeite `.editorconfig` (IntelliJ IDEA, PyCharm, VS Code, Neovim, etc.).
+
+### JetBrains (IntelliJ/PyCharm) sem commitar `.idea/`
+
+1. Importe o projeto normalmente pela IDE.
+2. Aplique as preferencias locais (tema, plugins, layout, run configs locais) apenas no seu ambiente.
+3. Nao adicione arquivos de `.idea/` ao commit.
+4. Antes de abrir PR, valide com:
+   ```bash
+   git status --short
+   ```
+   Se aparecer qualquer arquivo dentro de `.idea/`, mantenha fora do indice Git.
+
+### Onde colocar convencoes de equipe
+
+Quando precisar padronizar comportamento entre IDEs/editores, priorize:
+
+1. `.editorconfig` para formatacao basica (indentacao, newline, trailing spaces).
+2. Documentacao no `README.md` para processos operacionais.
+3. Ferramentas de lint/formatter do projeto (quando aplicavel) para enforcement automatizado.
+
 ## Licenca
 
 Proprietary -- All Rights Reserved.
