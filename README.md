@@ -67,6 +67,11 @@ Diretório contendo a configuração completa do ambiente OpenCode:
 - `plugins/` — Plugins TypeScript para extensibilidade
 - `tools/` — Ferramentas adicionais disponíveis aos agentes
 - `specs/` — Specifications de comportamento e contratos
+  - `handoff-contract.sanitized.json` — Contrato de handoff entre agentes
+  - `README.md` — Documentação das specs
+- `manifests/` — Manifestos de execução
+  - `sanitized/run-manifest.example.json` — Exemplo de manifesto sanitizado
+  - `README.md` — Documentação dos manifests
 - `context/` — Contexto de sessão e estado operacional
 
 #### Public vs Internal Artifacts

@@ -1,0 +1,32 @@
+{
+  "session_id": "ses_2ab415db5ffeiKVpOvVHcp8YbU",
+  "agent": "general",
+  "timestamp": "2026-04-03T19:07:58.812Z",
+  "directory": "/home/douglas-souza/PycharmProjects/agent-coding-framework-main",
+  "phases": {
+    "exploration": {
+      "status": "in_progress",
+      "agent": "general",
+      "started_at": 1775243278812
+    },
+    "implementation": {
+      "status": "pending",
+      "agent": "general"
+    },
+    "review": {
+      "status": "pending",
+      "agent": "reviewer"
+    }
+  },
+  "resume_capable": true,
+  "total_tokens": 0,
+  "total_cost": 0,
+  "message_count": 13,
+  "last_command": "",
+  "last_tool_call": "read",
+  "created_at": "2026-04-03T19:07:58.812Z",
+  "updated_at": "2026-04-03T19:09:34.374Z",
+  "state_hash": "sha256:54213d253674f076b35395c4f7e62b32f121016f6ffb5acf6806c4fc3c94426a",
+  "provider": "opencode",
+  "model": "qwen3.6-plus-free"
+}
