@@ -14,7 +14,10 @@ fi
 
 echo "[boundary] Checking sensitive operational keywords..."
 keyword_pattern='OPENAI_API_KEY|ANTHROPIC_API_KEY|AWS_SECRET_ACCESS_KEY|BEGIN (RSA|OPENSSH|EC) PRIVATE KEY|ghp_[A-Za-z0-9]{20,}|xox[baprs]-[A-Za-z0-9-]{10,}'
-if keyword_hits=$(git grep -nEI "$keyword_pattern" -- . ':(exclude)*.example' || true); then
+# Exclude policy-as-code files that intentionally document detection signatures.
+if keyword_hits=$(git grep -nEI "$keyword_pattern" -- . \
+  ':(exclude)*.example' \
+  ':(exclude)scripts/check-public-boundary.sh' || true); then
   if [[ -n "$keyword_hits" ]]; then
     echo "Found disallowed sensitive keywords in tracked files:"
     echo "$keyword_hits"
