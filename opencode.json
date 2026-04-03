@@ -1,7 +1,7 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "default_agent": "autocoder",
-  "note": "Public sanitized interface. Keep operational config in private repository.",
+  "note": "Public sanitized interface. private repository only for operational config.",
   "template_refs": [
     ".opencode.example/opencode.json.example",
     ".codex.example/config.toml.example"
