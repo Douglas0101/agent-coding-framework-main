@@ -100,7 +100,7 @@
     "evidence://repo/.opencode/specs/release/stable-execution.release.yaml",
     "evidence://repo/.opencode/specs/slos/stable-execution.slo.yaml",
     "evidence://repo/.internal/tests/test_stable_execution.py",
-    "evidence://repo/.opencode/skills/self-bootstrap-opencode/debug_autocode.log",
+    "evidence://repo/.internal/artifacts/codex-swarm/run-stable-execution/debug_autocode.log",
     "evidence://repo/AGENTS.md",
     "evidence://repo/.internal/scripts/run-autocode.sh",
     "evidence://repo/.github/workflows/routing-regression.yml",

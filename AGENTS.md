@@ -24,7 +24,7 @@ opencode run --agent autocoder --command autocode "your task"
 ./.internal/scripts/run-autocode.sh "your task"
 ```
 
-**Tracking:** Root cause appears to be silent config merge failure when `.opencode/opencode.json` does not exist. See `.opencode/skills/self-bootstrap-opencode/debug_autocode.log` for DEBUG evidence.
+**Tracking:** Root cause appears to be silent config merge failure when `.opencode/opencode.json` does not exist. See `.internal/artifacts/codex-swarm/run-stable-execution/debug_autocode.log` for DEBUG evidence.
 
 ---
 
@@ -34,6 +34,8 @@ This project now enforces stable execution through a comprehensive specification
 
 ### Configuration Parity
 - `opencode.json` (root) and `.opencode/opencode.json` must be structurally and semantically equivalent
+- Routing-critical fields that MUST match: `default_agent`, `maxSteps`, `routing.commands.autocode`, `routing.agents.autocoder.maxSteps`
+- Allowed divergence policy: only non-routing metadata/local runtime fields may differ (e.g., `note`, `template_refs`, provider credentials, local overrides). Any divergence that changes routing or step limits is forbidden.
 - Automated test `test_root_and_dot_opencode_configs_match` fails on drift
 - Both files define `default_agent: autocoder` with `maxSteps: 6`
 

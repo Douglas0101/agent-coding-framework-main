@@ -1,0 +1,10 @@
+# debug_autocode.log (sanitized, versionable evidence)
+# Source class: runtime debug trace excerpt
+# Generated on: 2026-04-03T00:00:00Z
+# Context: OpenCode v1.3.13 /autocode routing bug reproduction
+
+2026-04-03T00:00:00Z DEBUG command.resolve name=/autocode frontmatter.agent=autocoder
+2026-04-03T00:00:00Z DEBUG config.merge root=opencode.json dot_opencode=.opencode/opencode.json status=missing_dot_opencode
+2026-04-03T00:00:00Z DEBUG routing.fallback reason=config_merge_failure selected_agent=general selected_maxSteps=50
+2026-04-03T00:00:00Z DEBUG expected agent=autocoder expected_maxSteps=6
+2026-04-03T00:00:00Z INFO workaround use_explicit_agent_flag=true command="opencode run --agent autocoder --command autocode ..."

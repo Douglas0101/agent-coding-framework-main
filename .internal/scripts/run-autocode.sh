@@ -4,14 +4,14 @@
 # Problema: /autocode (agent: autocoder) roteia para general com maxSteps=50
 # Workaround: --agent autocoder força o roteamento correto com maxSteps=6
 #
-# Tracking: .opencode/skills/self-bootstrap-opencode/debug_autocode.log
+# Tracking: .internal/artifacts/codex-swarm/run-stable-execution/debug_autocode.log
 # Issue: AGENTS.md → Known Issues → Routing Bug: /autocode command
 # SDD: capability.stable-execution@1.0.0
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+PROJECT_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
 
 # ============================================================
 # Pre-flight: validate config parity
@@ -42,6 +42,23 @@ from pathlib import Path
 root_path = Path(sys.argv[1])
 dot_path = Path(sys.argv[2])
 
+CRITICAL_PATHS = [
+    "default_agent",
+    "maxSteps",
+    "routing.commands.autocode",
+    "routing.agents.autocoder.maxSteps",
+]
+
+
+def get_path(data: dict, path: str):
+    current = data
+    for part in path.split("."):
+        if not isinstance(current, dict) or part not in current:
+            return False, None
+        current = current[part]
+    return True, current
+
+
 try:
     root_cfg = json.loads(root_path.read_text())
     dot_cfg = json.loads(dot_path.read_text())
@@ -49,30 +66,48 @@ except Exception as exc:  # explicit pre-flight failure with context
     print(f"ERROR:invalid_json:{exc}")
     raise SystemExit(1)
 
-root_agent = str(root_cfg.get("default_agent", ""))
-dot_agent = str(dot_cfg.get("default_agent", ""))
+for path in CRITICAL_PATHS:
+    root_found, root_value = get_path(root_cfg, path)
+    dot_found, dot_value = get_path(dot_cfg, path)
 
-if root_agent != dot_agent:
-    print(f"ERROR:default_agent_mismatch:{root_agent}:{dot_agent}")
-    raise SystemExit(1)
+    if root_found != dot_found:
+        print(
+            "ERROR:missing_field:"
+            f"{path}:"
+            f"opencode.json({'present' if root_found else 'missing'}):"
+            f".opencode/opencode.json({'present' if dot_found else 'missing'})"
+        )
+        raise SystemExit(1)
 
-# Keep shell output parsing stable and machine-friendly.
-print(f"OK:{root_agent}")
+    if root_value != dot_value:
+        print(
+            "ERROR:value_mismatch:"
+            f"{path}:"
+            f"opencode.json={root_value!r}:"
+            f".opencode/opencode.json={dot_value!r}"
+        )
+        raise SystemExit(1)
+
+print(f"OK:{root_cfg['default_agent']}")
 PY
 )"; then
     case "$result" in
       ERROR:invalid_json:*)
         echo "[ERROR] Invalid JSON in config: ${result#ERROR:invalid_json:}"
         ;;
-      ERROR:default_agent_mismatch:*)
-        IFS=':' read -r _ _ root_agent dot_agent <<< "$result"
-        echo "[ERROR] Config drift detected: root default_agent='$root_agent' vs .opencode default_agent='$dot_agent'"
+      ERROR:missing_field:*)
+        IFS=':' read -r _ _ path root_state dot_state <<< "$result"
+        echo "[ERROR] Config drift detected: required field '$path' differs in presence ($root_state vs $dot_state)"
+        ;;
+      ERROR:value_mismatch:*)
+        IFS=':' read -r _ _ path root_value dot_value <<< "$result"
+        echo "[ERROR] Config drift detected: field '$path' mismatch ($root_value vs $dot_value)"
         ;;
       *)
         echo "[ERROR] Unexpected parity-check failure: $result"
         ;;
     esac
-    echo "[ERROR] Run: python -m pytest .internal/tests/test_stable_execution.py -k test_root_and_dot_opencode -v"
+    echo "[ERROR] Run: python -m pytest .internal/tests/test_stable_execution.py -k parity -v"
     exit 1
   fi
 
