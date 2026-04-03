@@ -1,139 +1,52 @@
-# Agent Coding Framework
+# Agent Coding Framework (Public Template)
 
-[![Routing Regression](https://github.com/douglas-souza/agent-coding-framework-main/actions/workflows/routing-regression.yml/badge.svg)](https://github.com/douglas-souza/agent-coding-framework-main/actions/workflows/routing-regression.yml)
-[![Tests](https://img.shields.io/badge/tests-38%20pass-brightgreen)](https://github.com/douglas-souza/PycharmProjects/agent-coding-framework-main/actions)
-[![SDD](https://img.shields.io/badge/SDD-14%20specs%20approved-blue)](.opencode/specs/)
+Repositorio publico com **artefatos sanitizados** para bootstrap de ambientes de agent coding.
+A configuracao operacional completa (runtime, agentes internos, comandos e plugins) foi movida para repositório **privado**.
 
-Repositorio de configuracoes de **agent coding** para sistemas de IA de alta confiabilidade.
-Template reutilizavel para qualquer projeto que utilize **OpenCode**, **Codex** e **skills especializadas**.
+## Objetivo
 
-## Visao Geral
+Este repositorio existe para:
+- documentar a interface publica do framework;
+- distribuir templates seguros (`*.example`);
+- manter validacoes de publicacao para evitar vazamento de artefatos internos.
 
-Este repositorio contem a infraestrutura completa de agentes, ferramentas, plugins e workflows
-para orquestracao de coding agents em projetos de engenharia de software e machine learning.
+## Public vs Internal Artifacts
 
-### Componentes
+### Publico por padrao (este repositorio)
+- `README.md`, `AGENTS.md` e documentacao de alto nivel.
+- `scripts/` com utilitarios publicos sem detalhes de runtime interno.
+- `tests/` e workflows de CI voltados a conformidade publica.
+- Templates sanitizados:
+  - `.agent.example/`
+  - `.codex.example/`
+  - `.opencode.example/`
+  - arquivos `*.example`
 
-| Componente | Descricao | Arquivos |
-|------------|-----------|----------|
-| **OpenCode** | Agents, commands, plugins, tools, lib | `.opencode/` |
-| **Codex** | Multi-agent swarm config | `.codex/` |
-| **Skills** | 57 skills especializadas | `.agent/skills/` |
-| **Workflows** | 11 workflows prontos | `.agent/workflows/` |
-| **Swarm Rules** | Regras nativas do swarm | `AGENTS.md` |
-| **Specs SDD** | 14 specs aprovadas (capability, behavior, verification, policy, release, slo, contract) | `.opencode/specs/` |
-| **Testes Python** | Suite de stable execution (38 testes) | `tests/test_stable_execution.py` |
+### Interno (repositório privado de configuração operacional)
+- `.agent/` (skills/workflows operacionais completos).
+- `.codex/` (configuração de swarm e agentes internos).
+- `.opencode/` (agents, commands, plugins, tools, specs e contexto de runtime).
+- qualquer artefato com segredo/token/chave privada.
 
-## Known Issues
+> Local dos arquivos privados: repositório privado de configuração operacional da organização (ex.: `agent-coding-framework-internal-config`).
 
-### Routing Bug: `/autocode` command (OpenCode v1.3.13)
+## Estrutura publica
 
-**Problema:** O comando `/autocode` (frontmatter: `agent: autocoder`) e roteado para o agente `general` com `maxSteps: 50` em vez de `autocoder` com `maxSteps: 6`.
-
-**Confirmado:** Bug persiste com `--pure` (sem plugins), afetando tambem `/ops-report`. Outros commands com `agent:` funcionam corretamente (`/ship` → orchestrator, `/review` → reviewer, `/analyze` → explore).
-
-**Workaround:**
-```bash
-# Opcao 1: Flag direta
-opencode run --agent autocoder --command autocode "sua tarefa"
-
-# Opcao 2: Wrapper script (com pre-flight check)
-./scripts/run-autocode.sh "sua tarefa"
-```
-
-**Tracking:**
-- Documentacao tecnica: `AGENTS.md` → Known Issues
-- Logs DEBUG: `.opencode/skills/self-bootstrap-opencode/debug_autocode.log`
-- Bug report: `.opencode/skills/self-bootstrap-opencode/issue-report/BUG-autocode-routing.md`
-- SDD Specs: `capability.bugfix.routing-suite@1.0.0` + `capability.stable-execution@1.0.0` (14 specs aprovadas, DAG compilado)
-- Testes de regressao: `.opencode/tests/routing-regression.test.ts` (15 testes) + `tests/test_stable_execution.py` (38 testes Python)
-- Workaround operacional: `scripts/run-autocode.sh` com pre-flight check e adaptive detection
-
-## Spec-Driven Development (SDD)
-
-Este projeto utiliza **Spec-Driven Development** para governanca de mudancas. Cada alteracao significativa e governada por specs versionadas que passam por validacao, aprovacao four-eyes, compilacao DAG e verificacao automatizada.
-
-### Specs Aprovadas
-
-#### Bugfix Routing Suite
-| Spec | Tipo | Versao | Status |
-|------|------|--------|--------|
-| `capability.bugfix.routing-suite` | Capability | 1.0.0 | ✅ approved |
-| `behavior.bugfix.routing-suite` | Behavior | 1.0.0 | ✅ approved |
-| `verification.bugfix.routing-suite` | Verification | 1.0.0 | ✅ approved |
-| `policy.bugfix.routing-suite` | Policy | 1.0.0 | ✅ approved |
-| `release.bugfix.routing-suite` | Release | 1.0.0 | ✅ approved |
-| `slo.bugfix.routing-suite` | SLO | 1.0.0 | ✅ approved |
-| `contract.bugfix.routing-suite` | Contract | 1.0.0 | ✅ approved |
-
-#### Stable Execution
-| Spec | Tipo | Versao | Status |
-|------|------|--------|--------|
-| `capability.stable-execution` | Capability | 1.0.0 | ✅ approved |
-| `behavior.stable-execution` | Behavior | 1.0.0 | ✅ approved |
-| `verification.stable-execution` | Verification | 1.0.0 | ✅ approved |
-| `policy.stable-execution` | Policy | 1.0.0 | ✅ approved |
-| `release.stable-execution` | Release | 1.0.0 | ✅ approved |
-| `slo.stable-execution` | SLO | 1.0.0 | ✅ approved |
-| `contract.agent-handoff` | Contract | 1.0.0 | ✅ approved |
-
-### DAG Compilado
-
-**Bugfix Routing Suite DAG:**
-```
-detect → document → workaround → harden → test → verify
-```
-
-**Stable Execution DAG:**
-```
-detect → instrument → reproduce → localize → patch → validate → regress
-```
-
-### Traceabilidade
-
-- **Links criados:** 14 traceability links (7 bugfix + 7 stable-execution)
-- **Evidencias:** `artifacts/codex-swarm/run-stable-execution/conformance-report.json`
-- **Relatorio operacional:** `relatorio-operacional-stable-execution.md`
-- **Completeness score:** 0.85-0.95 (threshold: 0.75)
-- **Approval gate:** `review` (sem bloqueios)
-- **Test coverage:** 164 testes passando, 0 falhas
-
-## Estrutura
-
-```
+```text
 .
-├── .opencode/
-│   ├── agents/           # 11 agent definitions (orchestrator, reviewer, tester, etc.)
-│   ├── commands/         # 6 commands (analyze, autocode, review, ship, etc.)
-│   ├── plugins/          # output-filter.ts (redaction, suppression, manifest tracking)
-│   ├── tools/            # examine-algorithm.ts (tree-sitter based analysis)
-│   ├── specs/            # 7 specs aprovadas (SDD): capability, behavior, verification, policy, release, slo, contract
-│   ├── lib/              # shared.ts, cache.ts, metrics.ts, tree-sitter-parsers.ts
-│   ├── skills/           # self-bootstrap-opencode
-│   ├── context/project/  # conventions.md
-│   ├── tests/            # unit, integration, fuzz, performance, routing-regression tests
-│   ├── package.json      # Bun dependencies
-│   ├── tsconfig.json     # TypeScript config
-│   ├── output-filter.config.json  # Filter configuration
-│   └── .gitignore
-├── .github/
-│   └── workflows/        # CI/CD: routing-regression.yml (push + PR)
-├── .codex/
-│   ├── config.toml       # Multi-agent configuration
-│   └── agents/           # 6 agent configs (synthesizer, verifier, etc.)
-├── .agent/
-│   ├── skills/           # 57 specialized skills
-│   └── workflows/        # 11 ready-to-use workflows
+├── .agent.example/
+├── .codex.example/
+├── .opencode.example/
+├── .github/workflows/
 ├── scripts/
-│   └── run-autocode.sh   # Wrapper com pre-flight check para bug de routing
 ├── tests/
-│   └── test_stable_execution.py  # 38 testes Python de regressao
-├── AGENTS.md             # Native Swarm Rules + Known Issues
-├── opencode.json         # OpenCode configuration (18 agents) — root
-└── .opencode/
-    └── opencode.json     # OpenCode configuration (identico ao root)
+├── AGENTS.md
+├── README.md
+└── opencode.json
 ```
 
+## Politica de publicacao
+=======
 ## Skills Disponiveis (57)
 
 ### Engenharia de Codigo
@@ -286,4 +199,7 @@ Proprietary -- All Rights Reserved.
 
 ---
 
-*Framework extraido do Projeto Vitruviano -- High-Assurance Medical AI Engine*
+Antes de publicar:
+1. validar que diretórios internos (`.agent/`, `.codex/`, `.opencode/`) não estão versionados;
+2. manter apenas templates sanitizados (`*.example` + READMEs de interface);
+3. executar o check de boundary no CI.

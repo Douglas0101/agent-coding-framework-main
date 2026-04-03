@@ -1,0 +1,5 @@
+{
+  "default_agent": "autocoder",
+  "maxSteps": 6,
+  "note": "example-only"
+}

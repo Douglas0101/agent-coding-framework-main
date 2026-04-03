@@ -1,0 +1,4 @@
+# Example only
+# Fill in local/private operational repository.
+default_agent = "autocoder"
+max_steps = 6
