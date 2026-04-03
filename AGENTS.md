@@ -25,3 +25,39 @@ opencode run --agent autocoder --command autocode "your task"
 ```
 
 **Tracking:** Root cause appears to be silent config merge failure when `.opencode/opencode.json` does not exist. See `.opencode/skills/self-bootstrap-opencode/debug_autocode.log` for DEBUG evidence.
+
+---
+
+## Stable Execution Guarantees
+
+This project now enforces stable execution through a comprehensive specification suite:
+
+### Configuration Parity
+- `opencode.json` (root) and `.opencode/opencode.json` must be structurally and semantically equivalent
+- Automated test `test_root_and_dot_opencode_configs_match` fails on drift
+- Both files define `default_agent: autocoder` with `maxSteps: 6`
+
+### Invariant Enforcement
+- **No unbounded retry:** `max_attempts ≤ 3` with exponential backoff
+- **No silent fallback:** Agent routing failures require explicit logging and evidence
+- **Verifier gate:** `verifier` is mandatory before `synthesizer` writes final output
+- **Write scope isolation:** Parallel workers must have disjoint `write_scope`
+- **No doom loop:** `doom_loop: deny` is enforced globally and per-agent
+- **Idempotency:** Same idempotency key must imply same logical outcome
+
+### State Machine
+- 13 states with 20 valid transitions and 7 forbidden transitions
+- Forbidden: `running→running` (no progress), `retrying→retrying` (infinite), `running→synthesized` (skip verified)
+- Resume requires valid checkpoint; failed→running requires explicit invalidation
+
+### Handoff Contract
+- 12 required fields: schema_version, artifact_type, producer_agent, consumer_agent, spec_id, spec_version, run_id, timestamp, evidence_refs, risk_level, compatibility_assessment, trace_links
+- 6 validation rules: no_partial_payload, no_missing_provenance, evidence_refs_resolvable, versioning_required, write_scope_disjoint, verifier_gate
+
+### Test Coverage
+- 38 Python tests in 7 suites: ConfigIntegrity, CommandRouting, SpecStructure, Invariants, HandoffContract, AgentsMdConsistency, NegativePatterns
+- Run: `python -m pytest tests/test_stable_execution.py -v`
+
+### CI Integration
+- Routing regression: `.github/workflows/routing-regression.yml`
+- Python test suite runs on push/PR to main/master when config or spec files change

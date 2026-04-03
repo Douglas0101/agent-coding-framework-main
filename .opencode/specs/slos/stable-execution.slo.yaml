@@ -1,0 +1,45 @@
+slo_id: slo.stable-execution
+version: 1.0.0
+capability_ref: capability.stable-execution
+objectives:
+  - name: routing_accuracy
+    metric: percentage_of_correctly_routed_commands
+    threshold: 99.9
+    measurement_window: 24h
+  - name: test_pass_rate
+    metric: pytest_stable_execution_pass_rate
+    threshold: 100
+    measurement_window: per_run
+  - name: config_parity
+    metric: root_dot_opencode_config_match
+    threshold: 100
+    measurement_window: per_commit
+  - name: verifier_gate_integrity
+    metric: no_synthesized_without_verified
+    threshold: 100
+    measurement_window: per_run
+  - name: write_scope_isolation
+    metric: parallel_worker_scope_collisions
+    threshold: 0
+    measurement_window: per_run
+  - name: no_silent_fallback
+    metric: explicit_fallback_evidence_rate
+    threshold: 100
+    measurement_window: per_run
+  - name: spec_coverage
+    metric: spec_coverage_score
+    threshold: 90
+    measurement_window: per_release
+  - name: runtime_alignment
+    metric: runtime_to_spec_alignment
+    threshold: 97
+    measurement_window: per_release
+rollback_triggers:
+  - routing_accuracy < 99.9
+  - test_pass_rate < 100
+  - config_parity < 100
+  - verifier_gate_integrity < 100
+  - write_scope_isolation > 0
+  - no_silent_fallback < 100
+  - spec_coverage < 90
+  - runtime_alignment < 97

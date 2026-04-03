@@ -8,6 +8,7 @@ on:
       - 'opencode.json'
       - 'AGENTS.md'
       - 'scripts/**'
+      - 'tests/**'
   pull_request:
     branches: [main, master]
     paths:
@@ -15,6 +16,7 @@ on:
       - 'opencode.json'
       - 'AGENTS.md'
       - 'scripts/**'
+      - 'tests/**'
 
 jobs:
   routing-regression:
@@ -38,6 +40,23 @@ jobs:
       - name: Run routing regression tests
         working-directory: .opencode
         run: bun test routing-regression
+
+  stable-execution-tests:
+    name: Stable Execution Tests (Python)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run stable execution tests
+        run: python -m pytest tests/test_stable_execution.py -v
 
   full-test-suite:
     name: Full Test Suite

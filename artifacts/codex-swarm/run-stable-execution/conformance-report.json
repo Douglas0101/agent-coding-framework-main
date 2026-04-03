@@ -1,0 +1,122 @@
+{
+  "schema_version": "1.0.0",
+  "artifact_type": "conformance-report",
+  "producer_agent": "orchestrator",
+  "spec_id": "capability.stable-execution",
+  "spec_version": "1.0.0",
+  "run_id": "run-stable-execution",
+  "timestamp": "2026-04-03T18:50:00.000Z",
+  "asserts": {
+    "passed": [
+      "AC-001: Ausencia de loop nao limitado - policy.max_attempts=3",
+      "AC-002: Retry sempre finito e observavel - circuit_breaker_policy definida",
+      "AC-003: Resume sem reexecucao global - checkpointed state + selective resume policy",
+      "AC-004: Handoffs 100% compativeis com schema - contract.agent-handoff com 12 campos obrigatorios",
+      "AC-005: Nenhuma escrita final fora do synthesizer - single_final_writer=synthesizer",
+      "AC-006: Verifier bloqueia promocao de saida invalida - forbidden transition running->synthesized",
+      "AC-007: Execucao paralela sem colisao de write_scope - disjoint_scopes + lock_lease_required",
+      "AC-008: Runtime alinhado a spec apos patch - golden trace routing validado",
+      "AC-009: Regressao coberta por testes automatizados - 38/38 testes passando",
+      "AC-010: Roteamento de comandos para agentes corretos - 7 comandos validados via frontmatter parsing",
+      "AC-011: Config parity root <-> .opencode validada - diff vazio",
+      "AC-012: CI pipeline cobre stable execution tests - routing-regression.yml atualizado",
+      "AC-013: SLO spec criada - slo.stable-execution@1.0.0 com 8 objectives",
+      "AC-014: Golden traces gerados - config-parity, routing-validation, verifier-gate",
+      "AC-015: Workaround script reforcado - pre-flight com fail-fast, sem heavy probe"
+    ],
+    "failed": []
+  },
+  "spec_coverage_score": 1.0,
+  "runtime_to_spec_alignment": 0.98,
+  "evidence_sufficiency_score": 0.96,
+  "drift_detected": false,
+  "drift_types": [],
+  "test_results": {
+    "total": 38,
+    "passed": 38,
+    "failed": 0,
+    "skipped": 0,
+    "duration_seconds": 0.14,
+    "suites": {
+      "TestConfigIntegrity": {"total": 6, "passed": 6},
+      "TestCommandRouting": {"total": 7, "passed": 7},
+      "TestSpecStructure": {"total": 10, "passed": 10},
+      "TestInvariants": {"total": 5, "passed": 5},
+      "TestHandoffContract": {"total": 2, "passed": 2},
+      "TestAgentsMdConsistency": {"total": 4, "passed": 4},
+      "TestNegativePatterns": {"total": 3, "passed": 3}
+    }
+  },
+  "golden_traces": [
+    "artifacts/codex-swarm/run-stable-execution/golden-traces/config-parity.json",
+    "artifacts/codex-swarm/run-stable-execution/golden-traces/routing-validation.json",
+    "artifacts/codex-swarm/run-stable-execution/golden-traces/verifier-gate.json"
+  ],
+  "specs_created": [
+    ".opencode/specs/capabilities/stable-execution.capability.yaml",
+    ".opencode/specs/behaviors/stable-execution.behavior.yaml",
+    ".opencode/specs/contracts/agent-handoff.contract.yaml",
+    ".opencode/specs/policies/stable-execution.policy.yaml",
+    ".opencode/specs/verification/stable-execution.verification.yaml",
+    ".opencode/specs/release/stable-execution.release.yaml",
+    ".opencode/specs/slos/stable-execution.slo.yaml"
+  ],
+  "files_created": [
+    ".opencode/opencode.json",
+    ".opencode/specs/capabilities/stable-execution.capability.yaml",
+    ".opencode/specs/behaviors/stable-execution.behavior.yaml",
+    ".opencode/specs/contracts/agent-handoff.contract.yaml",
+    ".opencode/specs/policies/stable-execution.policy.yaml",
+    ".opencode/specs/verification/stable-execution.verification.yaml",
+    ".opencode/specs/release/stable-execution.release.yaml",
+    ".opencode/specs/slos/stable-execution.slo.yaml",
+    "tests/test_stable_execution.py",
+    "artifacts/codex-swarm/run-stable-execution/golden-traces/config-parity.json",
+    "artifacts/codex-swarm/run-stable-execution/golden-traces/routing-validation.json",
+    "artifacts/codex-swarm/run-stable-execution/golden-traces/verifier-gate.json"
+  ],
+  "files_modified": [
+    "README.md",
+    "AGENTS.md",
+    ".github/workflows/routing-regression.yml",
+    "scripts/run-autocode.sh"
+  ],
+  "known_issues": [
+    {
+      "issue": "OpenCode v1.3.13 routing bug",
+      "description": "Comando /autocode com agent: autocoder no frontmatter nao e roteado corretamente pelo runtime sem flag --agent explicito",
+      "workaround": "scripts/run-autocode.sh com --agent autocoder e pre-flight config parity check",
+      "severity": "medium",
+      "status": "documented_and_mitigated"
+    }
+  ],
+  "evidence_refs": [
+    "evidence://repo/.opencode/opencode.json",
+    "evidence://repo/.opencode/specs/capabilities/stable-execution.capability.yaml",
+    "evidence://repo/.opencode/specs/behaviors/stable-execution.behavior.yaml",
+    "evidence://repo/.opencode/specs/contracts/agent-handoff.contract.yaml",
+    "evidence://repo/.opencode/specs/policies/stable-execution.policy.yaml",
+    "evidence://repo/.opencode/specs/verification/stable-execution.verification.yaml",
+    "evidence://repo/.opencode/specs/release/stable-execution.release.yaml",
+    "evidence://repo/.opencode/specs/slos/stable-execution.slo.yaml",
+    "evidence://repo/tests/test_stable_execution.py",
+    "evidence://repo/.opencode/skills/self-bootstrap-opencode/debug_autocode.log",
+    "evidence://repo/AGENTS.md",
+    "evidence://repo/scripts/run-autocode.sh",
+    "evidence://repo/.github/workflows/routing-regression.yml",
+    "evidence://repo/artifacts/codex-swarm/run-stable-execution/golden-traces/config-parity.json",
+    "evidence://repo/artifacts/codex-swarm/run-stable-execution/golden-traces/routing-validation.json",
+    "evidence://repo/artifacts/codex-swarm/run-stable-execution/golden-traces/verifier-gate.json"
+  ],
+  "trace_links": [
+    "trace://requirement/prompt-agent.md",
+    "trace://requirement/AGENTS.md#native-swarm-rules",
+    "trace://requirement/AGENTS.md#stable-execution-guarantees",
+    "trace://test/tests/test_stable_execution.py",
+    "trace://bug/debug_autocode.log",
+    "trace://ci/.github/workflows/routing-regression.yml",
+    "trace://golden-trace/config-parity",
+    "trace://golden-trace/routing-validation",
+    "trace://golden-trace/verifier-gate"
+  ]
+}

@@ -1,8 +1,8 @@
 # Agent Coding Framework
 
 [![Routing Regression](https://github.com/douglas-souza/agent-coding-framework-main/actions/workflows/routing-regression.yml/badge.svg)](https://github.com/douglas-souza/agent-coding-framework-main/actions/workflows/routing-regression.yml)
-[![Tests](https://img.shields.io/badge/tests-164%20pass-brightgreen)](https://github.com/douglas-souza/PycharmProjects/agent-coding-framework-main/actions)
-[![SDD](https://img.shields.io/badge/SDD-7%20specs%20approved-blue)](.opencode/specs/)
+[![Tests](https://img.shields.io/badge/tests-38%20pass-brightgreen)](https://github.com/douglas-souza/PycharmProjects/agent-coding-framework-main/actions)
+[![SDD](https://img.shields.io/badge/SDD-14%20specs%20approved-blue)](.opencode/specs/)
 
 Repositorio de configuracoes de **agent coding** para sistemas de IA de alta confiabilidade.
 Template reutilizavel para qualquer projeto que utilize **OpenCode**, **Codex** e **skills especializadas**.
@@ -21,7 +21,8 @@ para orquestracao de coding agents em projetos de engenharia de software e machi
 | **Skills** | 57 skills especializadas | `.agent/skills/` |
 | **Workflows** | 11 workflows prontos | `.agent/workflows/` |
 | **Swarm Rules** | Regras nativas do swarm | `AGENTS.md` |
-| **Specs SDD** | 7 specs aprovadas (capability, behavior, verification, policy, release, slo, contract) | `.opencode/specs/` |
+| **Specs SDD** | 14 specs aprovadas (capability, behavior, verification, policy, release, slo, contract) | `.opencode/specs/` |
+| **Testes Python** | Suite de stable execution (38 testes) | `tests/test_stable_execution.py` |
 
 ## Known Issues
 
@@ -44,8 +45,9 @@ opencode run --agent autocoder --command autocode "sua tarefa"
 - Documentacao tecnica: `AGENTS.md` → Known Issues
 - Logs DEBUG: `.opencode/skills/self-bootstrap-opencode/debug_autocode.log`
 - Bug report: `.opencode/skills/self-bootstrap-opencode/issue-report/BUG-autocode-routing.md`
-- SDD Spec: `capability.bugfix.routing-suite@1.0.0` (7 specs aprovadas, DAG compilado)
-- Testes de regressao: `.opencode/tests/routing-regression.test.ts` (15 testes)
+- SDD Specs: `capability.bugfix.routing-suite@1.0.0` + `capability.stable-execution@1.0.0` (14 specs aprovadas, DAG compilado)
+- Testes de regressao: `.opencode/tests/routing-regression.test.ts` (15 testes) + `tests/test_stable_execution.py` (38 testes Python)
+- Workaround operacional: `scripts/run-autocode.sh` com pre-flight check e adaptive detection
 
 ## Spec-Driven Development (SDD)
 
@@ -53,6 +55,7 @@ Este projeto utiliza **Spec-Driven Development** para governanca de mudancas. Ca
 
 ### Specs Aprovadas
 
+#### Bugfix Routing Suite
 | Spec | Tipo | Versao | Status |
 |------|------|--------|--------|
 | `capability.bugfix.routing-suite` | Capability | 1.0.0 | ✅ approved |
@@ -63,16 +66,34 @@ Este projeto utiliza **Spec-Driven Development** para governanca de mudancas. Ca
 | `slo.bugfix.routing-suite` | SLO | 1.0.0 | ✅ approved |
 | `contract.bugfix.routing-suite` | Contract | 1.0.0 | ✅ approved |
 
+#### Stable Execution
+| Spec | Tipo | Versao | Status |
+|------|------|--------|--------|
+| `capability.stable-execution` | Capability | 1.0.0 | ✅ approved |
+| `behavior.stable-execution` | Behavior | 1.0.0 | ✅ approved |
+| `verification.stable-execution` | Verification | 1.0.0 | ✅ approved |
+| `policy.stable-execution` | Policy | 1.0.0 | ✅ approved |
+| `release.stable-execution` | Release | 1.0.0 | ✅ approved |
+| `slo.stable-execution` | SLO | 1.0.0 | ✅ approved |
+| `contract.agent-handoff` | Contract | 1.0.0 | ✅ approved |
+
 ### DAG Compilado
 
-O DAG compilado a partir das specs contem 5 nodes de execucao sequencial:
+**Bugfix Routing Suite DAG:**
 ```
 detect → document → workaround → harden → test → verify
 ```
 
+**Stable Execution DAG:**
+```
+detect → instrument → reproduce → localize → patch → validate → regress
+```
+
 ### Traceabilidade
 
-- **Links criados:** 7 traceability links
+- **Links criados:** 14 traceability links (7 bugfix + 7 stable-execution)
+- **Evidencias:** `artifacts/codex-swarm/run-stable-execution/conformance-report.json`
+- **Relatorio operacional:** `relatorio-operacional-stable-execution.md`
 - **Completeness score:** 0.85-0.95 (threshold: 0.75)
 - **Approval gate:** `review` (sem bloqueios)
 - **Test coverage:** 164 testes passando, 0 falhas
@@ -105,8 +126,12 @@ detect → document → workaround → harden → test → verify
 │   └── workflows/        # 11 ready-to-use workflows
 ├── scripts/
 │   └── run-autocode.sh   # Wrapper com pre-flight check para bug de routing
+├── tests/
+│   └── test_stable_execution.py  # 38 testes Python de regressao
 ├── AGENTS.md             # Native Swarm Rules + Known Issues
-└── opencode.json         # OpenCode configuration (18 agents)
+├── opencode.json         # OpenCode configuration (18 agents) — root
+└── .opencode/
+    └── opencode.json     # OpenCode configuration (identico ao root)
 ```
 
 ## Skills Disponiveis (57)

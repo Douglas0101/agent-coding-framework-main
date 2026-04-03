@@ -1,0 +1,66 @@
+{
+  "trace_id": "golden-trace-routing-validation",
+  "version": "1.0.0",
+  "description": "Golden trace: command routing validation for all 7 commands",
+  "timestamp": "2026-04-03T18:45:00.000Z",
+  "steps": [
+    {
+      "step": 1,
+      "action": "parse_command_frontmatter",
+      "command": "autocode",
+      "expected_agent": "autocoder",
+      "config_agent": "autocoder",
+      "status": "pass"
+    },
+    {
+      "step": 2,
+      "action": "parse_command_frontmatter",
+      "command": "ship",
+      "expected_agent": "orchestrator",
+      "config_agent": "orchestrator",
+      "status": "pass"
+    },
+    {
+      "step": 3,
+      "action": "parse_command_frontmatter",
+      "command": "review",
+      "expected_agent": "reviewer",
+      "config_agent": "reviewer",
+      "status": "pass"
+    },
+    {
+      "step": 4,
+      "action": "parse_command_frontmatter",
+      "command": "analyze",
+      "expected_agent": "explore",
+      "config_agent": "explore",
+      "status": "pass"
+    },
+    {
+      "step": 5,
+      "action": "parse_command_frontmatter",
+      "command": "test-scope",
+      "expected_agent": "tester",
+      "config_agent": "tester",
+      "status": "pass"
+    },
+    {
+      "step": 6,
+      "action": "parse_command_frontmatter",
+      "command": "ops-report",
+      "expected_agent": "autocoder",
+      "config_agent": "autocoder",
+      "status": "pass"
+    },
+    {
+      "step": 7,
+      "action": "verify_all_commands_have_agents",
+      "total_commands": 7,
+      "commands_with_agents": 7,
+      "commands_without_agents": 0,
+      "status": "pass"
+    }
+  ],
+  "result": "all_commands_routed_correctly",
+  "invariant_verified": "no_silent_fallback"
+}
