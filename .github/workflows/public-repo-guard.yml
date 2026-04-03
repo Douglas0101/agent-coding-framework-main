@@ -1,0 +1,148 @@
+name: Public Repo Guard
+
+on:
+  pull_request:
+    branches: [main, master]
+  push:
+    branches: [main, master]
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  public-repo-guard:
+    name: Public Repo Guard (Required)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate forbidden paths against versioned allowlist
+        run: |
+          python - <<'PY'
+          import fnmatch
+          import json
+          import subprocess
+          import sys
+          from pathlib import Path
+
+          allowlist_file = Path('.github/security/public-repo-allowlist.json')
+          if not allowlist_file.exists():
+              print(f"ERROR: missing allowlist file: {allowlist_file}")
+              sys.exit(1)
+
+          allowlist = json.loads(allowlist_file.read_text(encoding='utf-8'))
+          allowed_patterns = [item['pattern'] for item in allowlist.get('path_exceptions', [])]
+
+          forbidden_patterns = [
+              '.agent/**',
+              '.codex/**',
+              '.opencode/**',
+              '**/.env',
+              '**/.env.*',
+              '**/id_rsa',
+              '**/id_ed25519',
+              '**/*.pem',
+              '**/*.p12',
+              '**/*.pfx',
+              '**/*secret*',
+              '**/*credentials*'
+          ]
+
+          tracked = subprocess.check_output(['git', 'ls-files'], text=True).splitlines()
+
+          violations = []
+          for path in tracked:
+              blocked = any(fnmatch.fnmatch(path, p) for p in forbidden_patterns)
+              if not blocked:
+                  continue
+              allowlisted = any(fnmatch.fnmatch(path, p) for p in allowed_patterns)
+              if not allowlisted:
+                  violations.append(path)
+
+          if violations:
+              print('Forbidden public-repo paths detected (not allowlisted):')
+              for v in violations:
+                  print(f' - {v}')
+              print(f'\nReview and, if intentional, version an explicit exception in {allowlist_file}.')
+              sys.exit(1)
+
+          print('Forbidden path validation passed.')
+          PY
+
+      - name: Secret scan (gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Scan for sensitive operational config patterns
+        run: |
+          python - <<'PY'
+          import fnmatch
+          import pathlib
+          import re
+          import subprocess
+          import sys
+
+          allowlist = pathlib.Path('.github/security/public-repo-allowlist.json')
+          allow_cfg = {}
+          if allowlist.exists():
+              import json
+              allow_cfg = json.loads(allowlist.read_text(encoding='utf-8'))
+
+          scan_exceptions = [x['pattern'] for x in allow_cfg.get('pattern_scan_exceptions', [])]
+
+          files = subprocess.check_output(['git', 'ls-files'], text=True).splitlines()
+
+          text_extensions = {
+              '.md', '.txt', '.yaml', '.yml', '.json', '.toml', '.ini', '.cfg', '.conf',
+              '.py', '.sh', '.ts', '.tsx', '.js', '.jsx', '.java', '.go', '.rb', '.rs',
+              '.env', '.properties', '.xml'
+          }
+
+          patterns = {
+              'possible_token_assignment': re.compile(r'(?i)\b(token|api[_-]?key|secret|client[_-]?secret)\b\s*[:=]\s*["\']?[A-Za-z0-9_\-]{16,}["\']?'),
+              'aws_access_key_id': re.compile(r'\bAKIA[0-9A-Z]{16}\b'),
+              'github_pat_or_classic_token': re.compile(r'\b(ghp|github_pat)_[A-Za-z0-9_]{20,}\b'),
+              'private_key_material': re.compile(r'-----BEGIN (RSA|EC|DSA|OPENSSH|PRIVATE) KEY-----'),
+              'internal_endpoint': re.compile(r'https?://[^\s"\']+(\.internal\b|\.corp\b|\.local\b|\b10\.|\b192\.168\.|\b172\.(1[6-9]|2[0-9]|3[0-1])\.)')
+          }
+
+          findings = []
+
+          for f in files:
+              path = pathlib.Path(f)
+              if path.suffix.lower() not in text_extensions and path.name not in {'.env', '.env.example'}:
+                  continue
+              if any(part in {'.git', 'node_modules', 'dist', 'build', '.venv'} for part in path.parts):
+                  continue
+
+              if any(fnmatch.fnmatch(f, pat) for pat in scan_exceptions):
+                  continue
+
+              try:
+                  content = path.read_text(encoding='utf-8')
+              except Exception:
+                  continue
+
+              for name, rx in patterns.items():
+                  for m in rx.finditer(content):
+                      snippet = m.group(0)
+                      if 'example' in path.name.lower() or 'sample' in path.name.lower():
+                          continue
+                      findings.append((f, name, snippet[:120]))
+
+          if findings:
+              print('Sensitive operational configuration patterns detected:')
+              for f, kind, snippet in findings[:200]:
+                  print(f' - {f} :: {kind} :: {snippet}')
+              print('\nIf this is intentional, move data to secure secrets management or sanitize the value.')
+              sys.exit(1)
+
+          print('Sensitive operational configuration scan passed.')
+          PY

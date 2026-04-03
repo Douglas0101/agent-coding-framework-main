@@ -1,0 +1,38 @@
+{
+  "version": 2,
+  "description": "Allowlist explícita para conteúdos deliberadamente públicos no repositório.",
+  "path_exceptions": [
+    {
+      "pattern": ".agent/**",
+      "reason": "Biblioteca pública de skills e documentação do framework.",
+      "owner": "maintainers",
+      "reviewed_at": "2026-04-03"
+    },
+    {
+      "pattern": ".opencode/**",
+      "reason": "Configuração e testes OpenCode fazem parte do conteúdo público suportado.",
+      "owner": "maintainers",
+      "reviewed_at": "2026-04-03"
+    },
+    {
+      "pattern": ".codex/**",
+      "reason": "Configuração do agente Codex publicada para execução reprodutível no repositório.",
+      "owner": "maintainers",
+      "reviewed_at": "2026-04-03"
+    }
+  ],
+  "pattern_scan_exceptions": [
+    {
+      "pattern": ".opencode/tests/**",
+      "reason": "Fixtures de teste com segredos sintéticos para validação de filtros.",
+      "owner": "maintainers",
+      "reviewed_at": "2026-04-03"
+    },
+    {
+      "pattern": ".agent/skills/**",
+      "reason": "Exemplos didáticos podem conter placeholders de configuração (não credenciais reais).",
+      "owner": "maintainers",
+      "reviewed_at": "2026-04-03"
+    }
+  ]
+}
