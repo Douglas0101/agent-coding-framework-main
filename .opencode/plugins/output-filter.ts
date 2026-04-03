@@ -53,6 +53,8 @@ type ManifestPhase = {
 type SessionManifest = {
   session_id: string
   agent: string
+  provider?: string
+  model?: string
   timestamp: string
   directory: string
   phases: {
@@ -65,9 +67,17 @@ type SessionManifest = {
   total_tokens: number
   total_cost: number
   message_count: number
+  last_command: string
   last_tool_call: string
   created_at: string
   updated_at: string
+}
+
+type SessionRuntimeState = {
+  agent?: string
+  provider?: string
+  model?: string
+  last_command?: string
 }
 
 type ManifestConfig = {
@@ -113,13 +123,13 @@ const DEFAULT_CONFIG: OutputFilterConfig = {
   enabled: true,
   max_output_chars: 12000,
   redaction_patterns: [
+    { label: "api_key", pattern: "(api[_-]?key\\s*[=:]\\s*)([^\\s,;]+)", flags: "i", replacement: "$1[redacted]" },
+    { label: "bearer", pattern: "(authorization\\s*:\\s*bearer\\s+)([^\\s]+)", flags: "i", replacement: "$1[redacted]" },
+    { label: "secret", pattern: "((?:secret|token|password)\\s*[=:]\\s*)([^\\s,;]+)", flags: "i", replacement: "$1[redacted]" },
     { label: "openai_key", pattern: "(sk-[a-zA-Z0-9]{20,})", flags: "g", replacement: "[redacted-openai-key]" },
     { label: "aws_access_key", pattern: "(AKIA[0-9A-Z]{16})", flags: "g", replacement: "[redacted-aws-key]" },
     { label: "github_pat", pattern: "(ghp_[a-zA-Z0-9]{36})", flags: "g", replacement: "[redacted-github-pat]" },
     { label: "gitlab_pat", pattern: "(glpat-[a-zA-Z0-9\\-]{20})", flags: "g", replacement: "[redacted-gitlab-pat]" },
-    { label: "api_key", pattern: "(api[_-]?key\\s*[=:]\\s*)([^\\s,;]+)", flags: "i", replacement: "$1[redacted]" },
-    { label: "bearer", pattern: "(authorization\\s*:\\s*bearer\\s+)([^\\s]+)", flags: "i", replacement: "$1[redacted]" },
-    { label: "secret", pattern: "((?:secret|token|password)\\s*[=:]\\s*)([^\\s,;]+)", flags: "i", replacement: "$1[redacted]" },
   ],
   suppression: {},
   enrichment: {
@@ -527,6 +537,7 @@ function createEmptyManifest(
     total_tokens: 0,
     total_cost: 0,
     message_count: 0,
+    last_command: "",
     last_tool_call: "",
     created_at: now,
     updated_at: now,
@@ -565,6 +576,82 @@ function getInputAgent(input: unknown): string {
   const record = input as Record<string, unknown>
   const agent = record.agent ?? record.agentName
   return typeof agent === "string" && agent.length > 0 ? agent : "unknown"
+}
+
+function firstNonEmptyString(...values: unknown[]): string | undefined {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim() !== "") {
+      return value
+    }
+  }
+  return undefined
+}
+
+function readNestedString(
+  value: unknown,
+  ...keys: string[]
+): string | undefined {
+  if (!value || typeof value !== "object") {
+    return undefined
+  }
+
+  const record = value as Record<string, unknown>
+  return firstNonEmptyString(...keys.map((key) => record[key]))
+}
+
+function normalizeCommandName(command: string): string {
+  const trimmed = command.trim()
+  if (trimmed === "") {
+    return ""
+  }
+
+  return trimmed.split(/\s+/, 1)[0]?.replace(/^\//, "") ?? ""
+}
+
+function isDoomLoopPermission(input: unknown): boolean {
+  if (!input || typeof input !== "object") {
+    return false
+  }
+
+  const record = input as Record<string, unknown>
+  const pattern = record.pattern
+  const flattenedPattern = Array.isArray(pattern) ? pattern.join(" ") : pattern
+  const metadataType = readNestedString(record.metadata, "type", "permission", "name")
+  const signals = [
+    record.type,
+    record.title,
+    flattenedPattern,
+    metadataType,
+  ]
+
+  return signals.some(
+    (value) => typeof value === "string" && /(^|\W)doom_loop($|\W)/i.test(value),
+  )
+}
+
+function applyRuntimeStateToManifest(
+  manifest: SessionManifest,
+  runtimeState: SessionRuntimeState,
+  phase?: PhaseLabel,
+): void {
+  if (runtimeState.agent) {
+    manifest.agent = runtimeState.agent
+    if (phase) {
+      manifest.phases[phase].agent = runtimeState.agent
+    }
+  }
+
+  if (runtimeState.provider) {
+    manifest.provider = runtimeState.provider
+  }
+
+  if (runtimeState.model) {
+    manifest.model = runtimeState.model
+  }
+
+  if (runtimeState.last_command) {
+    manifest.last_command = runtimeState.last_command
+  }
 }
 
 function markPhaseComplete(phase: ManifestPhase, timestamp: number): void {
@@ -686,6 +773,25 @@ const OutputFilterPlugin: Plugin = async ({ directory }) => {
 
   // Manifest state: one manifest per session, keyed by sessionID
   const manifestStates = new Map<string, SessionManifest>()
+  const sessionRuntimeStates = new Map<string, SessionRuntimeState>()
+
+  function rememberSessionRuntime(
+    sessionID: string,
+    update: SessionRuntimeState,
+  ): SessionRuntimeState {
+    const current = sessionRuntimeStates.get(sessionID) ?? {}
+    const next = {
+      ...current,
+      ...Object.fromEntries(
+        Object.entries(update).filter(([, value]) => {
+          return typeof value === "string" && value.trim() !== ""
+        }),
+      ),
+    }
+
+    sessionRuntimeStates.set(sessionID, next)
+    return next
+  }
 
   function getOrCreateManifest(
     sessionID: string,
@@ -702,9 +808,12 @@ const OutputFilterPlugin: Plugin = async ({ directory }) => {
   function updateManifestPhase(
     manifest: SessionManifest,
     phase: PhaseLabel,
+    runtimeState: SessionRuntimeState,
   ): void {
     const now = Date.now()
     const currentPhase = manifest.phases[phase]
+
+    applyRuntimeStateToManifest(manifest, runtimeState, phase)
 
     if (currentPhase.status === "pending") {
       currentPhase.status = "in_progress"
@@ -753,13 +862,17 @@ const OutputFilterPlugin: Plugin = async ({ directory }) => {
       return
     }
 
-    const manifest = getOrCreateManifest(sessionID, agent)
+    const runtimeState = rememberSessionRuntime(
+      sessionID,
+      agent !== "unknown" ? { agent } : {},
+    )
+    const manifest = getOrCreateManifest(sessionID, runtimeState.agent ?? agent)
     const phase = config.manifest.auto_phase_tracking
       ? detectPhase(tool, args)
       : "implementation"
 
     // Update phase tracking
-    updateManifestPhase(manifest, phase)
+    updateManifestPhase(manifest, phase, runtimeState)
 
     // Track last tool call
     manifest.last_tool_call = tool
@@ -782,6 +895,37 @@ const OutputFilterPlugin: Plugin = async ({ directory }) => {
   }
 
   return {
+    "chat.message": async (input) => {
+      rememberSessionRuntime(input.sessionID, {
+        agent: input.agent,
+        provider: input.model?.providerID,
+        model: input.model?.modelID,
+      })
+    },
+    "chat.params": async (input) => {
+      rememberSessionRuntime(input.sessionID, {
+        agent: input.agent,
+        provider: firstNonEmptyString(
+          readNestedString(input.provider, "id", "providerID", "name"),
+          readNestedString(input.model, "providerID"),
+        ),
+        model: firstNonEmptyString(
+          readNestedString(input.model, "id", "modelID", "name"),
+        ),
+      })
+    },
+    "permission.ask": async (input, output) => {
+      if (isDoomLoopPermission(input)) {
+        output.status = "deny"
+        metrics.incrementDoomLoopDenials()
+      }
+    },
+    "command.execute.before": async (input) => {
+      const command = normalizeCommandName(input.command)
+      if (command !== "") {
+        rememberSessionRuntime(input.sessionID, { last_command: command })
+      }
+    },
     "experimental.chat.system.transform": async (_input, output) => {
       if (!config.examination.sequential_plan_prompt) {
         return

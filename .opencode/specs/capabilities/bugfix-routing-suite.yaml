@@ -1,0 +1,65 @@
+spec_id: capability.bugfix.routing-suite
+version: 1.0.0
+status: draft
+domain: runtime-routing
+objective: >
+  Corrigir suite de bugs de routing do OpenCode v1.3.13 afetando commands
+  com agent: autocoder, incluindo documentação, workarounds, testes de
+  regressão e hardening de configuração.
+
+inputs:
+  - opencode.json
+  - .opencode/commands/autocode.md
+  - .opencode/commands/ops-report.md
+  - .opencode/tests/integration.test.ts
+  - .opencode/skills/self-bootstrap-opencode/SKILL.md
+  - AGENTS.md
+
+outputs:
+  - AGENTS.md (Known Issues section)
+  - scripts/run-autocode.sh (wrapper com pre-flight)
+  - .opencode/tests/routing-regression.test.ts
+  - .opencode/skills/self-bootstrap-opencode/SKILL.md (contexto atualizado)
+  - .opencode/skills/self-bootstrap-opencode/issue-report/BUG-autocode-routing.md
+
+invariants:
+  - autocoder.maxSteps deve ser 6
+  - doom_loop deve ser deny para todos os agentes
+  - external_directory deve ser deny para todos os agentes
+  - Nenhum arquivo de config pode causar hang do runtime
+  - 149+ testes devem passar após cada mudança
+  - Routing de /autocode deve ser documentado como workaround ativo
+
+non_functional:
+  latency_p95_ms: 5000
+  max_retries: 2
+  availability_slo: 0.99
+
+bugs_covered:
+  B1:
+    id: bug.autocode-routing
+    severity: critical
+    description: /autocode roteia para general (maxSteps=50) em vez de autocoder (maxSteps=6)
+    workaround: --agent autocoder flag
+  B2:
+    id: bug.config-merge-hang
+    severity: high
+    description: .opencode/opencode.json vazio causa hang do runtime
+    workaround: Arquivo removido; validação de startup necessária
+  B3:
+    id: bug.wrapper-preflight
+    severity: medium
+    description: Wrapper script sem verificação de agente ativo
+    workaround: Adicionar pre-flight check
+  B4:
+    id: bug.routing-regression-test
+    severity: high
+    description: Nenhum teste automatizado detecta regressão de routing
+    workaround: Criar routing-regression.test.ts
+
+traceability:
+  owner_technical: orchestrator
+  owner_domain: runtime-routing
+  requirement_refs:
+    - AGENTS.md Known Issues section
+    - .opencode/skills/self-bootstrap-opencode/debug_autocode.log

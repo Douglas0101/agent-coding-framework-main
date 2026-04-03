@@ -13,6 +13,8 @@
  * Schema validation is structural (JSON Schema draft-07 subset) without a full AJV runtime.
  */
 
+import { createLink } from './spec-linker.js';
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -37,6 +39,14 @@ export interface SpecEntry {
   registered_at: string; // ISO 8601
   registered_by: string;
   payload: Record<string, unknown>;
+  approval?: SpecApprovalMetadata;
+}
+
+export interface SpecApprovalMetadata {
+  approved_at: string;
+  approved_by: string;
+  approval_run_id: string;
+  traceability_link_id: string;
 }
 
 export interface SpecValidationResult {
@@ -49,6 +59,22 @@ export interface SpecHistoryEntry {
   status: SpecStatus;
   registered_at: string;
   registered_by: string;
+}
+
+export interface ApproveSpecInput {
+  approved_by: string;
+  requirement_refs?: string[];
+  code_refs?: string[];
+  test_cases?: string[];
+  evidence_refs?: string[];
+  owner_technical?: string;
+  owner_domain?: string;
+  approval_run_id?: string;
+}
+
+export interface ApproveSpecResult extends SpecValidationResult {
+  traceability_link_id?: string;
+  approval_run_id?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -66,6 +92,87 @@ const store = new Map<string, SpecEntry[]>();
 
 function specKey(spec_id: string): string {
   return spec_id.toLowerCase().trim();
+}
+
+function toStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is string => typeof item === 'string');
+}
+
+function extractTraceabilityDefaults(payload: Record<string, unknown>): {
+  requirement_refs: string[];
+  owner_technical: string;
+  owner_domain: string;
+} {
+  const traceability = payload['traceability'];
+  if (!traceability || typeof traceability !== 'object' || Array.isArray(traceability)) {
+    return {
+      requirement_refs: [],
+      owner_technical: '',
+      owner_domain: '',
+    };
+  }
+
+  const record = traceability as Record<string, unknown>;
+  return {
+    requirement_refs: toStringArray(record['requirement_refs']),
+    owner_technical:
+      typeof record['owner_technical'] === 'string' ? record['owner_technical'] : '',
+    owner_domain: typeof record['owner_domain'] === 'string' ? record['owner_domain'] : '',
+  };
+}
+
+function syncPayloadStatus(entry: SpecEntry, status: SpecStatus): void {
+  if (entry.spec_type === 'capability') {
+    entry.payload = {
+      ...entry.payload,
+      status,
+    };
+  }
+}
+
+function canTransition(current: SpecStatus, next: SpecStatus): boolean {
+  const allowedTransitions: Record<SpecStatus, SpecStatus[]> = {
+    draft: ['draft', 'proposed', 'deprecated'],
+    proposed: ['proposed', 'approved', 'deprecated'],
+    approved: ['approved', 'deprecated'],
+    deprecated: ['deprecated'],
+  };
+
+  return allowedTransitions[current].includes(next);
+}
+
+function createApprovalMetadata(
+  entry: SpecEntry,
+  approved_by: string,
+  input: Omit<ApproveSpecInput, 'approved_by'>,
+  approved_at: string,
+): {
+  approval: SpecApprovalMetadata;
+  valid: boolean;
+  errors: string[];
+} {
+  const defaults = extractTraceabilityDefaults(entry.payload);
+  const approval_run_id = input.approval_run_id?.trim() || `approval:${entry.spec_id}@${entry.version}`;
+  const traceLink = createLink(entry.spec_id, entry.version, approval_run_id, {
+    requirements: input.requirement_refs ?? defaults.requirement_refs,
+    code_refs: input.code_refs ?? [],
+    test_cases: input.test_cases ?? [],
+    evidence_refs: input.evidence_refs ?? [`spec://${entry.spec_id}@${entry.version}`],
+    owner_technical: input.owner_technical ?? defaults.owner_technical,
+    owner_domain: input.owner_domain ?? defaults.owner_domain,
+  });
+
+  return {
+    approval: {
+      approved_at,
+      approved_by,
+      approval_run_id,
+      traceability_link_id: traceLink.link.link_id,
+    },
+    valid: traceLink.validation.valid,
+    errors: traceLink.validation.errors,
+  };
 }
 
 function parseVersion(v: string): [number, number, number] {
@@ -192,15 +299,44 @@ export function registerSpec(
     };
   }
 
+  const latest = existing[existing.length - 1];
+  if (latest && compareVersions(version, latest.version) < 0) {
+    return {
+      valid: false,
+      errors: [
+        `Spec "${spec_id}" version "${version}" is older than the latest registered version "${latest.version}". Downgrade registration is blocked.`,
+      ],
+    };
+  }
+
+  if (status === 'approved') {
+    return {
+      valid: false,
+      errors: [
+        `Direct registration as "approved" is blocked for "${spec_id}@${version}". Register the spec as "draft" or "proposed" and use approveSpec().`,
+      ],
+    };
+  }
+
+  const normalizedPayload =
+    spec_type === 'capability'
+      ? {
+          ...payload,
+          status,
+        }
+      : { ...payload };
+
+  const registered_at = new Date().toISOString();
+
   const entry: SpecEntry = {
     spec_id,
     spec_type,
     version,
     status,
     domain,
-    registered_at: new Date().toISOString(),
+    registered_at,
     registered_by,
-    payload,
+    payload: normalizedPayload,
   };
 
   store.set(key, [...existing, entry].sort((a, b) => compareVersions(a.version, b.version)));
@@ -281,8 +417,116 @@ export function updateSpecStatus(
     };
   }
 
+  if (new_status === 'approved') {
+    return {
+      valid: false,
+      errors: [
+        `Direct status transition to "approved" is blocked for "${spec_id}@${version}". Use approveSpec() to capture approval metadata and traceability.`,
+      ],
+    };
+  }
+
+  if (!canTransition(entry.status, new_status)) {
+    return {
+      valid: false,
+      errors: [
+        `Invalid status transition for "${spec_id}@${version}": ${entry.status} -> ${new_status}.`,
+      ],
+    };
+  }
+
   entry.status = new_status;
+  syncPayloadStatus(entry, new_status);
   return { valid: true, errors: [] };
+}
+
+/**
+ * Formal approval path for a proposed spec version.
+ * Approval captures traceability metadata and links the approved spec to a
+ * minimal traceability manifest.
+ */
+export function approveSpec(
+  spec_id: string,
+  version: string,
+  input: ApproveSpecInput,
+): ApproveSpecResult {
+  const key = specKey(spec_id);
+  const entries = store.get(key);
+  if (!entries) {
+    return { valid: false, errors: [`Spec "${spec_id}" not found`] };
+  }
+
+  const entry = entries.find((candidate) => candidate.version === version);
+  if (!entry) {
+    return { valid: false, errors: [`Spec "${spec_id}" version "${version}" not found`] };
+  }
+
+  if (entry.status !== 'proposed') {
+    return {
+      valid: false,
+      errors: [
+        `Spec "${spec_id}@${version}" must be in status "proposed" before approval. Current status: "${entry.status}".`,
+      ],
+    };
+  }
+
+  const approvedBy = input.approved_by.trim();
+  if (!approvedBy) {
+    return {
+      valid: false,
+      errors: [`Spec "${spec_id}@${version}" approval requires a non-empty approved_by identity.`],
+    };
+  }
+
+  if (input.approval_run_id !== undefined && input.approval_run_id.trim() === '') {
+    return {
+      valid: false,
+      errors: [`Spec "${spec_id}@${version}" approval_run_id must be non-empty when provided.`],
+    };
+  }
+
+  if (approvedBy === entry.registered_by.trim()) {
+    return {
+      valid: false,
+      errors: [
+        `Spec "${spec_id}@${version}" cannot be approved by its original author "${entry.registered_by}".`,
+      ],
+    };
+  }
+
+  const approved_at = new Date().toISOString();
+  const approvalResult = createApprovalMetadata(
+    entry,
+    approvedBy,
+    {
+      requirement_refs: input.requirement_refs,
+      code_refs: input.code_refs,
+      test_cases: input.test_cases,
+      evidence_refs: input.evidence_refs,
+      owner_technical: input.owner_technical,
+      owner_domain: input.owner_domain,
+      approval_run_id: input.approval_run_id,
+    },
+    approved_at,
+  );
+
+  if (!approvalResult.valid) {
+    return {
+      valid: false,
+      errors: approvalResult.errors,
+    };
+  }
+
+  entry.status = 'approved';
+  entry.approval = approvalResult.approval;
+  syncPayloadStatus(entry, 'approved');
+
+  return {
+    valid: true,
+    errors: [],
+    traceability_link_id: approvalResult.approval.traceability_link_id,
+    approval_run_id: approvalResult.approval.approval_run_id,
+  };
 }
 
 /**

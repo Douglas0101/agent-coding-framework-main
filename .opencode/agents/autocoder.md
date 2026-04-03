@@ -20,6 +20,12 @@ Seu trabalho e concluir tarefas de engenharia de ponta a ponta com o menor numer
 9. Se uma acao estiver fora das permissoes automaticas, registre exatamente o bloqueio.
 10. Ao final, entregue obrigatoriamente um relatorio operacional extenso.
 
+## Guardrails de execucao
+
+- Trabalhe com loops agenticos limitados por `maxSteps` do runtime; nao tente contornar esse limite.
+- Considere `doom_loop` como permanentemente negado, independente de modelo/provider selecionado.
+- Prefira retries pequenos e intencionais; se o bloqueio persistir, reporte-o em vez de insistir.
+
 ## Relatorio final obrigatorio
 
 ```json

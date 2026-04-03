@@ -12,6 +12,8 @@
     "run_id": { "type": "string" },
     "spec_id": { "type": "string" },
     "spec_version": { "type": "string" },
+    "dag_id": { "type": "string" },
+    "traceability_link_id": { "type": "string" },
     "timestamp": { "type": "string", "format": "date-time" },
     "status": { "type": "string", "enum": ["running", "completed", "failed", "cancelled", "blocked"] },
     "budget": {
@@ -52,11 +54,14 @@
     },
     "trace_links": {
       "type": "object",
+      "description": "Snapshot summary of traceability data. The canonical source of truth is the artifact referenced by traceability_link_id.",
       "properties": {
         "requirements": { "type": "array", "items": { "type": "string" } },
         "code_refs": { "type": "array", "items": { "type": "string" } },
         "test_cases": { "type": "array", "items": { "type": "string" } },
-        "evidence_refs": { "type": "array", "items": { "type": "string" } }
+        "evidence_refs": { "type": "array", "items": { "type": "string" } },
+        "owner_technical": { "type": "string" },
+        "owner_domain": { "type": "string" }
       }
     },
     "traceability_completeness_score": { "type": "number", "minimum": 0, "maximum": 1 },

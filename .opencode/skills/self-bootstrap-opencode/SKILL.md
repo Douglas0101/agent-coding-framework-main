@@ -27,10 +27,19 @@ Seu foco principal é:
 Presuma que existe um command `autocode.md` com `agent: autocoder`.
 
 Presuma também que o comportamento observado foi:
-- `/autocode` executou com `orchestrator`, não com `autocoder`
-- `edit` falhou com `"oldString not found"`
-- houve fallback para `write`
-- uma validação com `bash` foi rejeitada por permissão
+- `/autocode` executou com `general` (maxSteps=50), não com `autocoder` (maxSteps=6)
+- `/ops-report` (também `agent: autocoder`) executou com `general` (maxSteps=5)
+- Outros commands com `agent:` funcionam corretamente (`/ship`→orchestrator, `/review`→reviewer, `/analyze`→explore)
+- Bug persiste com `--pure` (sem plugins) → causa é do runtime, não de plugins
+- Runtime tenta carregar `.opencode/opencode.json` e `.opencode/opencode.jsonc` que não existem
+- Criar `.opencode/opencode.json` vazio (`{}`) causa hang do runtime
+
+**Causa-raiz confirmada (2026-04-03):** Bug de routing seletivo no OpenCode v1.3.13.
+Commands com `agent: autocoder` no frontmatter são ignorados pelo runtime, caindo em `general`.
+Workaround: usar `--agent autocoder` flag explicitamente.
+
+**Evidência:** `.opencode/skills/self-bootstrap-opencode/debug_autocode.log`
+**Issue report:** `.opencode/skills/self-bootstrap-opencode/issue-report/BUG-autocode-routing.md`
 
 Trate isso como um conflito entre:
 1. comportamento documentado

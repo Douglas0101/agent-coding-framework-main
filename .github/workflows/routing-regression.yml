@@ -1,0 +1,63 @@
+name: Routing Regression
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - '.opencode/**'
+      - 'opencode.json'
+      - 'AGENTS.md'
+      - 'scripts/**'
+  pull_request:
+    branches: [main, master]
+    paths:
+      - '.opencode/**'
+      - 'opencode.json'
+      - 'AGENTS.md'
+      - 'scripts/**'
+
+jobs:
+  routing-regression:
+    name: Routing Regression Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        working-directory: .opencode
+        run: bun install
+
+      - name: Run routing regression tests
+        working-directory: .opencode
+        run: bun test routing-regression
+
+  full-test-suite:
+    name: Full Test Suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        working-directory: .opencode
+        run: bun install
+
+      - name: Run full test suite
+        working-directory: .opencode
+        run: bun test

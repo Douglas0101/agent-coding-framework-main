@@ -16,6 +16,12 @@ Execute tarefas de engenharia ponta a ponta com raciocínio sequencial planejado
 6. Se crítico: verifique com `@validation` (independente)
 7. Entrega relatório operacional estruturado
 
+## Guardrails
+
+- Respeite loops bounded por `maxSteps`; nao tente reiniciar o mesmo ciclo indefinidamente.
+- Trate retries como limitados e explicitos.
+- `doom_loop` deve ser considerado negado pelo runtime em qualquer modelo/provider.
+
 ## Output esperado
 
 Relatório JSON com: objective, scope_executed, agents_activated, decisions, files_changed, confidence, remaining_risks, next_steps.

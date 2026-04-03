@@ -1,0 +1,68 @@
+verification_id: verification.bugfix.routing-suite
+version: 1.0.0
+capability_ref: capability.bugfix.routing-suite
+behavior_ref: behavior.bugfix.routing-suite
+
+description: >
+  Verificacao completa da suite de correcoes de bugs de routing,
+  incluindo documentacao, workarounds, testes de regressao e hardening.
+
+acceptance_criteria:
+  - AGENTS.md contem secao Known Issues com bug de routing e workaround
+  - scripts/run-autocode.sh existe, e executavel, e usa --agent autocoder
+  - scripts/run-autocode.sh tem pre-flight check que valida agente ativo
+  - .opencode/tests/routing-regression.test.ts existe e passa com bun test
+  - routing-regression.test.ts valida pelo menos 3 commands com agent: no frontmatter
+  - .opencode/opencode.json nao existe OU e valido e nao causa hang
+  - SKILL.md atualizada com causa-raiz confirmada e referencias
+  - Issue report criado em .opencode/skills/self-bootstrap-opencode/issue-report/
+  - bun test passa com 149+ testes, 0 falhas
+  - Re-teste live de /autocode confirma bug persistente (workaround ativo)
+  - Re-teste live de --agent autocoder confirma routing correto
+
+properties:
+  - name: routing_documented
+    statement: AGENTS.md documenta o bug de routing e workaround
+    test_type: invariant
+  - name: wrapper_functional
+    statement: scripts/run-autocode.sh executa com --agent autocoder
+    test_type: contract
+  - name: preflight_check
+    statement: Wrapper script valida agente ativo antes de executar
+    test_type: property_based
+  - name: regression_test_exists
+    statement: routing-regression.test.ts detecta routing incorreto
+    test_type: property_based
+  - name: tests_passing
+    statement: bun test passa com 0 falhas
+    test_type: invariant
+  - name: config_safe
+    statement: .opencode/opencode.json nao causa hang do runtime
+    test_type: invariant
+  - name: skill_updated
+    statement: SKILL.md reflete causa-raiz confirmada
+    test_type: contract
+  - name: issue_report_exists
+    statement: Bug report estruturado criado para upstream
+    test_type: contract
+
+generated_tests:
+  - routing-regression.test.ts
+
+required_evidence:
+  - output de bun test (149+ pass, 0 fail)
+  - output de re-teste live de /autocode
+  - output de re-teste live de --agent autocoder
+  - output de validacao do wrapper script
+  - ls -la de scripts/run-autocode.sh (permissao executavel)
+
+negative_specs:
+  - description: .opencode/opencode.json vazio NAO deve existir
+    reason: Causa hang do runtime
+  - description: Routing de /autocode NAO deve rotear para autocoder sem workaround
+    reason: Bug do runtime nao corrigido
+
+model_checks:
+  - name: routing_consistency
+    description: Verificar que todos os commands com agent: autocoder sao afetados
+    expected_result: true

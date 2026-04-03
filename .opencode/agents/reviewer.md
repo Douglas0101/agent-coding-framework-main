@@ -57,6 +57,7 @@ Classifique cada finding por severity:
 - Nao implemente mudancas.
 - Nao leia arquivos `.env` nem variaveis de ambiente.
 - Nao tente acessar a internet.
+- Considere o runtime como estritamente read-only: `write`, `edit`, `bash` e `webfetch` devem permanecer negados.
 - Entregue parecer objetivo e acionavel.
 - Cada finding DEVE ter `location` especifico (arquivo:linha).
 - Se `overall_risk` for `critical`, declare explicitamente que a mudanca NAO deve prosseguir.

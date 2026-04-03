@@ -72,6 +72,7 @@ class DeepAgentMetrics {
   // Security (Counter)
   private pathTraversalAttempts = 0
   private unauthorizedWriteAttempts = 0
+  private doomLoopDenials = 0
 
   // Operation (Gauge/Counter)
   private commandSuccessCount = 0
@@ -104,6 +105,10 @@ class DeepAgentMetrics {
 
   incrementUnauthorizedWriteAttempts(): void {
     this.unauthorizedWriteAttempts++
+  }
+
+  incrementDoomLoopDenials(): void {
+    this.doomLoopDenials++
   }
 
   recordCommandResult(success: boolean): void {
@@ -145,6 +150,7 @@ class DeepAgentMetrics {
       security: {
         pathTraversalAttempts: this.pathTraversalAttempts,
         unauthorizedWriteAttempts: this.unauthorizedWriteAttempts,
+        doomLoopDenials: this.doomLoopDenials,
       },
       operation: {
         commandSuccessRate: this.commandTotalCount > 0
@@ -167,6 +173,7 @@ class DeepAgentMetrics {
     this.secretRedactionTotal = 0
     this.pathTraversalAttempts = 0
     this.unauthorizedWriteAttempts = 0
+    this.doomLoopDenials = 0
     this.commandSuccessCount = 0
     this.commandTotalCount = 0
     this.agentDispatchErrors = 0
@@ -198,6 +205,7 @@ export interface DeepAgentMetricsSnapshot {
   security: {
     pathTraversalAttempts: number
     unauthorizedWriteAttempts: number
+    doomLoopDenials: number
   }
   operation: {
     commandSuccessRate: number

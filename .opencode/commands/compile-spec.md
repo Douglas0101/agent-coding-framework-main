@@ -19,7 +19,9 @@ Este command compila um conjunto de specs versionadas em um DAG executável de T
 4. Se `policy_violations.length > 0`, reporte cada violação como `[BLOCKED]` e não prossiga.
 5. Se `requires_human_approval === true`, pause e solicite aprovação antes de executar.
 6. Persista o DAG em `artifacts/codex-swarm/<run_id>/dag-compiled.json`.
-7. Gere um `run-manifest` inicial com `status: running` e `dag_id` vinculado.
+7. Gere um `traceability-link` inicial da run com `run_id` real, `spec_id`, `dag_nodes` e requisitos/owners mínimos disponíveis.
+8. Gere um `run-manifest` inicial com `status: running`, `dag_id` vinculado e `traceability_link_id` apontando para o artefato canônico de rastreabilidade.
+9. Trate a completude de rastreabilidade como incremental: `code_refs`, `test_cases`, `evidence_refs` e `runtime_trace_ids` podem ser enriquecidos ao longo da run, mas o gate crítico continua em `assertMinimumLinks(...)` no momento de release/execução sensível.
 
 ## Output esperado
 

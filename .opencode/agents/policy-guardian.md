@@ -43,7 +43,7 @@ Para cada nó do DAG, checar:
 ### 3. Verificar write_scope disjoint
 ```
 REGRA: write_scope de workers paralelos não pode ter interseção
-AÇÃO: se interseção detectada → serializar automaticamente os nós conflitantes
+AÇÃO: se interseção detectada → derivar plano efetivo serializado sem mutar o DAG original
 ```
 
 ### 4. Gerar relatório de policy
@@ -70,6 +70,10 @@ AÇÃO: se interseção detectada → serializar automaticamente os nós conflit
         "reason": "<string>"
       }
     ],
+    "effective_execution_order": ["<task_id>"],
+    "serialized_edges": [
+      {"from": "<task_id>", "to": "<task_id>", "reason": "<string>"}
+    ],
     "approved": true
   }
 }
@@ -86,7 +90,7 @@ AÇÃO: se interseção detectada → serializar automaticamente os nós conflit
 - NUNCA permitir write_scope com interseção em execução paralela
 - SEMPRE emitir `policy_guardian_report` independente do resultado
 - SEMPRE checar ambas as policies: default + domain-specific
-- NUNCA modificar o DAG (apenas reportar e bloquear — sem auto-correção de lógica)
+- NUNCA modificar o DAG original; quando houver conflito de `write_scope`, derivar dependências efetivas e ordem serializada apenas no relatório
 
 ## write_scope
 

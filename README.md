@@ -1,5 +1,9 @@
 # Agent Coding Framework
 
+[![Routing Regression](https://github.com/douglas-souza/agent-coding-framework-main/actions/workflows/routing-regression.yml/badge.svg)](https://github.com/douglas-souza/agent-coding-framework-main/actions/workflows/routing-regression.yml)
+[![Tests](https://img.shields.io/badge/tests-164%20pass-brightgreen)](https://github.com/douglas-souza/PycharmProjects/agent-coding-framework-main/actions)
+[![SDD](https://img.shields.io/badge/SDD-7%20specs%20approved-blue)](.opencode/specs/)
+
 Repositorio de configuracoes de **agent coding** para sistemas de IA de alta confiabilidade.
 Template reutilizavel para qualquer projeto que utilize **OpenCode**, **Codex** e **skills especializadas**.
 
@@ -17,6 +21,61 @@ para orquestracao de coding agents em projetos de engenharia de software e machi
 | **Skills** | 57 skills especializadas | `.agent/skills/` |
 | **Workflows** | 11 workflows prontos | `.agent/workflows/` |
 | **Swarm Rules** | Regras nativas do swarm | `AGENTS.md` |
+| **Specs SDD** | 7 specs aprovadas (capability, behavior, verification, policy, release, slo, contract) | `.opencode/specs/` |
+
+## Known Issues
+
+### Routing Bug: `/autocode` command (OpenCode v1.3.13)
+
+**Problema:** O comando `/autocode` (frontmatter: `agent: autocoder`) e roteado para o agente `general` com `maxSteps: 50` em vez de `autocoder` com `maxSteps: 6`.
+
+**Confirmado:** Bug persiste com `--pure` (sem plugins), afetando tambem `/ops-report`. Outros commands com `agent:` funcionam corretamente (`/ship` → orchestrator, `/review` → reviewer, `/analyze` → explore).
+
+**Workaround:**
+```bash
+# Opcao 1: Flag direta
+opencode run --agent autocoder --command autocode "sua tarefa"
+
+# Opcao 2: Wrapper script (com pre-flight check)
+./scripts/run-autocode.sh "sua tarefa"
+```
+
+**Tracking:**
+- Documentacao tecnica: `AGENTS.md` → Known Issues
+- Logs DEBUG: `.opencode/skills/self-bootstrap-opencode/debug_autocode.log`
+- Bug report: `.opencode/skills/self-bootstrap-opencode/issue-report/BUG-autocode-routing.md`
+- SDD Spec: `capability.bugfix.routing-suite@1.0.0` (7 specs aprovadas, DAG compilado)
+- Testes de regressao: `.opencode/tests/routing-regression.test.ts` (15 testes)
+
+## Spec-Driven Development (SDD)
+
+Este projeto utiliza **Spec-Driven Development** para governanca de mudancas. Cada alteracao significativa e governada por specs versionadas que passam por validacao, aprovacao four-eyes, compilacao DAG e verificacao automatizada.
+
+### Specs Aprovadas
+
+| Spec | Tipo | Versao | Status |
+|------|------|--------|--------|
+| `capability.bugfix.routing-suite` | Capability | 1.0.0 | ✅ approved |
+| `behavior.bugfix.routing-suite` | Behavior | 1.0.0 | ✅ approved |
+| `verification.bugfix.routing-suite` | Verification | 1.0.0 | ✅ approved |
+| `policy.bugfix.routing-suite` | Policy | 1.0.0 | ✅ approved |
+| `release.bugfix.routing-suite` | Release | 1.0.0 | ✅ approved |
+| `slo.bugfix.routing-suite` | SLO | 1.0.0 | ✅ approved |
+| `contract.bugfix.routing-suite` | Contract | 1.0.0 | ✅ approved |
+
+### DAG Compilado
+
+O DAG compilado a partir das specs contem 5 nodes de execucao sequencial:
+```
+detect → document → workaround → harden → test → verify
+```
+
+### Traceabilidade
+
+- **Links criados:** 7 traceability links
+- **Completeness score:** 0.85-0.95 (threshold: 0.75)
+- **Approval gate:** `review` (sem bloqueios)
+- **Test coverage:** 164 testes passando, 0 falhas
 
 ## Estrutura
 
@@ -27,21 +86,27 @@ para orquestracao de coding agents em projetos de engenharia de software e machi
 │   ├── commands/         # 6 commands (analyze, autocode, review, ship, etc.)
 │   ├── plugins/          # output-filter.ts (redaction, suppression, manifest tracking)
 │   ├── tools/            # examine-algorithm.ts (tree-sitter based analysis)
+│   ├── specs/            # 7 specs aprovadas (SDD): capability, behavior, verification, policy, release, slo, contract
 │   ├── lib/              # shared.ts, cache.ts, metrics.ts, tree-sitter-parsers.ts
 │   ├── skills/           # self-bootstrap-opencode
 │   ├── context/project/  # conventions.md
-│   ├── tests/            # unit, integration, fuzz, performance tests
+│   ├── tests/            # unit, integration, fuzz, performance, routing-regression tests
 │   ├── package.json      # Bun dependencies
 │   ├── tsconfig.json     # TypeScript config
 │   ├── output-filter.config.json  # Filter configuration
 │   └── .gitignore
+├── .github/
+│   └── workflows/        # CI/CD: routing-regression.yml (push + PR)
 ├── .codex/
 │   ├── config.toml       # Multi-agent configuration
 │   └── agents/           # 6 agent configs (synthesizer, verifier, etc.)
 ├── .agent/
 │   ├── skills/           # 57 specialized skills
 │   └── workflows/        # 11 ready-to-use workflows
-└── AGENTS.md             # Native Swarm Rules
+├── scripts/
+│   └── run-autocode.sh   # Wrapper com pre-flight check para bug de routing
+├── AGENTS.md             # Native Swarm Rules + Known Issues
+└── opencode.json         # OpenCode configuration (18 agents)
 ```
 
 ## Skills Disponiveis (57)

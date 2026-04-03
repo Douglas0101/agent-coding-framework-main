@@ -15,6 +15,19 @@
  */
 
 import { getSpec, validateSpec, assertSpecApproved, SpecType } from './spec-registry.js';
+import {
+  appendToLink,
+  createLink,
+  resolveLink,
+  type LinkerValidationResult,
+  type TraceabilityLink,
+} from './spec-linker.js';
+import {
+  buildInitialRunManifest,
+  type RunManifest,
+  type RunManifestAgentActivation,
+  type RunManifestArtifact,
+} from './run-manifest.js';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -84,6 +97,29 @@ export interface CompilerResult {
   warnings: string[];
 }
 
+export interface CompilerTraceabilityResult extends CompilerResult {
+  traceability_link?: TraceabilityLink;
+  traceability_validation?: LinkerValidationResult;
+  run_manifest?: RunManifest;
+}
+
+export interface CompileDAGWithRunManifestOptions {
+  timestamp?: string;
+  agents_activated?: RunManifestAgentActivation[];
+  artifacts_produced?: RunManifestArtifact[];
+  budget?: RunManifest['budget'];
+  risk_level?: RunManifest['risk_level'];
+  remaining_risks?: string[];
+  next_steps?: string[];
+  requirement_refs?: string[];
+  code_refs?: string[];
+  test_cases?: string[];
+  evidence_refs?: string[];
+  runtime_trace_ids?: string[];
+  owner_technical?: string;
+  owner_domain?: string;
+}
+
 // ---------------------------------------------------------------------------
 // Internal helpers
 // ---------------------------------------------------------------------------
@@ -104,6 +140,54 @@ function deriveRiskLevel(
 
 function buildNodeId(prefix: string, index: number): string {
   return `${prefix}_${String(index).padStart(3, '0')}`;
+}
+
+function toStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0);
+}
+
+function uniqueNonEmptyStrings(values: string[]): string[] {
+  return [...new Set(values.filter((value) => value.trim().length > 0))];
+}
+
+function extractTraceabilityDefaults(payload: Record<string, unknown>): {
+  requirement_refs: string[];
+  owner_technical: string;
+  owner_domain: string;
+} {
+  const traceability = payload['traceability'];
+  if (!traceability || typeof traceability !== 'object' || Array.isArray(traceability)) {
+    return {
+      requirement_refs: [],
+      owner_technical: '',
+      owner_domain: '',
+    };
+  }
+
+  const record = traceability as Record<string, unknown>;
+  return {
+    requirement_refs: toStringArray(record['requirement_refs']),
+    owner_technical:
+      typeof record['owner_technical'] === 'string' ? record['owner_technical'] : '',
+    owner_domain: typeof record['owner_domain'] === 'string' ? record['owner_domain'] : '',
+  };
+}
+
+function summarizeLinkValidation(link: TraceabilityLink): LinkerValidationResult {
+  const errors = link.missing_links
+    .filter((gap) => gap.severity === 'blocking' || gap.severity === 'error')
+    .map((gap) => gap.description);
+  const warnings = link.missing_links
+    .filter((gap) => gap.severity === 'warning')
+    .map((gap) => gap.description);
+
+  return {
+    valid: errors.length === 0,
+    errors,
+    warnings,
+    completeness_score: link.completeness_score,
+  };
 }
 
 function topoSort(nodes: TaskNode[]): string[] {
@@ -448,4 +532,91 @@ export function compileDAG(
   }
 
   return { success: true, dag, errors: [], warnings };
+}
+
+export function compileDAGWithRunManifest(
+  capability_spec_id: string,
+  behavior_spec_id: string,
+  policy_bundle_id: string,
+  verification_spec_id: string,
+  run_id: string,
+  options: CompileDAGWithRunManifestOptions = {},
+): CompilerTraceabilityResult {
+  const result = compileDAG(
+    capability_spec_id,
+    behavior_spec_id,
+    policy_bundle_id,
+    verification_spec_id,
+    run_id,
+  );
+
+  if (!result.success || !result.dag) {
+    return result;
+  }
+
+  const capabilityEntry = getSpec(capability_spec_id);
+  const defaults = capabilityEntry
+    ? extractTraceabilityDefaults(capabilityEntry.payload)
+    : {
+        requirement_refs: [],
+        owner_technical: '',
+        owner_domain: '',
+      };
+
+  const traceabilityLinks = {
+    requirements: options.requirement_refs ?? defaults.requirement_refs,
+    specs: uniqueNonEmptyStrings([
+      capability_spec_id,
+      behavior_spec_id,
+      policy_bundle_id,
+      verification_spec_id,
+    ]),
+    dag_nodes: result.dag.nodes.map((node) => node.task_id),
+    code_refs: options.code_refs ?? [],
+    test_cases: options.test_cases ?? [],
+    evidence_refs: options.evidence_refs ?? [`spec://${capability_spec_id}@${result.dag.spec_version}`],
+    runtime_trace_ids: options.runtime_trace_ids ?? [],
+    owner_technical: options.owner_technical ?? defaults.owner_technical,
+    owner_domain: options.owner_domain ?? defaults.owner_domain,
+  };
+
+  const existingLink = resolveLink({ spec_id: capability_spec_id, run_id });
+  let traceability:
+    | { link: TraceabilityLink; validation: LinkerValidationResult }
+    | ReturnType<typeof createLink>;
+
+  if (existingLink) {
+    const updatedLink = appendToLink(capability_spec_id, run_id, traceabilityLinks) ?? existingLink;
+    traceability = {
+      link: updatedLink,
+      validation: summarizeLinkValidation(updatedLink),
+    };
+  } else {
+    traceability = createLink(capability_spec_id, result.dag.spec_version, run_id, traceabilityLinks);
+  }
+
+  const run_manifest = buildInitialRunManifest({
+    run_id,
+    dag: result.dag,
+    traceability_link: traceability.link,
+    timestamp: options.timestamp,
+    agents_activated: options.agents_activated,
+    artifacts_produced: options.artifacts_produced,
+    budget: options.budget,
+    risk_level: options.risk_level,
+    remaining_risks: options.remaining_risks,
+    next_steps: options.next_steps,
+  });
+
+  return {
+    ...result,
+    traceability_link: traceability.link,
+    traceability_validation: traceability.validation,
+    run_manifest,
+    warnings: [
+      ...result.warnings,
+      ...traceability.validation.errors.map((error) => `Traceability bootstrap incomplete: ${error}`),
+      ...traceability.validation.warnings.map((warning) => `Traceability bootstrap warning: ${warning}`),
+    ],
+  };
 }

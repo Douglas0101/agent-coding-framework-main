@@ -1,0 +1,26 @@
+contract_id: contract.routing-suite
+version: 1.0.0
+capability_ref: capability.bugfix.routing-suite
+producer_agents:
+  - orchestrator
+  - validation
+consumer_agents:
+  - autocoder
+  - explorer
+  - reviewer
+artifact_types:
+  - spec
+  - dag
+  - run_manifest
+  - traceability_link
+required_fields:
+  - spec_id
+  - version
+  - status
+  - completeness_score
+compatibility_rules:
+  - backward_compatible: true
+    breaking_changes_require: major_version_bump
+evolution:
+  deprecation_notice: 30_days
+  migration_path: automated_via_spec_linker
