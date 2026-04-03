@@ -4,7 +4,7 @@ set -euo pipefail
 fail=0
 
 echo "[boundary] Checking disallowed internal directories..."
-if disallowed_paths=$(git ls-files | rg -n '(^|/)\.(agent|codex|opencode)(/|$)' || true); then
+if disallowed_paths=$(git ls-files | grep -nE '(^|/)\.(agent|codex|opencode)(/|$)' || true); then
   if [[ -n "$disallowed_paths" ]]; then
     echo "Found internal artifacts in public repo:"
     echo "$disallowed_paths"
