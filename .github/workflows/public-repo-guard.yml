@@ -22,6 +22,81 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Validate allowlist schema and expiry
+        run: |
+          python - <<'PY'
+          import datetime as dt
+          import json
+          import sys
+          from pathlib import Path
+
+          allowlist_file = Path('.github/security/public-repo-allowlist.json')
+          if not allowlist_file.exists():
+              print(f"ERROR: missing allowlist file: {allowlist_file}")
+              sys.exit(1)
+
+          allowlist = json.loads(allowlist_file.read_text(encoding='utf-8'))
+          required_categories = ['path_exceptions', 'pattern_scan_exceptions']
+          optional_categories = ['tool_exceptions']
+          required_fields = ['pattern', 'justification', 'owner', 'expires_on', 'ticket_ref']
+
+          today = dt.date.today()
+          errors = []
+          active = []
+
+          for category in required_categories:
+              if category not in allowlist:
+                  errors.append(f"missing required category: {category}")
+
+          for category in required_categories + optional_categories:
+              entries = allowlist.get(category, [])
+              if not isinstance(entries, list):
+                  errors.append(f"{category} must be an array")
+                  continue
+
+              for idx, item in enumerate(entries):
+                  if not isinstance(item, dict):
+                      errors.append(f"{category}[{idx}] must be an object")
+                      continue
+
+                  missing = [field for field in required_fields if not str(item.get(field, '')).strip()]
+                  if missing:
+                      errors.append(f"{category}[{idx}] missing fields: {', '.join(missing)}")
+                      continue
+
+                  try:
+                      expires_on = dt.date.fromisoformat(str(item['expires_on']))
+                  except ValueError:
+                      errors.append(f"{category}[{idx}] has invalid expires_on (expected YYYY-MM-DD): {item['expires_on']}")
+                      continue
+
+                  if expires_on < today:
+                      errors.append(
+                          f"{category}[{idx}] expired on {expires_on.isoformat()} "
+                          f"(pattern={item['pattern']}, ticket={item['ticket_ref']})"
+                      )
+                  else:
+                      active.append((
+                          category,
+                          item['pattern'],
+                          item['owner'],
+                          item['ticket_ref'],
+                          expires_on.isoformat(),
+                      ))
+
+          if errors:
+              print('Allowlist schema/expiry validation failed:')
+              for err in errors:
+                  print(f' - {err}')
+              sys.exit(1)
+
+          print('Active public-repo allowlist exceptions:')
+          for category, pattern, owner, ticket, expires_on in sorted(active):
+              print(f' - {category}: {pattern} | owner={owner} | ticket={ticket} | expires_on={expires_on}')
+
+          print('Allowlist schema/expiry validation passed.')
+          PY
+
       - name: Validate forbidden paths against versioned allowlist
         run: |
           python - <<'PY'
