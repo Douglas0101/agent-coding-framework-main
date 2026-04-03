@@ -1,6 +1,0 @@
-node_modules/
-evidence/*
-!evidence/.keep
-manifests/*.json
-!manifests/.keep
-memory/
