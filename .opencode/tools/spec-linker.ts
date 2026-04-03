@@ -14,6 +14,19 @@
  * No external runtime dependencies.
  */
 
+import { AsyncLock } from './async-lock.js';
+import { sanitizeSpecId, sanitizeVersion, sanitizeRunId } from './input-sanitizer.js';
+
+// ---------------------------------------------------------------------------
+// Concurrency Control
+// ---------------------------------------------------------------------------
+
+/**
+ * AsyncLock to prevent race conditions in concurrent multi-agent execution.
+ * All write operations must acquire this lock before modifying the linkStore.
+ */
+const linkerLock = new AsyncLock();
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -183,16 +196,37 @@ export function listGaps(links: TraceLinks): TraceGap[] {
 /**
  * Creates and persists a new traceability link for a run.
  * Returns a validation result including the completeness score and any gaps.
+ * Thread-safe: uses async lock for concurrent access protection.
  */
-export function createLink(
+export async function createLink(
   spec_id: string,
   spec_version: string,
   run_id: string,
   links: Partial<TraceLinks>,
-): { link: TraceabilityLink; validation: LinkerValidationResult } {
+): Promise<{ link: TraceabilityLink; validation: LinkerValidationResult }> {
+  // Input sanitization
+  const specIdResult = sanitizeSpecId(spec_id);
+  if (!specIdResult.valid) {
+    throw new Error(`Invalid spec_id: ${specIdResult.errors.join(', ')}`);
+  }
+
+  const versionResult = sanitizeVersion(spec_version);
+  if (!versionResult.valid) {
+    throw new Error(`Invalid spec_version: ${versionResult.errors.join(', ')}`);
+  }
+
+  const runIdResult = sanitizeRunId(run_id);
+  if (!runIdResult.valid) {
+    throw new Error(`Invalid run_id: ${runIdResult.errors.join(', ')}`);
+  }
+
+  const sanitizedSpecId = specIdResult.sanitized;
+  const sanitizedVersion = versionResult.sanitized;
+  const sanitizedRunId = runIdResult.sanitized;
+
   const fullLinks: TraceLinks = {
     requirements: links.requirements ?? [],
-    specs: links.specs ?? [spec_id],
+    specs: links.specs ?? [sanitizedSpecId],
     dag_nodes: links.dag_nodes ?? [],
     code_refs: links.code_refs ?? [],
     test_cases: links.test_cases ?? [],
@@ -202,36 +236,41 @@ export function createLink(
     owner_domain: links.owner_domain ?? '',
   };
 
-  const score = computeScore(fullLinks);
-  const gaps = listGaps(fullLinks);
-  const errors = gaps.filter((g) => g.severity === 'blocking' || g.severity === 'error').map((g) => g.description);
-  const warnings = gaps.filter((g) => g.severity === 'warning').map((g) => g.description);
+  const release = await linkerLock.acquire();
+  try {
+    const score = computeScore(fullLinks);
+    const gaps = listGaps(fullLinks);
+    const errors = gaps.filter((g) => g.severity === 'blocking' || g.severity === 'error').map((g) => g.description);
+    const warnings = gaps.filter((g) => g.severity === 'warning').map((g) => g.description);
 
-  const link_id = `tl_${spec_id}_${run_id}_${Date.now()}`;
+    const link_id = `tl_${sanitizedSpecId}_${sanitizedRunId}_${Date.now()}`;
 
-  const traceLink: TraceabilityLink = {
-    link_id,
-    schema_version: '1.0.0',
-    spec_id,
-    spec_version,
-    run_id,
-    timestamp: new Date().toISOString(),
-    completeness_score: score,
-    links: fullLinks,
-    missing_links: gaps,
-  };
-
-  linkStore.set(linkKey(spec_id, run_id), traceLink);
-
-  return {
-    link: traceLink,
-    validation: {
-      valid: errors.length === 0,
-      errors,
-      warnings,
+    const traceLink: TraceabilityLink = {
+      link_id,
+      schema_version: '1.0.0',
+      spec_id: sanitizedSpecId,
+      spec_version: sanitizedVersion,
+      run_id: sanitizedRunId,
+      timestamp: new Date().toISOString(),
       completeness_score: score,
-    },
-  };
+      links: fullLinks,
+      missing_links: gaps,
+    };
+
+    linkStore.set(linkKey(sanitizedSpecId, sanitizedRunId), traceLink);
+
+    return {
+      link: traceLink,
+      validation: {
+        valid: errors.length === 0,
+        errors,
+        warnings,
+        completeness_score: score,
+      },
+    };
+  } finally {
+    release();
+  }
 }
 
 /**
@@ -296,36 +335,52 @@ export function assertMinimumLinks(
 
 /**
  * Appends additional link data to an existing trace link (e.g., runtime trace IDs added post-deploy).
+ * Thread-safe: uses async lock for concurrent access protection.
  */
-export function appendToLink(
+export async function appendToLink(
   spec_id: string,
   run_id: string,
   additionalLinks: Partial<TraceLinks>,
-): TraceabilityLink | null {
-  const existing = linkStore.get(linkKey(spec_id, run_id));
-  if (!existing) return null;
+): Promise<TraceabilityLink | null> {
+  const specIdResult = sanitizeSpecId(spec_id);
+  if (!specIdResult.valid) {
+    throw new Error(`Invalid spec_id: ${specIdResult.errors.join(', ')}`);
+  }
 
-  const merged: TraceLinks = {
-    requirements: [...new Set([...existing.links.requirements, ...(additionalLinks.requirements ?? [])])],
-    specs: [...new Set([...existing.links.specs, ...(additionalLinks.specs ?? [])])],
-    dag_nodes: [...new Set([...existing.links.dag_nodes, ...(additionalLinks.dag_nodes ?? [])])],
-    code_refs: [...new Set([...existing.links.code_refs, ...(additionalLinks.code_refs ?? [])])],
-    test_cases: [...new Set([...existing.links.test_cases, ...(additionalLinks.test_cases ?? [])])],
-    evidence_refs: [...new Set([...existing.links.evidence_refs, ...(additionalLinks.evidence_refs ?? [])])],
-    runtime_trace_ids: [...new Set([...existing.links.runtime_trace_ids, ...(additionalLinks.runtime_trace_ids ?? [])])],
-    owner_technical: additionalLinks.owner_technical ?? existing.links.owner_technical,
-    owner_domain: additionalLinks.owner_domain ?? existing.links.owner_domain,
-  };
+  const runIdResult = sanitizeRunId(run_id);
+  if (!runIdResult.valid) {
+    throw new Error(`Invalid run_id: ${runIdResult.errors.join(', ')}`);
+  }
 
-  const updated: TraceabilityLink = {
-    ...existing,
-    links: merged,
-    completeness_score: computeScore(merged),
-    missing_links: listGaps(merged),
-  };
+  const release = await linkerLock.acquire();
+  try {
+    const existing = linkStore.get(linkKey(specIdResult.sanitized, runIdResult.sanitized));
+    if (!existing) return null;
 
-  linkStore.set(linkKey(spec_id, run_id), updated);
-  return updated;
+    const merged: TraceLinks = {
+      requirements: [...new Set([...existing.links.requirements, ...(additionalLinks.requirements ?? [])])],
+      specs: [...new Set([...existing.links.specs, ...(additionalLinks.specs ?? [])])],
+      dag_nodes: [...new Set([...existing.links.dag_nodes, ...(additionalLinks.dag_nodes ?? [])])],
+      code_refs: [...new Set([...existing.links.code_refs, ...(additionalLinks.code_refs ?? [])])],
+      test_cases: [...new Set([...existing.links.test_cases, ...(additionalLinks.test_cases ?? [])])],
+      evidence_refs: [...new Set([...existing.links.evidence_refs, ...(additionalLinks.evidence_refs ?? [])])],
+      runtime_trace_ids: [...new Set([...existing.links.runtime_trace_ids, ...(additionalLinks.runtime_trace_ids ?? [])])],
+      owner_technical: additionalLinks.owner_technical ?? existing.links.owner_technical,
+      owner_domain: additionalLinks.owner_domain ?? existing.links.owner_domain,
+    };
+
+    const updated: TraceabilityLink = {
+      ...existing,
+      links: merged,
+      completeness_score: computeScore(merged),
+      missing_links: listGaps(merged),
+    };
+
+    linkStore.set(linkKey(specIdResult.sanitized, runIdResult.sanitized), updated);
+    return updated;
+  } finally {
+    release();
+  }
 }
 
 /**
@@ -341,7 +396,23 @@ export function listLinks(filter?: { spec_id?: string }): TraceabilityLink[] {
 
 /**
  * Clears the link store. Intended for testing only.
+ * PRODUCTION GUARD: Blocked when NODE_ENV is 'production' or when ALLOW_CLEAR is not set.
  */
 export function _clearLinks(): void {
+  if (process.env.NODE_ENV === 'production' && process.env.ALLOW_CLEAR !== '1') {
+    throw new Error(
+      '_clearLinks is blocked in production. Set ALLOW_CLEAR=1 to override (testing only).',
+    );
+  }
   linkStore.clear();
+}
+
+/**
+ * Export lock metrics for monitoring (read-only).
+ */
+export function getLinkerLockMetrics(): { isLocked: boolean; queueLength: number } {
+  return {
+    isLocked: linkerLock.isLocked,
+    queueLength: linkerLock.queueLength,
+  };
 }

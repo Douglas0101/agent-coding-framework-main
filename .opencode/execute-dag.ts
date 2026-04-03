@@ -378,7 +378,7 @@ console.log('Runtime trace IDs (OTel format):');
 for (const id of runtimeTraceIds) console.log(`  ${id}`);
 
 console.log('\nCompilando run manifest com runtime trace IDs...');
-const manifestResult = compileDAGWithRunManifest(
+const manifestResult = await compileDAGWithRunManifest(
   'capability.bugfix.routing-suite',
   'behavior.bugfix.routing-suite',
   'policy.bugfix.routing-suite',
@@ -424,7 +424,7 @@ const remainingSpecs = [
 for (const specId of remainingSpecs) {
   const existingLink = resolveLink({ spec_id: specId, run_id: RUN_ID });
   if (existingLink) {
-    const updated = appendToLink(specId, RUN_ID, { runtime_trace_ids: runtimeTraceIds });
+    const updated = await appendToLink(specId, RUN_ID, { runtime_trace_ids: runtimeTraceIds });
     if (updated) {
       const score = computeScore(updated.links);
       console.log(`  ${specId}: score=${score} runtime_traces=${updated.links.runtime_trace_ids.length} ✅`);

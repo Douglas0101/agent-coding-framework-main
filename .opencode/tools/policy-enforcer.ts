@@ -457,7 +457,7 @@ export function enforcePolicyPreflight(
   return {
     policy_guardian_report: {
       dag_id,
-      timestamp: options.timestamp ?? new Date(0).toISOString(),
+      timestamp: options.timestamp ?? new Date().toISOString(),
       nodes_checked: nodes.length,
       violations_found: violations.length,
       violations,

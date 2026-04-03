@@ -33,8 +33,8 @@ describe('UT: spec-registry.ts', () => {
     _clearLinks();
   });
 
-  it('requires formal approval flow and creates traceability on approval', () => {
-    const register = registerSpec(
+  it('requires formal approval flow and creates traceability on approval', async () => {
+    const register = await registerSpec(
       'capability.order-routing',
       'capability',
       '1.0.0',
@@ -45,9 +45,9 @@ describe('UT: spec-registry.ts', () => {
     );
 
     expect(register.valid).toBe(true);
-    expect(updateSpecStatus('capability.order-routing', '1.0.0', 'proposed').valid).toBe(true);
+    expect((await updateSpecStatus('capability.order-routing', '1.0.0', 'proposed')).valid).toBe(true);
 
-    const approval = approveSpec('capability.order-routing', '1.0.0', {
+    const approval = await approveSpec('capability.order-routing', '1.0.0', {
       approved_by: 'tech-lead',
       approval_run_id: 'run-approve-order-routing',
       code_refs: ['.opencode/specs/capabilities/order-routing.capability.yaml:1'],
@@ -69,8 +69,8 @@ describe('UT: spec-registry.ts', () => {
     expect(traceLink?.spec_id).toBe('capability.order-routing');
   });
 
-  it('rejects direct approval registration and direct approved transition', () => {
-    const directApproved = registerSpec(
+  it('rejects direct approval registration and direct approved transition', async () => {
+    const directApproved = await registerSpec(
       'capability.order-routing',
       'capability',
       '1.0.0',
@@ -83,7 +83,7 @@ describe('UT: spec-registry.ts', () => {
     expect(directApproved.valid).toBe(false);
     expect(directApproved.errors.some((error) => error.includes('Direct registration as "approved"'))).toBe(true);
 
-    const register = registerSpec(
+    const register = await registerSpec(
       'capability.order-routing',
       'capability',
       '1.0.0',
@@ -94,12 +94,12 @@ describe('UT: spec-registry.ts', () => {
     );
 
     expect(register.valid).toBe(true);
-    expect(updateSpecStatus('capability.order-routing', '1.0.0', 'approved').valid).toBe(false);
+    expect((await updateSpecStatus('capability.order-routing', '1.0.0', 'approved')).valid).toBe(false);
   });
 
-  it('rejects approval metadata without a real approver identity', () => {
+  it('rejects approval metadata without a real approver identity', async () => {
     expect(
-      registerSpec(
+      (await registerSpec(
         'capability.order-routing',
         'capability',
         '1.0.0',
@@ -107,25 +107,25 @@ describe('UT: spec-registry.ts', () => {
         'payments',
         buildCapabilityPayload('1.0.0', 'draft'),
         'spec-architect',
-      ).valid,
+      )).valid,
     ).toBe(true);
-    expect(updateSpecStatus('capability.order-routing', '1.0.0', 'proposed').valid).toBe(true);
+    expect((await updateSpecStatus('capability.order-routing', '1.0.0', 'proposed')).valid).toBe(true);
 
-    const emptyApprover = approveSpec('capability.order-routing', '1.0.0', {
+    const emptyApprover = await approveSpec('capability.order-routing', '1.0.0', {
       approved_by: '   ',
     });
     expect(emptyApprover.valid).toBe(false);
 
-    const emptyRunId = approveSpec('capability.order-routing', '1.0.0', {
+    const emptyRunId = await approveSpec('capability.order-routing', '1.0.0', {
       approved_by: 'tech-lead',
       approval_run_id: '   ',
     });
     expect(emptyRunId.valid).toBe(false);
   });
 
-  it('rejects approval when traceability minimums are missing', () => {
+  it('rejects approval when traceability minimums are missing', async () => {
     expect(
-      registerSpec(
+      (await registerSpec(
         'capability.order-routing',
         'capability',
         '1.0.0',
@@ -133,11 +133,11 @@ describe('UT: spec-registry.ts', () => {
         'payments',
         buildCapabilityPayload('1.0.0', 'draft'),
         'spec-architect',
-      ).valid,
+      )).valid,
     ).toBe(true);
-    expect(updateSpecStatus('capability.order-routing', '1.0.0', 'proposed').valid).toBe(true);
+    expect((await updateSpecStatus('capability.order-routing', '1.0.0', 'proposed')).valid).toBe(true);
 
-    const approval = approveSpec('capability.order-routing', '1.0.0', {
+    const approval = await approveSpec('capability.order-routing', '1.0.0', {
       approved_by: 'tech-lead',
       evidence_refs: ['evidence://spec-review/order-routing'],
     });
@@ -146,9 +146,9 @@ describe('UT: spec-registry.ts', () => {
     expect(approval.errors.some((error) => error.includes('Code references'))).toBe(true);
   });
 
-  it('rejects invalid specs in under 100ms', () => {
+  it('rejects invalid specs in under 100ms', async () => {
     const start = performance.now();
-    const result = registerSpec(
+    const result = await registerSpec(
       'capability.invalid-routing',
       'capability',
       '1.0.0',

@@ -3,12 +3,12 @@ import { beforeEach, describe, expect, it } from 'bun:test';
 import { analyzeImpact } from '../tools/impact-analyzer.js';
 import { approveSpec, _clearRegistry, registerSpec } from '../tools/spec-registry.js';
 
-function registerCapability(
+async function registerCapability(
   version: string,
   payload: Record<string, unknown>,
   status: 'draft' | 'proposed' | 'approved' = 'approved',
-): void {
-  const result = registerSpec(
+): Promise<void> {
+  const result = await registerSpec(
     'capability.payment-routing',
     'capability',
     version,
@@ -31,27 +31,26 @@ function registerCapability(
   expect(result.valid).toBe(true);
 
   if (status === 'approved') {
-    expect(
-      approveSpec('capability.payment-routing', version, {
-        approved_by: 'domain-reviewer',
-        approval_run_id: `run-approve-capability-${version}`,
-        requirement_refs: ['req://payments/routing'],
-        code_refs: ['.opencode/specs/capabilities/payment-routing.capability.yaml:1'],
-        test_cases: ['UT: impact-analyzer capability approval'],
-        evidence_refs: [`spec://capability.payment-routing@${version}`],
-        owner_technical: 'platform-team',
-        owner_domain: 'payments',
-      }).valid,
-    ).toBe(true);
+    const approval = await approveSpec('capability.payment-routing', version, {
+      approved_by: 'domain-reviewer',
+      approval_run_id: `run-approve-capability-${version}`,
+      requirement_refs: ['req://payments/routing'],
+      code_refs: ['.opencode/specs/capabilities/payment-routing.capability.yaml:1'],
+      test_cases: ['UT: impact-analyzer capability approval'],
+      evidence_refs: [`spec://capability.payment-routing@${version}`],
+      owner_technical: 'platform-team',
+      owner_domain: 'payments',
+    });
+    expect(approval.valid).toBe(true);
   }
 }
 
-function registerBehavior(
+async function registerBehavior(
   version: string,
   payload: Record<string, unknown>,
   status: 'draft' | 'proposed' | 'approved' = 'approved',
-): void {
-  const result = registerSpec(
+): Promise<void> {
+  const result = await registerSpec(
     'workflow.payment-routing',
     'behavior',
     version,
@@ -73,18 +72,17 @@ function registerBehavior(
   expect(result.valid).toBe(true);
 
   if (status === 'approved') {
-    expect(
-      approveSpec('workflow.payment-routing', version, {
-        approved_by: 'workflow-reviewer',
-        approval_run_id: `run-approve-behavior-${version}`,
-        requirement_refs: ['req://payments/routing'],
-        code_refs: ['.opencode/specs/behaviors/payment-routing.behavior.yaml:1'],
-        test_cases: ['UT: impact-analyzer behavior approval'],
-        evidence_refs: [`spec://workflow.payment-routing@${version}`],
-        owner_technical: 'platform-team',
-        owner_domain: 'payments',
-      }).valid,
-    ).toBe(true);
+    const approval = await approveSpec('workflow.payment-routing', version, {
+      approved_by: 'workflow-reviewer',
+      approval_run_id: `run-approve-behavior-${version}`,
+      requirement_refs: ['req://payments/routing'],
+      code_refs: ['.opencode/specs/behaviors/payment-routing.behavior.yaml:1'],
+      test_cases: ['UT: impact-analyzer behavior approval'],
+      evidence_refs: [`spec://workflow.payment-routing@${version}`],
+      owner_technical: 'platform-team',
+      owner_domain: 'payments',
+    });
+    expect(approval.valid).toBe(true);
   }
 }
 
@@ -93,8 +91,8 @@ describe('UT: impact-analyzer.ts', () => {
     _clearRegistry();
   });
 
-  it('uses a deterministic fallback when there is no previous version', () => {
-    registerCapability('1.0.0', {
+  it('uses a deterministic fallback when there is no previous version', async () => {
+    await registerCapability('1.0.0', {
       change_surface: 'code',
       risk_level: 'low',
       impact_scope: {
@@ -118,11 +116,11 @@ describe('UT: impact-analyzer.ts', () => {
     expect(result.report.timestamp).toBe('2026-04-02T00:00:00.000Z');
   });
 
-  it('reuses spec-diff when a breaking previous version exists', () => {
-    registerBehavior('1.0.0', {
+  it('reuses spec-diff when a breaking previous version exists', async () => {
+    await registerBehavior('1.0.0', {
       description: 'Baseline approval workflow.',
     });
-    registerBehavior('2.0.0', {
+    await registerBehavior('2.0.0', {
       initial_state: 'queued',
       change_surface: 'api',
     });
@@ -138,11 +136,11 @@ describe('UT: impact-analyzer.ts', () => {
     expect(result.report.payload.risk_level).toBe('critical');
   });
 
-  it('captures risky-compatible and additive-compatible baselines', () => {
-    registerBehavior('1.0.0', {
+  it('captures risky-compatible and additive-compatible baselines', async () => {
+    await registerBehavior('1.0.0', {
       description: 'Baseline approval workflow.',
     });
-    registerBehavior('1.1.0', {
+    await registerBehavior('1.1.0', {
       description: 'Baseline approval workflow with richer logging.',
       timeout_ms: 1000,
     });
@@ -154,7 +152,7 @@ describe('UT: impact-analyzer.ts', () => {
     expect(additive.diff?.classification).toBe('additive-compatible');
     expect(additive.auto_approvable).toBe(true);
 
-    registerBehavior('1.2.0', {
+    await registerBehavior('1.2.0', {
       description: 'Baseline approval workflow with richer logging.',
       timeout_ms: 2000,
     });
@@ -168,8 +166,8 @@ describe('UT: impact-analyzer.ts', () => {
     expect(risky.report.payload.risk_level).toBe('medium');
   });
 
-  it('elevates risk level when blast radius grows beyond the safe threshold', () => {
-    registerCapability('1.0.0', {
+  it('elevates risk level when blast radius grows beyond the safe threshold', async () => {
+    await registerCapability('1.0.0', {
       risk_level: 'low',
     });
 
@@ -182,15 +180,15 @@ describe('UT: impact-analyzer.ts', () => {
     expect(result.report.payload.risk_level).toBe('high');
   });
 
-  it('uses the latest approved baseline when history contains non-approved versions', () => {
-    registerBehavior('1.0.0', {
+  it('uses the latest approved baseline when history contains non-approved versions', async () => {
+    await registerBehavior('1.0.0', {
       description: 'Approved baseline workflow.',
     });
-    registerBehavior('1.1.0', {
+    await registerBehavior('1.1.0', {
       description: 'Proposed intermediate workflow.',
       timeout_ms: 1000,
     }, 'proposed');
-    registerBehavior('1.2.0', {
+    await registerBehavior('1.2.0', {
       initial_state: 'queued',
     });
 
@@ -204,11 +202,11 @@ describe('UT: impact-analyzer.ts', () => {
     expect(result.diff?.classification).toBe('breaking');
   });
 
-  it('targets the latest registered version even when it is only proposed', () => {
-    registerBehavior('1.0.0', {
+  it('targets the latest registered version even when it is only proposed', async () => {
+    await registerBehavior('1.0.0', {
       description: 'Approved baseline workflow.',
     });
-    registerBehavior('1.1.0', {
+    await registerBehavior('1.1.0', {
       timeout_ms: 1000,
     }, 'proposed');
 

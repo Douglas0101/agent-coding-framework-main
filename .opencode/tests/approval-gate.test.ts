@@ -270,8 +270,8 @@ describe('UT: approval-gate.ts', () => {
     expect(result.reasons.some((reason) => reason.includes('No traceability link found'))).toBe(true);
   });
 
-  it('allows release execution when minimum trace links exist', () => {
-    createLink('capability.payment-routing', '1.0.0', 'run-release-ready', {
+  it('allows release execution when minimum trace links exist', async () => {
+    await createLink('capability.payment-routing', '1.0.0', 'run-release-ready', {
       requirements: ['req://payment-routing/1'],
       code_refs: ['.opencode/tools/approval-gate.ts:1'],
       test_cases: ['UT: approval-gate traceability'],

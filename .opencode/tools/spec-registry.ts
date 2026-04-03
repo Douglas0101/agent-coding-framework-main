@@ -14,6 +14,18 @@
  */
 
 import { createLink } from './spec-linker.js';
+import { AsyncLock } from './async-lock.js';
+import { sanitizeSpecId, sanitizeVersion, sanitizeDomain, sanitizeAgentIdentity } from './input-sanitizer.js';
+
+// ---------------------------------------------------------------------------
+// Concurrency Control
+// ---------------------------------------------------------------------------
+
+/**
+ * AsyncLock to prevent race conditions in concurrent multi-agent execution.
+ * All write operations must acquire this lock before modifying the store.
+ */
+const registryLock = new AsyncLock();
 
 // ---------------------------------------------------------------------------
 // Types
@@ -142,19 +154,19 @@ function canTransition(current: SpecStatus, next: SpecStatus): boolean {
   return allowedTransitions[current].includes(next);
 }
 
-function createApprovalMetadata(
+async function createApprovalMetadata(
   entry: SpecEntry,
   approved_by: string,
   input: Omit<ApproveSpecInput, 'approved_by'>,
   approved_at: string,
-): {
+): Promise<{
   approval: SpecApprovalMetadata;
   valid: boolean;
   errors: string[];
-} {
+}> {
   const defaults = extractTraceabilityDefaults(entry.payload);
   const approval_run_id = input.approval_run_id?.trim() || `approval:${entry.spec_id}@${entry.version}`;
-  const traceLink = createLink(entry.spec_id, entry.version, approval_run_id, {
+  const traceLink = await createLink(entry.spec_id, entry.version, approval_run_id, {
     requirements: input.requirement_refs ?? defaults.requirement_refs,
     code_refs: input.code_refs ?? [],
     test_cases: input.test_cases ?? [],
@@ -274,7 +286,7 @@ export function validateSpec(
  * - Same spec_id + version already exists
  * - A newer version already exists (prevents downgrade injection)
  */
-export function registerSpec(
+export async function registerSpec(
   spec_id: string,
   spec_type: SpecType,
   version: string,
@@ -282,66 +294,97 @@ export function registerSpec(
   domain: string,
   payload: Record<string, unknown>,
   registered_by: string = 'system',
-): SpecValidationResult {
+): Promise<SpecValidationResult> {
+  // Input sanitization and validation
+  const specIdResult = sanitizeSpecId(spec_id);
+  if (!specIdResult.valid) {
+    return { valid: false, errors: [`Invalid spec_id: ${specIdResult.errors.join(', ')}`] };
+  }
+
+  const versionResult = sanitizeVersion(version);
+  if (!versionResult.valid) {
+    return { valid: false, errors: [`Invalid version: ${versionResult.errors.join(', ')}`] };
+  }
+
+  const domainResult = sanitizeDomain(domain);
+  if (!domainResult.valid) {
+    return { valid: false, errors: [`Invalid domain: ${domainResult.errors.join(', ')}`] };
+  }
+
+  const registeredByResult = sanitizeAgentIdentity(registered_by);
+  if (!registeredByResult.valid) {
+    return { valid: false, errors: [`Invalid registered_by: ${registeredByResult.errors.join(', ')}`] };
+  }
+
+  const sanitizedSpecId = specIdResult.sanitized;
+  const sanitizedVersion = versionResult.sanitized;
+  const sanitizedDomain = domainResult.sanitized;
+  const sanitizedRegisteredBy = registeredByResult.sanitized;
+
   const validation = validateSpec(payload, spec_type);
   if (!validation.valid) {
     return validation;
   }
 
-  const key = specKey(spec_id);
-  const existing = store.get(key) ?? [];
+  const release = await registryLock.acquire();
+  try {
+    const key = specKey(sanitizedSpecId);
+    const existing = store.get(key) ?? [];
 
-  // Duplicate version check
-  if (existing.some((e) => e.version === version)) {
-    return {
-      valid: false,
-      errors: [`Spec "${spec_id}" version "${version}" already registered. Use a new version.`],
+    // Duplicate version check
+    if (existing.some((e) => e.version === sanitizedVersion)) {
+      return {
+        valid: false,
+        errors: [`Spec "${sanitizedSpecId}" version "${sanitizedVersion}" already registered. Use a new version.`],
+      };
+    }
+
+    const latest = existing[existing.length - 1];
+    if (latest && compareVersions(sanitizedVersion, latest.version) < 0) {
+      return {
+        valid: false,
+        errors: [
+          `Spec "${sanitizedSpecId}" version "${sanitizedVersion}" is older than the latest registered version "${latest.version}". Downgrade registration is blocked.`,
+        ],
+      };
+    }
+
+    if (status === 'approved') {
+      return {
+        valid: false,
+        errors: [
+          `Direct registration as "approved" is blocked for "${sanitizedSpecId}@${sanitizedVersion}". Register the spec as "draft" or "proposed" and use approveSpec().`,
+        ],
+      };
+    }
+
+    const normalizedPayload =
+      spec_type === 'capability'
+        ? {
+            ...payload,
+            status,
+          }
+        : { ...payload };
+
+    const registered_at = new Date().toISOString();
+
+    const entry: SpecEntry = {
+      spec_id: sanitizedSpecId,
+      spec_type,
+      version: sanitizedVersion,
+      status,
+      domain: sanitizedDomain,
+      registered_at,
+      registered_by: sanitizedRegisteredBy,
+      payload: normalizedPayload,
     };
+
+    store.set(key, [...existing, entry].sort((a, b) => compareVersions(a.version, b.version)));
+
+    return { valid: true, errors: [] };
+  } finally {
+    release();
   }
-
-  const latest = existing[existing.length - 1];
-  if (latest && compareVersions(version, latest.version) < 0) {
-    return {
-      valid: false,
-      errors: [
-        `Spec "${spec_id}" version "${version}" is older than the latest registered version "${latest.version}". Downgrade registration is blocked.`,
-      ],
-    };
-  }
-
-  if (status === 'approved') {
-    return {
-      valid: false,
-      errors: [
-        `Direct registration as "approved" is blocked for "${spec_id}@${version}". Register the spec as "draft" or "proposed" and use approveSpec().`,
-      ],
-    };
-  }
-
-  const normalizedPayload =
-    spec_type === 'capability'
-      ? {
-          ...payload,
-          status,
-        }
-      : { ...payload };
-
-  const registered_at = new Date().toISOString();
-
-  const entry: SpecEntry = {
-    spec_id,
-    spec_type,
-    version,
-    status,
-    domain,
-    registered_at,
-    registered_by,
-    payload: normalizedPayload,
-  };
-
-  store.set(key, [...existing, entry].sort((a, b) => compareVersions(a.version, b.version)));
-
-  return { valid: true, errors: [] };
 }
 
 /**
@@ -393,140 +436,177 @@ export function getSpecHistory(spec_id: string): SpecHistoryEntry[] {
 /**
  * Updates the status of a specific spec version (e.g., draft → proposed → approved → deprecated).
  * Gate: cannot move from deprecated to any active status.
+ * Thread-safe: uses async lock for concurrent access protection.
  */
-export function updateSpecStatus(
+export async function updateSpecStatus(
   spec_id: string,
   version: string,
   new_status: SpecStatus,
-): SpecValidationResult {
-  const key = specKey(spec_id);
-  const entries = store.get(key);
-  if (!entries) {
-    return { valid: false, errors: [`Spec "${spec_id}" not found`] };
+): Promise<SpecValidationResult> {
+  const specIdResult = sanitizeSpecId(spec_id);
+  if (!specIdResult.valid) {
+    return { valid: false, errors: [`Invalid spec_id: ${specIdResult.errors.join(', ')}`] };
   }
 
-  const entry = entries.find((e) => e.version === version);
-  if (!entry) {
-    return { valid: false, errors: [`Spec "${spec_id}" version "${version}" not found`] };
+  const versionResult = sanitizeVersion(version);
+  if (!versionResult.valid) {
+    return { valid: false, errors: [`Invalid version: ${versionResult.errors.join(', ')}`] };
   }
 
-  if (entry.status === 'deprecated' && new_status !== 'deprecated') {
-    return {
-      valid: false,
-      errors: [`Cannot reactivate deprecated spec "${spec_id}@${version}". Create a new version instead.`],
-    };
-  }
+  const release = await registryLock.acquire();
+  try {
+    const key = specKey(specIdResult.sanitized);
+    const entries = store.get(key);
+    if (!entries) {
+      return { valid: false, errors: [`Spec "${specIdResult.sanitized}" not found`] };
+    }
 
-  if (new_status === 'approved') {
-    return {
-      valid: false,
-      errors: [
-        `Direct status transition to "approved" is blocked for "${spec_id}@${version}". Use approveSpec() to capture approval metadata and traceability.`,
-      ],
-    };
-  }
+    const entry = entries.find((e) => e.version === versionResult.sanitized);
+    if (!entry) {
+      return { valid: false, errors: [`Spec "${specIdResult.sanitized}" version "${versionResult.sanitized}" not found`] };
+    }
 
-  if (!canTransition(entry.status, new_status)) {
-    return {
-      valid: false,
-      errors: [
-        `Invalid status transition for "${spec_id}@${version}": ${entry.status} -> ${new_status}.`,
-      ],
-    };
-  }
+    if (entry.status === 'deprecated' && new_status !== 'deprecated') {
+      return {
+        valid: false,
+        errors: [`Cannot reactivate deprecated spec "${specIdResult.sanitized}@${versionResult.sanitized}". Create a new version instead.`],
+      };
+    }
 
-  entry.status = new_status;
-  syncPayloadStatus(entry, new_status);
-  return { valid: true, errors: [] };
+    if (new_status === 'approved') {
+      return {
+        valid: false,
+        errors: [
+          `Direct status transition to "approved" is blocked for "${specIdResult.sanitized}@${versionResult.sanitized}". Use approveSpec() to capture approval metadata and traceability.`,
+        ],
+      };
+    }
+
+    if (!canTransition(entry.status, new_status)) {
+      return {
+        valid: false,
+        errors: [
+          `Invalid status transition for "${specIdResult.sanitized}@${versionResult.sanitized}": ${entry.status} -> ${new_status}.`,
+        ],
+      };
+    }
+
+    entry.status = new_status;
+    syncPayloadStatus(entry, new_status);
+    return { valid: true, errors: [] };
+  } finally {
+    release();
+  }
 }
 
 /**
  * Formal approval path for a proposed spec version.
  * Approval captures traceability metadata and links the approved spec to a
  * minimal traceability manifest.
+ * Thread-safe: uses async lock for concurrent access protection.
  */
-export function approveSpec(
+export async function approveSpec(
   spec_id: string,
   version: string,
   input: ApproveSpecInput,
-): ApproveSpecResult {
-  const key = specKey(spec_id);
-  const entries = store.get(key);
-  if (!entries) {
-    return { valid: false, errors: [`Spec "${spec_id}" not found`] };
+): Promise<ApproveSpecResult> {
+  const specIdResult = sanitizeSpecId(spec_id);
+  if (!specIdResult.valid) {
+    return { valid: false, errors: [`Invalid spec_id: ${specIdResult.errors.join(', ')}`] };
   }
 
-  const entry = entries.find((candidate) => candidate.version === version);
-  if (!entry) {
-    return { valid: false, errors: [`Spec "${spec_id}" version "${version}" not found`] };
+  const versionResult = sanitizeVersion(version);
+  if (!versionResult.valid) {
+    return { valid: false, errors: [`Invalid version: ${versionResult.errors.join(', ')}`] };
   }
 
-  if (entry.status !== 'proposed') {
+  const approvedByResult = sanitizeAgentIdentity(input.approved_by);
+  if (!approvedByResult.valid) {
+    return { valid: false, errors: [`Invalid approved_by: ${approvedByResult.errors.join(', ')}`] };
+  }
+
+  const release = await registryLock.acquire();
+  try {
+    const key = specKey(specIdResult.sanitized);
+    const entries = store.get(key);
+    if (!entries) {
+      return { valid: false, errors: [`Spec "${specIdResult.sanitized}" not found`] };
+    }
+
+    const entry = entries.find((candidate) => candidate.version === versionResult.sanitized);
+    if (!entry) {
+      return { valid: false, errors: [`Spec "${specIdResult.sanitized}" version "${versionResult.sanitized}" not found`] };
+    }
+
+    if (entry.status !== 'proposed') {
+      return {
+        valid: false,
+        errors: [
+          `Spec "${specIdResult.sanitized}@${versionResult.sanitized}" must be in status "proposed" before approval. Current status: "${entry.status}".`,
+        ],
+      };
+    }
+
+    const approvedBy = approvedByResult.sanitized;
+    if (!approvedBy) {
+      return {
+        valid: false,
+        errors: [`Spec "${specIdResult.sanitized}@${versionResult.sanitized}" approval requires a non-empty approved_by identity.`],
+      };
+    }
+
+    if (input.approval_run_id !== undefined && input.approval_run_id.trim() === '') {
+      return {
+        valid: false,
+        errors: [`Spec "${specIdResult.sanitized}@${versionResult.sanitized}" approval_run_id must be non-empty when provided.`],
+      };
+    }
+
+    if (approvedBy === entry.registered_by.trim()) {
+      return {
+        valid: false,
+        errors: [
+          `Spec "${specIdResult.sanitized}@${versionResult.sanitized}" cannot be approved by its original author "${entry.registered_by}".`,
+        ],
+      };
+    }
+
+    const approved_at = new Date().toISOString();
+    const approvalResult = await createApprovalMetadata(
+      entry,
+      approvedBy,
+      {
+        requirement_refs: input.requirement_refs,
+        code_refs: input.code_refs,
+        test_cases: input.test_cases,
+        evidence_refs: input.evidence_refs,
+        owner_technical: input.owner_technical,
+        owner_domain: input.owner_domain,
+        approval_run_id: input.approval_run_id,
+      },
+      approved_at,
+    );
+
+    if (!approvalResult.valid) {
+      return {
+        valid: false,
+        errors: approvalResult.errors,
+      };
+    }
+
+    entry.status = 'approved';
+    entry.approval = approvalResult.approval;
+    syncPayloadStatus(entry, 'approved');
+
     return {
-      valid: false,
-      errors: [
-        `Spec "${spec_id}@${version}" must be in status "proposed" before approval. Current status: "${entry.status}".`,
-      ],
+      valid: true,
+      errors: [],
+      traceability_link_id: approvalResult.approval.traceability_link_id,
+      approval_run_id: approvalResult.approval.approval_run_id,
     };
+  } finally {
+    release();
   }
-
-  const approvedBy = input.approved_by.trim();
-  if (!approvedBy) {
-    return {
-      valid: false,
-      errors: [`Spec "${spec_id}@${version}" approval requires a non-empty approved_by identity.`],
-    };
-  }
-
-  if (input.approval_run_id !== undefined && input.approval_run_id.trim() === '') {
-    return {
-      valid: false,
-      errors: [`Spec "${spec_id}@${version}" approval_run_id must be non-empty when provided.`],
-    };
-  }
-
-  if (approvedBy === entry.registered_by.trim()) {
-    return {
-      valid: false,
-      errors: [
-        `Spec "${spec_id}@${version}" cannot be approved by its original author "${entry.registered_by}".`,
-      ],
-    };
-  }
-
-  const approved_at = new Date().toISOString();
-  const approvalResult = createApprovalMetadata(
-    entry,
-    approvedBy,
-    {
-      requirement_refs: input.requirement_refs,
-      code_refs: input.code_refs,
-      test_cases: input.test_cases,
-      evidence_refs: input.evidence_refs,
-      owner_technical: input.owner_technical,
-      owner_domain: input.owner_domain,
-      approval_run_id: input.approval_run_id,
-    },
-    approved_at,
-  );
-
-  if (!approvalResult.valid) {
-    return {
-      valid: false,
-      errors: approvalResult.errors,
-    };
-  }
-
-  entry.status = 'approved';
-  entry.approval = approvalResult.approval;
-  syncPayloadStatus(entry, 'approved');
-
-  return {
-    valid: true,
-    errors: [],
-    traceability_link_id: approvalResult.approval.traceability_link_id,
-    approval_run_id: approvalResult.approval.approval_run_id,
-  };
 }
 
 /**
@@ -561,7 +641,23 @@ export function assertSpecApproved(spec_id: string, version?: string): SpecValid
 
 /**
  * Clears the registry. Intended for testing only.
+ * PRODUCTION GUARD: Blocked when NODE_ENV is 'production' or when ALLOW_CLEAR is not set.
  */
 export function _clearRegistry(): void {
+  if (process.env.NODE_ENV === 'production' && process.env.ALLOW_CLEAR !== '1') {
+    throw new Error(
+      '_clearRegistry is blocked in production. Set ALLOW_CLEAR=1 to override (testing only).',
+    );
+  }
   store.clear();
+}
+
+/**
+ * Export lock metrics for monitoring (read-only).
+ */
+export function getRegistryLockMetrics(): { isLocked: boolean; queueLength: number } {
+  return {
+    isLocked: registryLock.isLocked,
+    queueLength: registryLock.queueLength,
+  };
 }

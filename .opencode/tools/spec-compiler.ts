@@ -534,14 +534,14 @@ export function compileDAG(
   return { success: true, dag, errors: [], warnings };
 }
 
-export function compileDAGWithRunManifest(
+export async function compileDAGWithRunManifest(
   capability_spec_id: string,
   behavior_spec_id: string,
   policy_bundle_id: string,
   verification_spec_id: string,
   run_id: string,
   options: CompileDAGWithRunManifestOptions = {},
-): CompilerTraceabilityResult {
+): Promise<CompilerTraceabilityResult> {
   const result = compileDAG(
     capability_spec_id,
     behavior_spec_id,
@@ -583,16 +583,16 @@ export function compileDAGWithRunManifest(
   const existingLink = resolveLink({ spec_id: capability_spec_id, run_id });
   let traceability:
     | { link: TraceabilityLink; validation: LinkerValidationResult }
-    | ReturnType<typeof createLink>;
+    | Awaited<ReturnType<typeof createLink>>;
 
   if (existingLink) {
-    const updatedLink = appendToLink(capability_spec_id, run_id, traceabilityLinks) ?? existingLink;
+    const updatedLink = await appendToLink(capability_spec_id, run_id, traceabilityLinks) ?? existingLink;
     traceability = {
       link: updatedLink,
       validation: summarizeLinkValidation(updatedLink),
     };
   } else {
-    traceability = createLink(capability_spec_id, result.dag.spec_version, run_id, traceabilityLinks);
+    traceability = await createLink(capability_spec_id, result.dag.spec_version, run_id, traceabilityLinks);
   }
 
   const run_manifest = buildInitialRunManifest({

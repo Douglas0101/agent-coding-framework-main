@@ -29,8 +29,8 @@ describe('UT: spec-linker.ts', () => {
     _clearLinks();
   });
 
-  it('creates a traceability link with spec fallback and resolves it by both keys', () => {
-    const created = createLink('capability.payment-routing', '1.0.0', 'run-link-001', makeLinks());
+  it('creates a traceability link with spec fallback and resolves it by both keys', async () => {
+    const created = await createLink('capability.payment-routing', '1.0.0', 'run-link-001', makeLinks());
 
     expect(created.link.link_id).toMatch(/^tl_capability\.payment-routing_run-link-001_/);
     expect(created.link.links.specs).toEqual(['capability.payment-routing']);
@@ -70,12 +70,12 @@ describe('UT: spec-linker.ts', () => {
     expect(gaps.find((gap) => gap.type === 'runtime_trace_ids')?.severity).toBe('warning');
   });
 
-  it('blocks when a link is missing or below the minimum threshold', () => {
+  it('blocks when a link is missing or below the minimum threshold', async () => {
     const missing = assertMinimumLinks('capability.payment-routing', 'run-missing');
     expect(missing.valid).toBe(false);
     expect(missing.errors.some((error) => error.includes('No traceability link found'))).toBe(true);
 
-    createLink('capability.payment-routing', '1.0.0', 'run-partial', {
+    await createLink('capability.payment-routing', '1.0.0', 'run-partial', {
       requirements: ['req://payments/routing'],
       owner_technical: 'platform-team',
       owner_domain: 'payments',
@@ -86,8 +86,8 @@ describe('UT: spec-linker.ts', () => {
     expect(belowThreshold.errors.some((error) => error.includes('below minimum 0.75'))).toBe(true);
   });
 
-  it('allows when a link is sufficiently complete', () => {
-    createLink('capability.payment-routing', '1.0.0', 'run-complete', {
+  it('allows when a link is sufficiently complete', async () => {
+    await createLink('capability.payment-routing', '1.0.0', 'run-complete', {
       requirements: ['req://payments/routing'],
       dag_nodes: ['received_to_validated_000'],
       code_refs: ['.opencode/tools/spec-linker.ts:1'],
@@ -103,14 +103,14 @@ describe('UT: spec-linker.ts', () => {
     expect(valid.completeness_score).toBe(1);
   });
 
-  it('appends links with deduplication and recalculates completeness', () => {
-    const created = createLink('capability.payment-routing', '1.0.0', 'run-append', {
+  it('appends links with deduplication and recalculates completeness', async () => {
+    const created = await createLink('capability.payment-routing', '1.0.0', 'run-append', {
       requirements: ['req://payments/routing'],
       owner_technical: 'platform-team',
       owner_domain: 'payments',
     });
 
-    const updated = appendToLink('capability.payment-routing', 'run-append', {
+    const updated = await appendToLink('capability.payment-routing', 'run-append', {
       requirements: ['req://payments/routing'],
       dag_nodes: ['received_to_validated_000'],
       code_refs: ['.opencode/tools/spec-linker.ts:1'],

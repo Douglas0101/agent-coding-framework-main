@@ -8,8 +8,8 @@ import {
 } from '../tools/spec-registry.js';
 import { compileDAG, compileDAGWithRunManifest } from '../tools/spec-compiler.js';
 
-function approveRegisteredSpec(spec_id: string, version: string, approved_by: string): void {
-  const approval = approveSpec(spec_id, version, {
+async function approveRegisteredSpec(spec_id: string, version: string, approved_by: string): Promise<void> {
+  const approval = await approveSpec(spec_id, version, {
     approved_by,
     requirement_refs: ['req://payments/routing'],
     code_refs: [`spec://${spec_id}@${version}`],
@@ -23,9 +23,9 @@ function approveRegisteredSpec(spec_id: string, version: string, approved_by: st
   expect(approval.valid).toBe(true);
 }
 
-function registerFoundationSpecs(): void {
+async function registerFoundationSpecs(): Promise<void> {
   expect(
-    registerSpec(
+    (await registerSpec(
       'capability.payment-routing',
       'capability',
       '1.0.0',
@@ -47,12 +47,12 @@ function registerFoundationSpecs(): void {
         },
       },
       'spec-architect',
-    ).valid,
+    )).valid,
   ).toBe(true);
-  approveRegisteredSpec('capability.payment-routing', '1.0.0', 'domain-reviewer');
+  await approveRegisteredSpec('capability.payment-routing', '1.0.0', 'domain-reviewer');
 
   expect(
-    registerSpec(
+    (await registerSpec(
       'workflow.payment-routing',
       'behavior',
       '1.0.0',
@@ -68,12 +68,12 @@ function registerFoundationSpecs(): void {
         transitions: [{ from: 'received', to: 'validated', action: 'validate' }],
       },
       'spec-architect',
-    ).valid,
+    )).valid,
   ).toBe(true);
-  approveRegisteredSpec('workflow.payment-routing', '1.0.0', 'workflow-reviewer');
+  await approveRegisteredSpec('workflow.payment-routing', '1.0.0', 'workflow-reviewer');
 
   expect(
-    registerSpec(
+    (await registerSpec(
       'policy.payment-routing',
       'policy',
       '1.0.0',
@@ -85,12 +85,12 @@ function registerFoundationSpecs(): void {
         rules: [],
       },
       'policy-architect',
-    ).valid,
+    )).valid,
   ).toBe(true);
-  approveRegisteredSpec('policy.payment-routing', '1.0.0', 'policy-reviewer');
+  await approveRegisteredSpec('policy.payment-routing', '1.0.0', 'policy-reviewer');
 
   expect(
-    registerSpec(
+    (await registerSpec(
       'verification.payment-routing',
       'verification',
       '1.0.0',
@@ -105,9 +105,9 @@ function registerFoundationSpecs(): void {
         generated_tests: ['state_transition_tests'],
       },
       'verification-architect',
-    ).valid,
+    )).valid,
   ).toBe(true);
-  approveRegisteredSpec('verification.payment-routing', '1.0.0', 'verification-reviewer');
+  await approveRegisteredSpec('verification.payment-routing', '1.0.0', 'verification-reviewer');
 }
 
 describe('IT: spec foundation traceability bootstrap', () => {
@@ -116,8 +116,8 @@ describe('IT: spec foundation traceability bootstrap', () => {
     _clearLinks();
   });
 
-  it('builds a traceability bootstrap and initial run manifest without changing compileDAG contract', () => {
-    registerFoundationSpecs();
+  it('builds a traceability bootstrap and initial run manifest without changing compileDAG contract', async () => {
+    await registerFoundationSpecs();
 
     const legacy = compileDAG(
       'capability.payment-routing',
@@ -126,7 +126,7 @@ describe('IT: spec foundation traceability bootstrap', () => {
       'verification.payment-routing',
       'run-123',
     );
-    const enriched = compileDAGWithRunManifest(
+    const enriched = await compileDAGWithRunManifest(
       'capability.payment-routing',
       'workflow.payment-routing',
       'policy.payment-routing',
@@ -171,13 +171,13 @@ describe('IT: spec foundation traceability bootstrap', () => {
     });
     expect(stored?.link_id).toBe(enriched.traceability_link?.link_id);
 
-    const enrichedLink = appendToLink('capability.payment-routing', 'run-123', {
+    const enrichedLink = await appendToLink('capability.payment-routing', 'run-123', {
       runtime_trace_ids: ['trace-123'],
       evidence_refs: ['evidence://runtime/trace-123'],
     });
     expect(enrichedLink?.links.runtime_trace_ids).toEqual(['trace-123']);
 
-    const recompilation = compileDAGWithRunManifest(
+    const recompilation = await compileDAGWithRunManifest(
       'capability.payment-routing',
       'workflow.payment-routing',
       'policy.payment-routing',
