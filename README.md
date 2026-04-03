@@ -107,6 +107,19 @@ Scripts, testes e artefatos de validação:
 
 ---
 
+
+## Public vs Internal Artifacts
+
+Este repositório público mantém apenas artefatos sanitizados. Diretórios operacionais (`.agent/`, `.codex/`, `.opencode/`) permanecem fora do versionamento público e devem ser materializados localmente em ambiente interno.
+
+Para garantir execução estável sem expor dados sensíveis:
+
+- `opencode.json` (raiz) define a interface pública sanitizada e os campos críticos de routing.
+- `.opencode/opencode.json` é a configuração operacional local e deve manter paridade nos campos críticos.
+- Campos não críticos podem divergir conforme a política documentada na seção **Execução Estável (Stable Execution)**.
+
+---
+
 ## Uso como Template
 
 ### Instalação
@@ -252,6 +265,8 @@ O framework implementa um sistema robusto de garantias de execução:
 ### Garantias Implementadas
 
 1. **Paridade de Configuração**: `opencode.json` (raiz) e `.opencode/opencode.json` devem ser equivalentes
+   - Campos críticos de routing (obrigatoriamente idênticos): `default_agent`, `maxSteps`, `routing.commands.autocode`, `routing.agents.autocoder.maxSteps`
+   - Campos permitidos a divergir: metadados e contexto não-crítico de runtime (ex.: `note`, `template_refs`, `providers`, segredos/overrides locais). Divergências nesses campos não podem alterar roteamento ou limites de steps.
 2. **Invariantes de Execução**:
    - Sem retry ilimitado (`max_attempts ≤ 3`)
    - Sem fallback silencioso de agente
