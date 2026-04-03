@@ -203,3 +203,35 @@ Antes de publicar:
 1. validar que diretórios internos (`.agent/`, `.codex/`, `.opencode/`) não estão versionados;
 2. manter apenas templates sanitizados (`*.example` + READMEs de interface);
 3. executar o check de boundary no CI.
+
+## Pre-commit local (segredos + padrões proibidos)
+
+Para alinhar validação local com o CI e reduzir divergência de regras:
+
+1. Instale dependências de pre-commit:
+   ```bash
+   python -m pip install pre-commit detect-secrets
+   ```
+2. Instale os hooks no repositório:
+   ```bash
+   pre-commit install
+   ```
+3. Execute uma validação completa manualmente:
+   ```bash
+   pre-commit run --all-files
+   ```
+
+### Hooks configurados
+
+- `detect-secrets` com baseline versionada em `.secrets.baseline`.
+- `sensitive-patterns-scan` (script local `scripts/scan_sensitive_patterns.py`) usando o mesmo arquivo de allowlist do CI: `.github/security/public-repo-allowlist.json`.
+
+### Atualizando baseline de segredos
+
+Quando houver mudança intencional de conteúdo analisado, regenere baseline:
+
+```bash
+detect-secrets scan --all-files --baseline .secrets.baseline --force-use-all-plugins
+```
+
+> Se precisar exceção de padrão, registre em `pattern_scan_exceptions` no allowlist versionado para manter paridade CI/local.

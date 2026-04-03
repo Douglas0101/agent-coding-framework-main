@@ -81,68 +81,28 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Scan for sensitive operational config patterns
+        run: python scripts/scan_sensitive_patterns.py
+
+  precommit-integrity:
+    name: Pre-commit Integrity (Optional)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install pre-commit tooling
         run: |
-          python - <<'PY'
-          import fnmatch
-          import pathlib
-          import re
-          import subprocess
-          import sys
+          python -m pip install --upgrade pip
+          python -m pip install pre-commit detect-secrets
 
-          allowlist = pathlib.Path('.github/security/public-repo-allowlist.json')
-          allow_cfg = {}
-          if allowlist.exists():
-              import json
-              allow_cfg = json.loads(allowlist.read_text(encoding='utf-8'))
+      - name: Validate pre-commit config
+        run: pre-commit validate-config
 
-          scan_exceptions = [x['pattern'] for x in allow_cfg.get('pattern_scan_exceptions', [])]
-
-          files = subprocess.check_output(['git', 'ls-files'], text=True).splitlines()
-
-          text_extensions = {
-              '.md', '.txt', '.yaml', '.yml', '.json', '.toml', '.ini', '.cfg', '.conf',
-              '.py', '.sh', '.ts', '.tsx', '.js', '.jsx', '.java', '.go', '.rb', '.rs',
-              '.env', '.properties', '.xml'
-          }
-
-          patterns = {
-              'possible_token_assignment': re.compile(r'(?i)\b(token|api[_-]?key|secret|client[_-]?secret)\b\s*[:=]\s*["\']?[A-Za-z0-9_\-]{16,}["\']?'),
-              'aws_access_key_id': re.compile(r'\bAKIA[0-9A-Z]{16}\b'),
-              'github_pat_or_classic_token': re.compile(r'\b(ghp|github_pat)_[A-Za-z0-9_]{20,}\b'),
-              'private_key_material': re.compile(r'-----BEGIN (RSA|EC|DSA|OPENSSH|PRIVATE) KEY-----'),
-              'internal_endpoint': re.compile(r'https?://[^\s"\']+(\.internal\b|\.corp\b|\.local\b|\b10\.|\b192\.168\.|\b172\.(1[6-9]|2[0-9]|3[0-1])\.)')
-          }
-
-          findings = []
-
-          for f in files:
-              path = pathlib.Path(f)
-              if path.suffix.lower() not in text_extensions and path.name not in {'.env', '.env.example'}:
-                  continue
-              if any(part in {'.git', 'node_modules', 'dist', 'build', '.venv'} for part in path.parts):
-                  continue
-
-              if any(fnmatch.fnmatch(f, pat) for pat in scan_exceptions):
-                  continue
-
-              try:
-                  content = path.read_text(encoding='utf-8')
-              except Exception:
-                  continue
-
-              for name, rx in patterns.items():
-                  for m in rx.finditer(content):
-                      snippet = m.group(0)
-                      if 'example' in path.name.lower() or 'sample' in path.name.lower():
-                          continue
-                      findings.append((f, name, snippet[:120]))
-
-          if findings:
-              print('Sensitive operational configuration patterns detected:')
-              for f, kind, snippet in findings[:200]:
-                  print(f' - {f} :: {kind} :: {snippet}')
-              print('\nIf this is intentional, move data to secure secrets management or sanitize the value.')
-              sys.exit(1)
-
-          print('Sensitive operational configuration scan passed.')
-          PY
+      - name: Validate detect-secrets baseline
+        run: detect-secrets scan --all-files --baseline .secrets.baseline --force-use-all-plugins
