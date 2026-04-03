@@ -1,12 +1,14 @@
-name: Public Artifacts Guard
+name: Public Boundary Check
 
 on:
   push:
     branches: [main, master]
   pull_request:
+    branches: [main, master]
 
 jobs:
-  guard-public-boundary:
+  public-boundary:
+    name: Public Boundary Check
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
