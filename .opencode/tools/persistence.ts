@@ -10,6 +10,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { AsyncLock } from './async-lock.js';
+import { clearBlockedMessage, isClearAllowed } from './clear-guard.js';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -226,10 +227,10 @@ export function initializePersistence(
  * PRODUCTION GUARD: Blocked when NODE_ENV is 'production' or when ALLOW_CLEAR is not set.
  */
 export function _clearPersistence(config: Partial<PersistenceConfig> = {}): PersistenceResult {
-  if (process.env.NODE_ENV === 'production' && process.env.ALLOW_CLEAR !== '1') {
+  if (!isClearAllowed()) {
     return {
       success: false,
-      errors: ['_clearPersistence is blocked in production. Set ALLOW_CLEAR=1 to override (testing only).'],
+      errors: [clearBlockedMessage('_clearPersistence')],
     };
   }
 

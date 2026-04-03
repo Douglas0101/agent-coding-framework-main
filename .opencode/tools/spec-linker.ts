@@ -15,6 +15,7 @@
  */
 
 import { AsyncLock } from './async-lock.js';
+import { clearBlockedMessage, isClearAllowed } from './clear-guard.js';
 import { sanitizeSpecId, sanitizeVersion, sanitizeRunId } from './input-sanitizer.js';
 
 // ---------------------------------------------------------------------------
@@ -399,10 +400,8 @@ export function listLinks(filter?: { spec_id?: string }): TraceabilityLink[] {
  * PRODUCTION GUARD: Blocked when NODE_ENV is 'production' or when ALLOW_CLEAR is not set.
  */
 export function _clearLinks(): void {
-  if (process.env.NODE_ENV === 'production' && process.env.ALLOW_CLEAR !== '1') {
-    throw new Error(
-      '_clearLinks is blocked in production. Set ALLOW_CLEAR=1 to override (testing only).',
-    );
+  if (!isClearAllowed()) {
+    throw new Error(clearBlockedMessage('_clearLinks'));
   }
   linkStore.clear();
 }
