@@ -1,0 +1,50 @@
+{
+  "trace_id": "golden-trace-verifier-gate",
+  "version": "1.0.0",
+  "description": "Golden trace: verifier gate enforcement — no synthesized before verified",
+  "timestamp": "2026-04-03T18:45:00.000Z",
+  "steps": [
+    {
+      "step": 1,
+      "action": "load_behavior_spec",
+      "file": ".opencode/specs/behaviors/stable-execution.behavior.yaml",
+      "expected": "contains verifier gate rule",
+      "actual": "contains 'Sintese sem validacao previa pelo verifier'",
+      "status": "pass"
+    },
+    {
+      "step": 2,
+      "action": "check_forbidden_transitions",
+      "forbidden": ["running->synthesized"],
+      "expected": "transition blocked",
+      "actual": "verified in behavior spec",
+      "status": "pass"
+    },
+    {
+      "step": 3,
+      "action": "check_policy_verifier_gate",
+      "file": ".opencode/specs/policies/stable-execution.policy.yaml",
+      "expected": "verifier_gate rule present",
+      "actual": "execution_policy with verifier_gate found",
+      "status": "pass"
+    },
+    {
+      "step": 4,
+      "action": "check_contract_verifier_gate",
+      "file": ".opencode/specs/contracts/agent-handoff.contract.yaml",
+      "expected": "verifier_gate validation rule",
+      "actual": "verifier_gate rule found in validation_rules",
+      "status": "pass"
+    },
+    {
+      "step": 5,
+      "action": "verify_agents_md_rule",
+      "file": "AGENTS.md",
+      "expected": "verifier is mandatory gate before synthesizer",
+      "actual": "verifier is the mandatory gate before synthesizer",
+      "status": "pass"
+    }
+  ],
+  "result": "verifier_gate_enforced_at_all_levels",
+  "invariant_verified": "no_synthesized_without_verified"
+}
