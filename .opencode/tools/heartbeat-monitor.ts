@@ -8,6 +8,7 @@
  */
 
 import { AsyncLock } from './async-lock.js';
+import { clearBlockedMessage, isClearAllowed } from './clear-guard.js';
 import { sanitizeRunId, sanitizeSpecId } from './input-sanitizer.js';
 
 // ---------------------------------------------------------------------------
@@ -199,10 +200,8 @@ export function listHeartbeats(filter?: { spec_id?: string; run_id?: string }): 
  * PRODUCTION GUARD: Blocked when NODE_ENV is 'production' or when ALLOW_CLEAR is not set.
  */
 export function _clearHeartbeats(): void {
-  if (process.env.NODE_ENV === 'production' && process.env.ALLOW_CLEAR !== '1') {
-    throw new Error(
-      '_clearHeartbeats is blocked in production. Set ALLOW_CLEAR=1 to override (testing only).',
-    );
+  if (!isClearAllowed()) {
+    throw new Error(clearBlockedMessage('_clearHeartbeats'));
   }
   heartbeatStore.clear();
 }

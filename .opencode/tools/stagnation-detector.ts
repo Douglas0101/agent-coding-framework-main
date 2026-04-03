@@ -8,6 +8,7 @@
  */
 
 import { AsyncLock } from './async-lock.js';
+import { clearBlockedMessage, isClearAllowed } from './clear-guard.js';
 import { sanitizeRunId, sanitizeSpecId } from './input-sanitizer.js';
 
 // ---------------------------------------------------------------------------
@@ -237,10 +238,8 @@ export function getStagnationEvents(spec_id: string, run_id: string): Stagnation
  * PRODUCTION GUARD: Blocked when NODE_ENV is 'production' or when ALLOW_CLEAR is not set.
  */
 export function _clearStagnationState(): void {
-  if (process.env.NODE_ENV === 'production' && process.env.ALLOW_CLEAR !== '1') {
-    throw new Error(
-      '_clearStagnationState is blocked in production. Set ALLOW_CLEAR=1 to override (testing only).',
-    );
+  if (!isClearAllowed()) {
+    throw new Error(clearBlockedMessage('_clearStagnationState'));
   }
   progressStore.clear();
   stagnationEvents.length = 0;

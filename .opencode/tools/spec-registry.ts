@@ -15,6 +15,7 @@
 
 import { createLink } from './spec-linker.js';
 import { AsyncLock } from './async-lock.js';
+import { clearBlockedMessage, isClearAllowed } from './clear-guard.js';
 import { sanitizeSpecId, sanitizeVersion, sanitizeDomain, sanitizeAgentIdentity } from './input-sanitizer.js';
 
 // ---------------------------------------------------------------------------
@@ -644,10 +645,8 @@ export function assertSpecApproved(spec_id: string, version?: string): SpecValid
  * PRODUCTION GUARD: Blocked when NODE_ENV is 'production' or when ALLOW_CLEAR is not set.
  */
 export function _clearRegistry(): void {
-  if (process.env.NODE_ENV === 'production' && process.env.ALLOW_CLEAR !== '1') {
-    throw new Error(
-      '_clearRegistry is blocked in production. Set ALLOW_CLEAR=1 to override (testing only).',
-    );
+  if (!isClearAllowed()) {
+    throw new Error(clearBlockedMessage('_clearRegistry'));
   }
   store.clear();
 }
