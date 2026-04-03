@@ -69,6 +69,22 @@ Diretório contendo a configuração completa do ambiente OpenCode:
 - `specs/` — Specifications de comportamento e contratos
 - `context/` — Contexto de sessão e estado operacional
 
+#### Public vs Internal Artifacts
+
+Para governança de repositório público, a pasta `.opencode/` é tratada como **deny-by-default**, com exceções explícitas apenas para contratos sanitizados.
+
+| Subpasta / Arquivo | Classificação | Política |
+|--------------------|---------------|----------|
+| `.opencode/opencode.json` | **Público** | Contrato de configuração sanitizada versionável |
+| `.opencode/specs/*.sanitized.json` | **Público** | Specs de contrato sem estado de runtime |
+| `.opencode/manifests/sanitized/*.json` | **Público** | Exemplos de manifests sanitizados |
+| `.opencode/node_modules/` | **Interno** | Dependências efêmeras (não versionar) |
+| `.opencode/memory/` | **Interno** | Memória/estado transitório de agentes |
+| `.opencode/context/` | **Interno** | Contexto de sessão e dados operacionais |
+| `.opencode/evidence/`, `.opencode/artifacts/`, `.opencode/tmp/` | **Interno** | Evidências e artefatos transitórios |
+
+> Regra prática: qualquer dado live/sensível fica fora do Git; somente contratos e exemplos sanitizados entram no repositório público.
+
 ### `.codex/` — Orquestração Multi-Agente
 
 Configuração do Codex para swarms multi-agente:

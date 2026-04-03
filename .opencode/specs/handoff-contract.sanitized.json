@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0.0",
+  "artifact_type": "handoff_contract",
+  "required_fields": [
+    "schema_version",
+    "artifact_type",
+    "producer_agent",
+    "consumer_agent",
+    "spec_id",
+    "spec_version",
+    "run_id",
+    "timestamp",
+    "evidence_refs",
+    "risk_level",
+    "compatibility_assessment",
+    "trace_links"
+  ],
+  "note": "Sanitized contract example; private repository only for live execution payloads."
+}
