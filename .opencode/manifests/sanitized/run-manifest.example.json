@@ -1,0 +1,12 @@
+{
+  "run_id": "run-example",
+  "status": "verified",
+  "agents": ["explorer", "verifier", "synthesizer"],
+  "artifacts": [
+    {
+      "path": ".internal/artifacts/codex-swarm/run-example/report.md",
+      "classification": "public"
+    }
+  ],
+  "note": "Sanitized manifest example; private repository only for runtime evidence."
+}

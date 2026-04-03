@@ -16,15 +16,25 @@ env/
 # JetBrains
 .idea/
 
-# OpenCode runtime artifacts
+# OpenCode: default deny, explicit allow for public contract files
+.opencode/*
+!.opencode/opencode.json
+!.opencode/specs/
+!.opencode/specs/README.md
+!.opencode/specs/*.sanitized.json
+!.opencode/manifests/
+!.opencode/manifests/README.md
+!.opencode/manifests/sanitized/
+!.opencode/manifests/sanitized/*.json
+
+# OpenCode runtime/sensitive subtrees
 .opencode/node_modules/
-.opencode/evidence/*
-!.opencode/evidence/.keep
-.opencode/manifests/*.json
-!.opencode/manifests/.keep
 .opencode/memory/
+.opencode/evidence/
+.opencode/context/
+.opencode/tmp/
+.opencode/artifacts/
 
 # Internal operational directories must stay out of the public repository
 .agent/
 .codex/
-.opencode/

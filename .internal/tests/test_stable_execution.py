@@ -15,7 +15,7 @@ REPO_ROOT = INTERNAL_ROOT.parent
 
 class TestPublicVsInternalBoundary:
     def test_internal_directories_not_tracked(self):
-        internal_paths = (".agent", ".codex", ".opencode")
+        internal_paths = (".agent", ".codex")
         try:
             result = subprocess.run(
                 ["git", "ls-files", "--", *internal_paths],
@@ -48,10 +48,28 @@ class TestPublicVsInternalBoundary:
             cwd=REPO_ROOT,
             text=True,
         ).splitlines()
-        for path in (".agent/", ".codex/", ".opencode/"):
+        for path in (".agent/", ".codex/"):
             assert not any(file_path.startswith(path) for file_path in tracked_files), (
                 f"{path} must stay out of public repo"
             )
+
+        allowed_opencode_files = {
+            ".opencode/opencode.json",
+            ".opencode/specs/README.md",
+            ".opencode/specs/handoff-contract.sanitized.json",
+            ".opencode/manifests/README.md",
+            ".opencode/manifests/sanitized/run-manifest.example.json",
+        }
+        tracked_opencode_files = [
+            file_path for file_path in tracked_files if file_path.startswith(".opencode/")
+        ]
+        disallowed_opencode_files = sorted(
+            set(tracked_opencode_files) - allowed_opencode_files
+        )
+        assert not disallowed_opencode_files, (
+            "Only sanitized .opencode contract files are allowed in public repo. "
+            f"Found: {disallowed_opencode_files}"
+        )
 
     def test_sanitized_templates_exist(self):
         required = [
