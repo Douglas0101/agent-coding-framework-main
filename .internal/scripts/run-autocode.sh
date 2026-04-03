@@ -1,12 +1,9 @@
 #!/usr/bin/env bash
-# run-autocode.sh — Wrapper para contornar bug de routing do OpenCode v1.3.13
+# run-autocode.sh — Wrapper com pre-flight de paridade para o schema suportado.
 #
-# Problema: /autocode (agent: autocoder) roteia para general com maxSteps=50
-# Workaround: --agent autocoder força o roteamento correto com maxSteps=6
-#
-# Tracking: .internal/artifacts/codex-swarm/run-stable-execution/debug_autocode.log
-# Issue: AGENTS.md → Known Issues → Routing Bug: /autocode command
-# SDD: capability.stable-execution@1.0.0
+# Root cause corrigida: configs antigas usavam schema invalido/incompleto para
+# OpenCode v1.3.13. Com schema valido (`default_agent`, `agent`, `command`),
+# o runtime roteia `/autocode` nativamente para `autocoder` sem `--agent`.
 
 set -euo pipefail
 
@@ -28,7 +25,7 @@ if [[ ! -f "$ROOT_CONFIG" ]]; then
 fi
 
 if [[ ! -f "$DOT_CONFIG" ]]; then
-  echo "[ERROR] Missing $DOT_CONFIG — causes silent routing failure"
+  echo "[ERROR] Missing $DOT_CONFIG — config resolution will diverge"
   exit 1
 fi
 
@@ -44,9 +41,9 @@ dot_path = Path(sys.argv[2])
 
 CRITICAL_PATHS = [
     "default_agent",
-    "maxSteps",
-    "routing.commands.autocode",
-    "routing.agents.autocoder.maxSteps",
+    "command.autocode.agent",
+    "agent.autocoder.maxSteps",
+    "agent.general.maxSteps",
 ]
 
 
@@ -69,6 +66,15 @@ except Exception as exc:  # explicit pre-flight failure with context
 for path in CRITICAL_PATHS:
     root_found, root_value = get_path(root_cfg, path)
     dot_found, dot_value = get_path(dot_cfg, path)
+
+    if not root_found or not dot_found:
+        print(
+            "ERROR:missing_field:"
+            f"{path}:"
+            f"opencode.json({'present' if root_found else 'missing'}):"
+            f".opencode/opencode.json({'present' if dot_found else 'missing'})"
+        )
+        raise SystemExit(1)
 
     if root_found != dot_found:
         print(
@@ -114,22 +120,22 @@ PY
   ROOT_AGENT="${result#OK:}"
   if [[ "$ROOT_AGENT" != "autocoder" ]]; then
     echo "[WARNING] default_agent is '$ROOT_AGENT' (expected 'autocoder')"
-    echo "[WARNING] This may indicate config drift. Continuing with explicit --agent autocoder."
+    echo "[WARNING] This may indicate config drift. Native command routing may differ."
   fi
 }
 
 validate_config_parity
 echo "[run-autocode] Pre-flight: config parity OK | default_agent=$ROOT_AGENT"
 
-# ============================================================
-# Execute with confirmed workaround
-# ============================================================
-# --agent autocoder is REQUIRED due to upstream routing bug in OpenCode v1.3.13
-# The command frontmatter specifies agent: autocoder, but runtime ignores it
-# without the explicit flag.
+if ! (cd "$PROJECT_ROOT" && opencode debug config >/dev/null 2>&1); then
+  echo "[ERROR] OpenCode rejected the project config schema"
+  echo "[ERROR] Run: opencode debug config --print-logs"
+  exit 1
+fi
+
+echo "[run-autocode] Pre-flight: runtime schema validation OK"
 
 exec opencode run \
-  --agent autocoder \
   --command autocode \
   --dir "$PROJECT_ROOT" \
   "$@"

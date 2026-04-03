@@ -479,14 +479,14 @@ A escolha do domínio `stable-execution` é correta como primeira capability, ma
 - drift detection contínua
 - observabilidade de conformidade em múltiplos domínios
 
-### 7.4 Risco de dependência em workaround operacional
+### 7.4 Risco de drift entre contrato sanitizado e schema real do runtime
 
-`AGENTS.md` documenta um bug relevante de roteamento do comando `/autocode`, com workaround via `--agent autocoder`. Isso indica que ainda existe uma diferença entre:
+A investigação posterior mostrou que a principal causa do desvio em `/autocode` neste snapshot não era um defeito inevitável do runtime, mas sim o uso de um schema de configuração antigo/incompatível no repositório. O risco dominante, portanto, passa a ser:
 
-- a semântica declarada por spec/config
-- o comportamento efetivo do runtime base
+- drift entre o contrato sanitizado publicado pelo repositório
+- o schema efetivamente aceito pelo OpenCode em produção
 
-Esse gap reforça a importância de manter a narrativa do relatório ancorada no que já foi blindado por testes e guardrails, e não no que se assume como resolvido de forma estrutural.
+Esse achado reforça a necessidade de ancorar a narrativa operacional em validação com o runtime real (`opencode debug config` e smoke tests controlados), e não apenas em paridade textual entre arquivos ou em hipóteses históricas sobre comportamento upstream.
 
 ---
 

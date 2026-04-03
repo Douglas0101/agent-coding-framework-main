@@ -51,10 +51,37 @@ jobs:
           root_json = json.loads(root.read_text(encoding='utf-8'))
           dot_json = json.loads(dot.read_text(encoding='utf-8'))
 
-          if root_json != dot_json:
-              raise SystemExit('Config drift detected: opencode.json != .opencode/opencode.json')
+          # Policy: compare only critical routing fields, not full JSON equality
+          # This matches the policy documented in AGENTS.md and enforced by run-autocode.sh
+          CRITICAL_FIELDS = (
+              "default_agent",
+              "command.autocode.agent",
+              "agent.autocoder.maxSteps",
+              "agent.general.maxSteps",
+          )
 
-          print('OpenCode config parity check passed.')
+          def get_path(data, path):
+              current = data
+              for part in path.split("."):
+                  if not isinstance(current, dict) or part not in current:
+                      return None
+                  current = current[part]
+              return current
+
+          errors = []
+          for field in CRITICAL_FIELDS:
+              root_val = get_path(root_json, field)
+              dot_val = get_path(dot_json, field)
+              if root_val is None or dot_val is None:
+                  errors.append(f"'{field}': missing required critical field (root={root_val!r}, dot={dot_val!r})")
+                  continue
+              if root_val != dot_val:
+                  errors.append(f"'{field}': root={root_val!r}, dot={dot_val!r}")
+
+          if errors:
+              raise SystemExit("Config drift in critical routing fields: " + "; ".join(errors))
+
+          print('OpenCode config parity check passed (critical fields only).')
           PY
 
       - name: Run stable execution regression suite

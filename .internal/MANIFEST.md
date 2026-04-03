@@ -15,9 +15,9 @@ scripts, tests, and artifacts — grouped with explicit dependency mapping.
 │   ├── security_patterns.py          ← Shared patterns (imported by tests + boundary check)
 │   ├── scan_sensitive_patterns.py    ← CI/local scanner (used by pre-commit + GitHub Actions)
 │   ├── check-public-boundary.sh      ← Boundary gate (used by public-artifacts-guard CI)
-│   └── run-autocode.sh               ← Autocode wrapper (workaround for OpenCode routing bug)
+│   └── run-autocode.sh               ← Autocode wrapper (parity + runtime schema pre-flight)
 ├── tests/
-│   ├── test_stable_execution.py              ← Stable execution suite (38 tests, 7 classes)
+│   ├── test_stable_execution.py              ← Stable execution suite (routing, schema, runtime integration)
 │   ├── test_public_config_sanitization.py    ← Sanitized config contract tests
 │   └── test_public_repo_allowlist.py         ← Allowlist governance tests
 └── artifacts/

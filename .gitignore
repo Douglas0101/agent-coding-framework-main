@@ -16,18 +16,15 @@ env/
 # JetBrains
 .idea/
 
-# OpenCode: default deny, explicit allow for public contract files
+# OpenCode: default deny, explicit allow for public sanitized contract files only
 .opencode/*
 !.opencode/opencode.json
-!.opencode/specs/
 !.opencode/specs/README.md
 !.opencode/specs/*.sanitized.json
-!.opencode/manifests/
 !.opencode/manifests/README.md
-!.opencode/manifests/sanitized/
 !.opencode/manifests/sanitized/*.json
 
-# OpenCode runtime/sensitive subtrees
+# OpenCode runtime/sensitive subtrees (always deny)
 .opencode/node_modules/
 .opencode/memory/
 .opencode/evidence/

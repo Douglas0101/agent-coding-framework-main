@@ -203,7 +203,7 @@ O framework oferece comandos especializados para diferentes tarefas:
 
 ```bash
 # Usando OpenCode diretamente
-opencode run --agent autocoder --command autocode "gere uma função para..."
+opencode run --command autocode "gere uma função para..."
 
 # Usando o wrapper (recomendado para /autocode)
 .internal/scripts/run-autocode.sh "sua tarefa aqui"
@@ -286,11 +286,11 @@ O framework implementa um sistema robusto de garantias de execução:
 
 ### Garantias Implementadas
 
-1. **Fail-fast de Configuração**: o wrapper `.internal/scripts/run-autocode.sh` falha imediatamente quando `.opencode/opencode.json` está ausente (evita fallback silencioso)
+1. **Fail-fast de Configuração**: o wrapper `.internal/scripts/run-autocode.sh` falha imediatamente quando `.opencode/opencode.json` está ausente ou diverge nos campos críticos de routing
 
 1. **Paridade de Configuração**: `opencode.json` (raiz) e `.opencode/opencode.json` devem ser equivalentes
-   - Campos críticos de routing (obrigatoriamente idênticos): `default_agent`, `maxSteps`, `routing.commands.autocode`, `routing.agents.autocoder.maxSteps`
-   - Campos permitidos a divergir: metadados e contexto não-crítico de runtime (ex.: `note`, `template_refs`, `providers`, segredos/overrides locais). Divergências nesses campos não podem alterar roteamento ou limites de steps.
+   - Campos críticos de routing (obrigatoriamente idênticos): `default_agent`, `command.autocode.agent`, `agent.autocoder.maxSteps`, `agent.general.maxSteps`
+   - Campos permitidos a divergir: campos suportados não críticos de runtime ou templates sanitizados (ex.: `providers`, `instructions`). Divergências nesses campos não podem alterar roteamento ou limites de steps.
 2. **Invariantes de Execução**:
    - Sem retry ilimitado (`max_attempts ≤ 3`)
    - Sem fallback silencioso de agente
@@ -311,7 +311,7 @@ python -m pytest .internal/tests/test_stable_execution.py -v
 ```
 
 Classes e foco atuais:
-- **TestCommandRoutingRegression** (4): casos mínimos para `/autocode` sem `--agent`, com `--agent autocoder` e ausência de fallback silencioso.
+- **TestCommandRoutingRegression** (4): casos mínimos para `/autocode` com roteamento nativo e documentação da causa raiz corrigida.
 - **TestStableExecutionGuardrails** (4): asserts de verifier gate, write_scope disjoint e fail-fast em drift de config.
 
 ---
@@ -321,8 +321,8 @@ Classes e foco atuais:
 Este repositório público publica apenas interfaces e templates sanitizados.
 Toda configuração/runtime operacional real permanece em **private repository only**.
 
-- Superfície pública: `opencode.json`, `.opencode.example/`, `.codex.example/`, `.agent.example/`.
-- Superfície interna: `.opencode/`, `.codex/`, `.agent/` (não versionadas neste repositório público).
+- Superfície pública: `opencode.json`, `.opencode/opencode.json`, `.opencode/specs/README.md`, `.opencode/specs/*.sanitized.json`, `.opencode/manifests/README.md`, `.opencode/manifests/sanitized/*.json`, `.opencode.example/`, `.codex.example/`, `.agent.example/`.
+- Superfície interna: `.opencode/` operacional (commands/plugins/runtime state), `.codex/`, `.agent/` e qualquer artefato com estado de sessão ou segredo (não versionados neste repositório público).
 
 ---
 
@@ -388,27 +388,27 @@ pre-commit run --all-files
 
 ---
 
-## Problema Conhecido: Routing Bug no `/autocode`
+## Root Cause Corrigida: Routing do `/autocode`
 
 ### Descrição
 
-No OpenCode v1.3.13, o comando `/autocode` não é roteado corretamente para o agente `autocoder`. Em vez disso, faz fallback para o agente `general` com `maxSteps: 50`.
+O problema observado neste repositório vinha de configs com schema inválido ou obsoleto para o OpenCode v1.3.13. As chaves top-level antigas como `maxSteps` e `routing` não eram suportadas no formato usado aqui, o que invalidava a configuração efetiva.
 
-### Solução de contorno (Workaround)
+### Solução
 
-Use o wrapper script fornecido:
+Use o schema suportado com top-level `agent` e `command`. Com isso, o runtime resolve `/autocode` nativamente para `autocoder` sem `--agent`:
 
 ```bash
 # Execute via wrapper (recomendado)
 .internal/scripts/run-autocode.sh "sua tarefa aqui"
 
-# Ou use o flag --agent diretamente
-opencode run --agent autocoder --command autocode "sua tarefa aqui"
+# Ou use o comando nativo diretamente
+opencode run --command autocode "sua tarefa aqui"
 ```
 
 ### Tracking
 
-O bug está sendo rastreado em `.internal/artifacts/codex-swarm/run-stable-execution/debug_autocode.log` (artefato sanitizado e versionável).
+A investigação histórica está registrada em `.internal/artifacts/codex-swarm/run-stable-execution/debug_autocode.log`, mas a interpretação atual correta para este snapshot e este repositório é: schema inválido/stale no repositório, não bug upstream como hipótese principal.
 
 ---
 

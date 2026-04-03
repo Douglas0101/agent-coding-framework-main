@@ -1,26 +1,53 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "default_agent": "autocoder",
-  "maxSteps": 6,
-  "routing": {
-    "commands": {
-      "autocode": "autocoder",
-      "analyze": "explore",
-      "review": "reviewer",
-      "ship": "orchestrator"
+  "instructions": [
+    "Sanitized public contract. private repository only for operational config."
+  ],
+  "agent": {
+    "autocoder": {
+      "description": "Primary autocode execution path.",
+      "mode": "primary",
+      "maxSteps": 6
     },
-    "agents": {
-      "autocoder": {
-        "maxSteps": 6
-      },
-      "general": {
-        "maxSteps": 50
-      }
+    "general": {
+      "description": "General-purpose fallback agent.",
+      "mode": "primary",
+      "maxSteps": 50
+    },
+    "explore": {
+      "description": "Repository exploration agent.",
+      "mode": "primary"
+    },
+    "reviewer": {
+      "description": "Technical review agent.",
+      "mode": "primary"
+    },
+    "orchestrator": {
+      "description": "Swarm orchestration agent.",
+      "mode": "primary"
     }
   },
-  "note": "Public sanitized interface. private repository only for operational config.",
-  "template_refs": [
-    ".opencode.example/opencode.json.example",
-    ".codex.example/config.toml.example"
-  ]
+  "command": {
+    "autocode": {
+      "template": "{{args}}",
+      "description": "Autocode command. private repository only for full operational prompts.",
+      "agent": "autocoder"
+    },
+    "analyze": {
+      "template": "{{args}}",
+      "description": "Analyze command.",
+      "agent": "explore"
+    },
+    "review": {
+      "template": "{{args}}",
+      "description": "Review command.",
+      "agent": "reviewer"
+    },
+    "ship": {
+      "template": "{{args}}",
+      "description": "Ship command.",
+      "agent": "orchestrator"
+    }
+  }
 }
