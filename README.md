@@ -327,9 +327,11 @@ Toda configuração/runtime operacional real permanece em **private repository o
 
 | Workflow | Descrição | Gatilho |
 |----------|-----------|---------|
-| `routing-regression.yml` | Testes de regressão de roteamento | Push/PR em config/spec |
+| `routing-regression.yml` | Regressão de routing + paridade de config + evidências auditáveis | Push/PR em config/spec |
 | `public-artifacts-guard.yml` | Verificação de boundary público | Push/PR em main/master |
 | `public-repo-guard.yml` | Scanner de padrões sensíveis | Push/PR em main/master |
+
+> **Merge gate obrigatório**: configure o status check `Routing Regression (Required)` como *required* na proteção de branch para bloquear merge em caso de regressão de routing.
 
 ### Execução Local
 
