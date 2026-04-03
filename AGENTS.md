@@ -24,7 +24,7 @@ opencode run --agent autocoder --command autocode "your task"
 ./.internal/scripts/run-autocode.sh "your task"
 ```
 
-**Tracking:** Root cause appears to be silent config merge failure when `.opencode/opencode.json` does not exist. See `.opencode/skills/self-bootstrap-opencode/debug_autocode.log` for DEBUG evidence.
+**Tracking:** Root cause appears to be silent config merge failure when `.opencode/opencode.json` does not exist. See `.internal/artifacts/codex-swarm/run-stable-execution/debug_autocode.log` for DEBUG evidence.
 
 ---
 

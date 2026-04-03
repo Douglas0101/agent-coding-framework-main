@@ -218,8 +218,21 @@
 .opencode/specs/release/stable-execution.release.yaml            (release)
 .internal/tests/test_stable_execution.py                                   (38 tests)
 .internal/artifacts/codex-swarm/run-stable-execution/conformance-report.json
-relatorio-operacional-stable-execution.md                        (este arquivo)
+.internal/artifacts/codex-swarm/run-stable-execution/debug_autocode.log
+docs/relatorio-operacional-stable-execution.md                   (este arquivo)
 ```
+
+---
+
+## 12. Evidence provenance
+
+| Campo | Valor |
+|-------|-------|
+| **Data (UTC)** | 2026-04-03 |
+| **Comando de geração** | `cat > .internal/artifacts/codex-swarm/run-stable-execution/debug_autocode.log <<'EOF' ... EOF` |
+| **Comando de hash** | `sha256sum .internal/artifacts/codex-swarm/run-stable-execution/debug_autocode.log` |
+| **SHA-256** | `f4652a2d2cca3f1c96e8b6cb50d8bc4ff1979017eccd82bdc66054ffb720528a` |
+| **Tipo de evidência** | Artefato sanitizado e versionável (equivalente ao log runtime-only) |
 
 ---
 
