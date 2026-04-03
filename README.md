@@ -46,7 +46,30 @@ Este repositorio existe para:
 ```
 
 ## Politica de publicacao
-=======
+
+Este repositório segue o contrato de **configuração sanitizada** para todos os templates e arquivos públicos.
+Qualquer valor operacional real é **private repository only**.
+
+### Matriz de configuração sanitizada (permitido vs proibido)
+
+| Categoria | Permitido (público) | Proibido (público) |
+|-----------|----------------------|--------------------|
+| API keys | `${OPENAI_API_KEY_PLACEHOLDER}` / `${ANTHROPIC_API_KEY_PLACEHOLDER}` | Tokens reais (`sk-...`, `ghp_...`, `xox...`) |
+| Endpoints | `https://api.example.com/v1` | Hosts internos (`localhost`, `*.internal`, IPs RFC1918) |
+| Chaves criptográficas | Texto explicativo e placeholders | Blocos `BEGIN ... PRIVATE KEY` |
+| Config runtime | Notas de interface e exemplos mínimos | IDs internos, manifests operacionais, estado de sessão |
+
+### Exemplos de credenciais
+
+**Seguro (template público):**
+- `OPENAI_API_KEY=${OPENAI_API_KEY_PLACEHOLDER}`
+- `ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY_PLACEHOLDER}`
+
+**Proibido (somente no repositório privado):**
+- `OPENAI_API_KEY=sk-live-...`
+- `AWS_SECRET_ACCESS_KEY=...`
+- Qualquer chave privada PEM/OpenSSH completa.
+
 ## Skills Disponiveis (57)
 
 ### Engenharia de Codigo
@@ -203,3 +226,35 @@ Antes de publicar:
 1. validar que diretórios internos (`.agent/`, `.codex/`, `.opencode/`) não estão versionados;
 2. manter apenas templates sanitizados (`*.example` + READMEs de interface);
 3. executar o check de boundary no CI.
+
+## Pre-commit local (segredos + padrões proibidos)
+
+Para alinhar validação local com o CI e reduzir divergência de regras:
+
+1. Instale dependências de pre-commit:
+   ```bash
+   python -m pip install pre-commit detect-secrets
+   ```
+2. Instale os hooks no repositório:
+   ```bash
+   pre-commit install
+   ```
+3. Execute uma validação completa manualmente:
+   ```bash
+   pre-commit run --all-files
+   ```
+
+### Hooks configurados
+
+- `detect-secrets` com baseline versionada em `.secrets.baseline`.
+- `sensitive-patterns-scan` (script local `scripts/scan_sensitive_patterns.py`) usando o mesmo arquivo de allowlist do CI: `.github/security/public-repo-allowlist.json`.
+
+### Atualizando baseline de segredos
+
+Quando houver mudança intencional de conteúdo analisado, regenere baseline:
+
+```bash
+detect-secrets scan --all-files --baseline .secrets.baseline --force-use-all-plugins
+```
+
+> Se precisar exceção de padrão, registre em `pattern_scan_exceptions` no allowlist versionado para manter paridade CI/local.

@@ -1,5 +1,15 @@
 {
   "default_agent": "autocoder",
   "maxSteps": 6,
-  "note": "example-only"
+  "note": "example-only. private repository only for real runtime configuration.",
+  "providers": {
+    "openai": {
+      "api_key": "${OPENAI_API_KEY_PLACEHOLDER}",
+      "base_url": "https://api.example.com/v1"
+    },
+    "anthropic": {
+      "api_key": "${ANTHROPIC_API_KEY_PLACEHOLDER}",
+      "base_url": "https://api.example.com/v1"
+    }
+  }
 }

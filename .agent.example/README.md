@@ -7,3 +7,4 @@ Template sanitizado para estrutura de skills/workflows.
 - `workflows/<workflow-name>.md.example`
 
 Nao incluir configuracoes de runtime, credenciais ou prompts operacionais internos.
+Use este template apenas como interface publica; valores reais ficam em **private repository only**.

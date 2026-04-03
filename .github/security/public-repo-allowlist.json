@@ -1,38 +1,44 @@
 {
-  "version": 2,
+  "version": 3,
   "description": "Allowlist explícita para conteúdos deliberadamente públicos no repositório.",
   "path_exceptions": [
     {
       "pattern": ".agent/**",
-      "reason": "Biblioteca pública de skills e documentação do framework.",
+      "justification": "Biblioteca pública de skills e documentação do framework.",
       "owner": "maintainers",
-      "reviewed_at": "2026-04-03"
+      "expires_on": "2026-12-31",
+      "ticket_ref": "SEC-1001"
     },
     {
       "pattern": ".opencode/**",
-      "reason": "Configuração e testes OpenCode fazem parte do conteúdo público suportado.",
+      "justification": "Configuração e testes OpenCode fazem parte do conteúdo público suportado.",
       "owner": "maintainers",
-      "reviewed_at": "2026-04-03"
+      "expires_on": "2026-12-31",
+      "ticket_ref": "SEC-1002"
     },
     {
       "pattern": ".codex/**",
-      "reason": "Configuração do agente Codex publicada para execução reprodutível no repositório.",
+      "justification": "Configuração do agente Codex publicada para execução reprodutível no repositório.",
       "owner": "maintainers",
-      "reviewed_at": "2026-04-03"
+      "expires_on": "2026-12-31",
+      "ticket_ref": "SEC-1003"
     }
   ],
   "pattern_scan_exceptions": [
     {
       "pattern": ".opencode/tests/**",
-      "reason": "Fixtures de teste com segredos sintéticos para validação de filtros.",
+      "justification": "Fixtures de teste com segredos sintéticos para validação de filtros.",
       "owner": "maintainers",
-      "reviewed_at": "2026-04-03"
+      "expires_on": "2026-12-31",
+      "ticket_ref": "SEC-1004"
     },
     {
       "pattern": ".agent/skills/**",
-      "reason": "Exemplos didáticos podem conter placeholders de configuração (não credenciais reais).",
+      "justification": "Exemplos didáticos podem conter placeholders de configuração (não credenciais reais).",
       "owner": "maintainers",
-      "reviewed_at": "2026-04-03"
+      "expires_on": "2026-12-31",
+      "ticket_ref": "SEC-1005"
     }
-  ]
+  ],
+  "tool_exceptions": []
 }
