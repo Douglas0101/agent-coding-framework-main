@@ -1,41 +1,59 @@
-# Agent Coding Framework
+# Agent Orchestration Framework
 
-Framework de agent coding para orquestração multi-agente com OpenCode e Codex. Este repositório implements um sistema robusto de execução estável com verificação de conformidade, contratos de handoff entre agentes e guardrails de segurança.
+**Status:** Core is Domain-Agnostic  
+**Architecture:** Spec-Driven Architecture (SDA)  
+**Reference:** [CONSTITUTION_emendada.md](docs/CONSTITUTION_emendada.md)
+
+---
 
 ## Visão Geral
 
-O **Agent Coding Framework** é uma infraestrutura de desenvolvimento orientada por agentes que combina:
+O **Agent Orchestration Framework** é uma infraestrutura de orquestração multi-agente de propósito geral. O **Core** é domain-agnostic — não contém lógica de negócio específica de ML, Medical, Finance ou outros domínios verticais.
 
-- **OpenCode**: Runtime de execução de agentes com suporte a commands, plugins e tools
-- **Codex**: Orquestrador de swarm multi-agente para tarefas complexas
-- **Skills**: Agentes especializados para diferentes fases do ciclo de desenvolvimento
-- **Stable Execution**: Sistema de garantias de execução com verificação de conformidade
+O framework combina:
+- **Core de Orquestração**: Gramática de execução, verificação, síntese e handoff
+- **Domain Packs**: Extensões contratuais que fornecem capacidades específicas de domínio
+- **Extension Registry**: Catálogo de packs disponíveis para ativação
 
 ### Propósito
 
-Este framework foi projetado para automatizar e otimizar o ciclo de desenvolvimento de software através de:
+Este framework foi projetado para automatizar orquestração de agentes em qualquer domínio computacional:
 
-1. **Automação de tarefas repetitivas**: Geração de código, refatoração, documentação
-2. **Análise de código**: Detecção de vulnerabilidades, code smells, padrões problemáticos
-3. **Pesquisa e investigação**: Exploração de bases de código, documentação externa, resolução de conflitos
-4. **Validação e verificação**: Testes automatizados, reviews técnicos, verificação de conformidade
+1. **Execução Estável**: Verificação de conformidade, fail-fast de configuração
+2. **Contratos Formais**: Handoff entre agentes com validação estrutural
+3. **Extensibilidade**: Novas capacidades via Domain Packs registrados
+4. **Neutralidade**: Core independente de domínio vertical
 
 ---
 
 ## Arquitetura do Sistema
 
-### Componentes Principais
+### Modelo: Core Domain-Agnostic + Domain Packs
 
 ```
-agent-coding-framework/
-├── .opencode/          # Configuração do OpenCode (agents, commands, tools, plugins)
-├── .codex/             # Configuração do Codex (swarm, multi-agent orchestration)
-├── .agent/             # Skills e workflows dos agentes
-├── .internal/          # Scripts, testes e artefatos operacionais
-├── .github/            # workflows de CI/CD
-├── docs/               # Documentação técnica
-└── templates/          # Templates sanitizados para distribuição
+agent-orchestration-framework/
+├── specs/core/              # Core domain-agnostic (nível 0)
+│   └── orchestration-contract.yaml
+├── domains/                 # Domain Packs (extensões contratuais)
+│   ├── software-engineering/   # Functional pack (default)
+│   ├── ml-ai/                    # Domain pack (experimental)
+│   └── medical-imaging/          # Domain pack (experimental)
+├── registry/                # Extension Registry
+│   └── registry.yaml
+├── templates/               # Templates para novos packs
+│   └── domain-pack/
+├── .opencode/              # Configuração OpenCode
+├── .codex/                 # Orquestração multi-agente
+├── .agent/                 # Skills operacionais
+├── .internal/             # Scripts e testes
+└── docs/                  # Documentação constitucional
 ```
+
+### Camadas Arquiteturais
+
+1. **Core (Nível 0)**: Gramática de orquestração — interfaces, protocolos, invariantes
+2. **Domain Packs**: Semântica de domínio implementada como extensões contratuais
+3. **Runtime**: Execução concreta via OpenCode/Codex
 
 ### Fluxo de Execução
 
@@ -57,9 +75,50 @@ agent-coding-framework/
 
 ## Estrutura de Diretórios
 
-### `.opencode/` — Configuração do OpenCode
+### `specs/core/` — Core Domain-Agnostic
 
-Diretório contendo a configuração completa do ambiente OpenCode:
+Especificações do Core que definem a gramática de orquestração:
+
+- `orchestration-contract.yaml` — Interfaces e protocolos do Core
+- O Core NÃO contém lógica de domínio vertical
+
+### `domains/` — Domain Packs
+
+Extensões contratuais que fornecem capacidades específicas de domínio:
+
+- `software-engineering/` — Pack funcional default (ativo)
+- `ml-ai/` — Pack de ML/AI (experimental, opcional)
+- `medical-imaging/` — Pack de imagens médicas (experimental, opcional)
+
+### `registry/` — Extension Registry
+
+Catálogo de todos os Domain Packs registrados:
+- `registry.yaml` — Lista de packs disponíveis com metadados
+
+### `.opencode/` — Configuração OpenCode
+
+Configuração do runtime de execução (não versionada publicamente):
+- `opencode.json` — Configuração pública sanitizada
+- `agents/` — Definições de agentes
+- `commands/` — Comandos disponíveis
+- `specs/` — Contratos e especificações
+- `manifests/` — Manifestos de execução
+
+> **Nota**: O diretório `.opencode/` operacional permanece interno. Apenas configurações sanitizadas e contratos são públicos.
+
+---
+
+## Criando Novo Domain Pack
+
+Para adicionar um novo domínio ao framework:
+
+1. **Crie o diretório**: `domains/<seu-dominio>/`
+2. **Adicione o contrato**: Copie `templates/domain-pack/contract.yaml`
+3. **Adicione o manifesto**: Copie `templates/domain-pack/manifest.json`
+4. **Registre no registry**: Adicione ao `registry/registry.yaml`
+5. **Valide conformidade**: Execute testes de constitucionalidade
+
+Consulte `templates/domain-pack/` para templates oficiais.
 
 - `opencode.json` — Arquivo de configuração principal
 - `agents/` — Definições dos agentes (autocoder, explore, reviewer, etc.)
@@ -212,72 +271,42 @@ opencode run --command autocode "gere uma função para..."
 
 ---
 
-## Skills Disponíveis
+## Domain Packs Disponíveis
 
-O framework oferece 57+ skills especializadas organizadas por domínio:
+### Software Engineering Pack (Default)
 
-### Skills de Análise e Pesquisa
+O pack funcional padrão fornece capacidades de desenvolvimento:
 
-| Skill | Descrição |
-|-------|-----------|
-| `explore` | Exploração rápida de codebases, busca de arquivos e padrões |
-| `hypothesis` | Geração de hipóteses testáveis a partir de requisitos |
-| `evidence` | Coleta de evidências com source grading |
-| `citation` | Verificação de credibilidade de fontes |
-| `contradiction` | Detecção e resolução de contradições |
-| `gap` | Identificação de lacunas de cobertura |
+| Agente | Descrição |
+|--------|-----------|
+| `analyze` | Exploração de codebase, identificação de padrões |
+| `reviewer` | Análise de código, segurança e qualidade |
+| `autocoder` | Geração e refatoração de código |
 
-### Skills de Desenvolvimento
+### ML/AI Pack (Experimental, Opcional)
 
-| Skill | Descrição |
-|-------|-----------|
-| `autocoder` | Coding agent com raciocínio sequencial |
-| `code-quality` | Análise de qualidade de código com Ruff |
-| `complexity-reduction` | Redução de complexidade ciclomática |
-| `refactor-patterns` | Governança de design patterns |
-| `dead-code-removal` | Detecção e eliminação de código morto |
+Disponível em `domains/ml-ai/`. Fornece:
 
-### Skills de Segurança
+| Agente | Descrição |
+|--------|-----------|
+| `ml-researcher` | Pesquisa de técnicas e papers |
+| `ml-engineer` | Desenvolvimento de modelos |
+| `ml-optimizer` | Otimização de hiperparâmetros |
 
-| Skill | Descrição |
-|-------|-----------|
-| `security-audit` | Auditoria SAST com Bandit |
-| `vulnerability-scanner` | Scanner enterprise de CVEs e secrets |
-| `threat-modeling` | STRIDE threat modeling |
-| `hardening` | Hardening de segurança OWASP/CIS |
-| `compliance-checker` | Verificação de compliance HIPAA/SOC2 |
+### Medical Imaging Pack (Experimental, Opcional)
 
-### Skills de Infraestrutura e DevOps
+Disponível em `domains/medical-imaging/`. Requer ML/AI Pack. Fornece:
 
-| Skill | Descrição |
-|-------|-----------|
-| `ci-cd-optimization` | Otimização de pipelines CI/CD |
-| `docker-patterns` | Melhores práticas Docker |
-| `observability` | Instrumentação OpenTelemetry |
-| `backend-reliability` | Verificação de contratos de API |
+| Agente | Descrição |
+|--------|-----------|
+| `radiologist-assistant` | Análise de imagens médicas |
+| `specialist-group-a` | Opacidades pulmonares difusas |
+| `specialist-group-b` | Anomalias estruturais grosseiras |
+| `specialist-group-c` | Lesões focais e fibrose |
+| `specialist-group-d` | Interação coração-pulmão |
+| `medical-reporter` | Geração de laudos estruturados |
 
-### Skills de ML/AI
-
-| Skill | Descrição |
-|-------|-----------|
-| `ai-research-advisor` | Diagnóstico de problemas de treinamento |
-| `advanced-ml-optimization` | Otimização de LLMs e PEFT |
-| `data-augmentation` | Técnicas de augmentation para imagens médicas |
-| `deep-performance-tuning` | Otimização de performance multi-camada |
-| `experiment-tracking` | Gestão de experimentos ML |
-| `model-lineage` | Rastreamento de proveniência de modelos |
-
-### Skills Especializadas por Domínio
-
-| Skill | Descrição |
-|-------|-----------|
-| `agentic-rag` | RAG para diretrizes médicas |
-| `agentic-reporting` | Geração de laudos médicos estruturados |
-| `specialist-ensemble` | Ensemble de especialistas |
-| `specialist-group-a` | Especialista em opacidades pulmonares |
-| `specialist-group-b` | Especialista em anomalias estruturais |
-| `specialist-group-c` | Especialista em lesões focais |
-| `specialist-group-d` | Especialista em interação coração-pulmão |
+> **Nota**: ML/AI e Medical Imaging são Domain Packs opcionais, não parte do Core. O Core permanece domain-agnostic.
 
 ---
 
