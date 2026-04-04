@@ -57,8 +57,8 @@ This project now enforces stable execution through a comprehensive specification
 - 6 validation rules: no_partial_payload, no_missing_provenance, evidence_refs_resolvable, versioning_required, write_scope_disjoint, verifier_gate
 
 ### Test Coverage
-- 12 Python tests in 3 suites: TestCommandRoutingRegression, TestStableExecutionGuardrails, TestOpenCodeConfigParity
-- Run: `python -m pytest .internal/tests/test_stable_execution.py -v`
+- 33 Python tests across 7 classes in 5 suites: TestCommandRoutingRegression, TestStableExecutionGuardrails, TestOpenCodeConfigParity, TestRuntimeIntegration, TestPublicVsInternalBoundary, TestSanitizedPublicConfigurationContract, TestPublicRepoAllowlistGovernance, TestOpencodeGovernance
+- Run: `python -m pytest .internal/tests/ -v`
 
 ### CI Integration
 - Routing regression: `.github/workflows/routing-regression.yml`

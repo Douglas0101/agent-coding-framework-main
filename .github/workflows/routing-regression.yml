@@ -2,17 +2,19 @@ name: Routing Regression (Required)
 
 on:
   push:
-    branches: [main, master]
+    branches: [main, master, develop]
     paths:
       - '.github/workflows/routing-regression.yml'
       - '.internal/tests/test_stable_execution.py'
+      - '.internal/tests/test_public_boundary.py'
       - '.opencode/**'
       - 'opencode.json'
   pull_request:
-    branches: [main, master]
+    branches: [main, master, develop]
     paths:
       - '.github/workflows/routing-regression.yml'
       - '.internal/tests/test_stable_execution.py'
+      - '.internal/tests/test_public_boundary.py'
       - '.opencode/**'
       - 'opencode.json'
 

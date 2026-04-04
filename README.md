@@ -117,10 +117,11 @@ Scripts, testes e artefatos de validação:
 │   ├── check-public-boundary.sh   # Verificação de boundary público
 │   └── run-autocode.sh            # Wrapper para /autocode
 ├── tests/
-│   ├── test_stable_execution.py           # Regressão de routing + guardrails (8 testes)
-│   ├── test_public_boundary.py            # Boundary público vs interno (4 testes)
+│   ├── test_stable_execution.py           # Regressão de routing + guardrails (16 testes, 4 classes)
+│   ├── test_public_boundary.py            # Boundary público vs interno (7 testes, 1 classe)
 │   ├── test_public_config_sanitization.py # Contrato de config/doc sanitizados (5 testes)
-│   └── test_public_repo_allowlist.py      # Governança de allowlist pública (3 testes)
+│   ├── test_public_repo_allowlist.py      # Governança de allowlist pública (3 testes)
+│   └── test_opencode_governance.py        # Governança de config pública (2 testes)
 └── artifacts/
     └── codex-swarm/
         ├── run-stable-execution/   # Relatórios de conformidade
