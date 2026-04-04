@@ -563,17 +563,104 @@ Ao executar tarefas, o framework cria:
 
 ## Integração em Novo Projeto
 
-Para usar este framework em outro projeto:
+Siga os passos abaixo para usar este framework em qualquer projeto:
 
-### Opção A: Cópia Direta
+### 1. Pré-requisitos
+
+| Requisito | Versão Mínima |
+|-----------|---------------|
+| OpenCode | 1.3.13+ |
+| Python | 3.10+ |
+| Git | 2.30+ |
+
+Instale o OpenCode se ainda não tiver:
+```bash
+npm install -g opencode-ai
+# ou
+curl -sL https://get.opencode.ai | bash
+```
+
+### 2. Integração (Escolha uma opção)
+
+#### Opção A: Cópia Direta (Recomendado para projetos novos)
 
 ```bash
-# No seu projeto
+# No diretório raiz do seu projeto
 mkdir -p .internal
+
+# Copie os arquivos do framework
 cp -r /caminho/para/agent-coding-framework-main/.internal/* ./
 cp /caminho/para/agent-coding-framework-main/opencode.json ./
-cp /caminho/para/agent-coding-framework-main/.opencode/ ./
+cp -r /caminho/para/agent-coding-framework-main/.opencode ./
+
+# Torne o wrapper executável
+chmod +x .internal/scripts/run-autocode.sh
 ```
+
+#### Opção B: Submódulo Git (Recomendado para projetos com Git)
+
+```bash
+# No diretório raiz do seu projeto
+git submodule add https://github.com/Douglas0101/agent-coding-framework-main.git .internal/framework
+
+# Configure os symlinks
+ln -sf .internal/framework/opencode.json opencode.json
+ln -sf .internal/framework/.opencode .opencode
+
+# Torne o wrapper executável
+chmod +x .internal/framework/.internal/scripts/run-autocode.sh
+```
+
+#### Opção C: PATH (Recomendado para múltiplos projetos)
+
+```bash
+# Adicione ao seu ~/.bashrc ou ~/.zshrc
+echo 'export OPENCODE_FRAMEWORK_PATH="/caminho/para/agent-coding-framework-main"' >> ~/.bashrc
+source ~/.bashrc
+
+# No seu projeto, use o wrapper com o PATH
+OPENCODE_FRAMEWORK_PATH="/caminho/para/agent-coding-framework-main" .internal/scripts/run-autocode.sh "sua tarefa"
+```
+
+### 3. Verificação
+
+Execute o teste de Sanity para confirmar que a integração funcionou:
+
+```bash
+# Verifica se o framework está carregado corretamente
+python -m pytest .internal/tests/test_stable_execution.py::TestStableExecutionGuardrails::test_doom_loop_deny -v
+
+# Ou execute uma tarefa simples via wrapper
+.internal/scripts/run-autocode.sh "Liste os arquivos na raiz do projeto"
+```
+
+### 4. Comandos Disponíveis
+
+Após a integração, use:
+
+| Comando | Descrição |
+|---------|-----------|
+| `.internal/scripts/run-autocode.sh "tarefa"` | Executa tarefa (modo autocoder) |
+| `opencode run --command analyze "tarefa"` | Modo exploration |
+| `opencode run --command review "tarefa"` | Modo reviewer |
+| `opencode run --command ship "tarefa"` | Modo orchestrator |
+
+### 5. Customização (Opcional)
+
+Para personalizar o framework no seu projeto:
+
+- **Adicionar Domain Packs**: Edite `.internal/registry/registry.yaml`
+- **Ajustar budgets**: Modifique os arquivos em `.internal/specs/modes/`
+- **Adicionar skills**: Siga o modelo em `.internal/skills/`
+- **Personalizar CI/CD**: Copie workflows de `.github/workflows/`
+
+### Solução de Problemas
+
+| Problema | Solução |
+|----------|---------|
+| "opencode not found" | Execute `npm install -g opencode-ai` |
+| "parity validation failed" | Execute `python -m pytest .internal/tests/ -k parity -v` |
+| "tests failing" | Execute `python -m pytest .internal/tests/test_stable_execution.py -v` |
 
 ### Opção B: Submódulo Git
 
