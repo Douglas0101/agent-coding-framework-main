@@ -177,4 +177,5 @@ Expected additional fields:
 
 - The Hybrid Core contracts, adapters, validator, gates, and calibration tooling are implemented and tested.
 - Rollout is environment-variable based because the OpenCode config schema does not accept custom repository feature keys.
-- The repository wrapper `run-autocode.sh` still relies on native `opencode run --command autocode`; use the validator and CLI directly when you need explicit Hybrid Core validation evidence.
+- The repository wrapper `run-autocode.sh` now integrates the native autocode output with Hybrid Core validation — it delegates to `python .internal/runtime/hybrid_core_cli.py run-autocode`, which captures the final JSON event stream, parses the structured payload, and validates it through the HybridCoreValidator.
+- The CLI `run-autocode` command provides full end-to-end operational proof of the 1x/2x Hybrid Core execution engine.
