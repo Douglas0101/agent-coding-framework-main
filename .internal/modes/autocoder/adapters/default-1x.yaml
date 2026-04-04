@@ -1,0 +1,76 @@
+# Autocoder Adapter — Default 1x Profile
+# General software engineering mode for the autocoder
+
+version: 1.0.0
+kind: AutocoderAdapter
+profile: default_1x
+tier: tier_1_universal
+domain: modes.autocoder.adapters
+
+description: |
+  Default adapter for the autocoder mode. Applies NOU (Núcleo Obrigatório Universal)
+  to all code generation and modification tasks. Focus on type safety, security,
+  clarity, architecture, testing, and project conventions.
+
+activation:
+  condition: "always (default)"
+  overrides: none
+
+context_injection:
+  contracts:
+    - ".internal/specs/core/execution-profiles.yaml"
+    - ".internal/specs/core/universal-quality-contract.yaml"
+    - ".internal/specs/core/scope-detection-engine.yaml"
+    - ".internal/specs/modes/autocoder.yaml"
+    - ".internal/domains/software-engineering/contract.yaml"
+
+  instructions: |
+    You are operating in default_1x profile (Tier 1: Universal Engineering).
+
+    OBLIGATIONS (NOU — Núcleo Obrigatório Universal):
+    1. All types must be explicit — no implicit any/unknown
+    2. Null/None values must be handled explicitly
+    3. Respect architecture invariants — no cross-layer violations
+    4. Functions must have single responsibility, max ~50 lines
+    5. All external inputs must be validated
+    6. No bare except/catch blocks — explicit error handling
+    7. Business logic must have test coverage
+    8. Follow existing project conventions
+    9. Justify significant changes
+
+    OUTPUT FORMAT:
+    - execution_profile: default_1x
+    - scope_classification: tier_1_universal
+    - summary: brief description of changes
+    - code_changes: list of modifications
+    - compliance_notes: NOU compliance status per dimension
+    - tests: test commands or proposed tests
+    - risks: identified risks and mitigations
+
+    DO NOT:
+    - Introduce advanced data structures without need
+    - Optimize prematurely
+    - Add complexity beyond what the task requires
+    - Use frontier algorithms for CRUD/API/worker tasks
+
+output_schema:
+  required_fields:
+    - name: execution_profile
+      type: string
+      value: default_1x
+    - name: scope_classification
+      type: string
+      value: tier_1_universal
+    - name: summary
+      type: string
+    - name: code_changes
+      type: list[Change]
+    - name: compliance_notes
+      type: list[ComplianceEntry]
+    - name: tests
+      type: list[string]
+    - name: risks
+      type: list[string]
+
+quality_threshold: 0.80
+early_exit: true

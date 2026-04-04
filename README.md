@@ -21,7 +21,7 @@ A versão 2.0 transforma o framework de **routing + guardrails** para **contrato
 | **Core domain-agnostic** | Protocolos de orquestração, handoff, verificação e síntese — sem lógica de domínio |
 | **Agent Mode Contracts** | 4 modos operacionais (explore, reviewer, orchestrator, autocoder) com budget, memória e semântica formal |
 | **Mode Skills** | 10 skills governadas por contrato, budget e evidência, ativadas contextualmente por modo |
-| **Domain Packs** | Extensões contratuais de domínio (software-engineering, ml-ai, medical-imaging) |
+| **Domain Packs** | Extensões contratuais opcionais — software-engineering (ativo), ml-ai e medical-imaging (experimentais), ioi-gold-compiler (experimental) |
 | **Runtime Governado** | 7 módulos de enforcement: contract-verifier, policy-enforcer, approval-gate, conformance-tracker, observability, replay-engine, metrics-collector |
 
 ### Propósito
@@ -316,6 +316,8 @@ O framework coleta e agrega 8 métricas principais:
 
 ## Domain Packs Disponíveis
 
+Domain Packs são extensões contratuais opcionais. O Core permanece domain-agnostic e não depende de nenhum pack.
+
 ### Software Engineering Pack (Default — Active)
 
 | Capacidade | Descrição |
@@ -324,7 +326,9 @@ O framework coleta e agrega 8 métricas principais:
 | Code review | Análise de segurança e qualidade |
 | Code generation | Geração e refatoração de código |
 
-### ML/AI Pack (Experimental)
+### ML/AI Pack (Experimental — Opcional)
+
+> Ilustrativo. Não requerido para operação do Core.
 
 | Capacidade | Descrição |
 |---|---|
@@ -332,13 +336,25 @@ O framework coleta e agrega 8 métricas principais:
 | ML engineering | Desenvolvimento de modelos |
 | ML optimization | Otimização de hiperparâmetros |
 
-### Medical Imaging Pack (Experimental)
+### Medical Imaging Pack (Experimental — Opcional)
+
+> Ilustrativo. Não requerido para operação do Core.
 
 | Capacidade | Descrição |
 |---|---|
 | Radiologist assistant | Análise de imagens médicas |
 | Specialist groups | Opacidades, anomalias, lesões, interação coração-pulmão |
 | Medical reporter | Geração de laudos estruturados |
+
+### IOI Gold Compiler Pack (Experimental — Opcional)
+
+> Ilustrativo. Algoritmos avançados e competitive programming. Não requerido para operação do Core.
+
+| Capacidade | Descrição |
+|---|---|
+| Algorithm selection | Mapeamento problema → algoritmo |
+| Complexity certification | Certificados de complexidade |
+| Stress test generation | Planos de validação sob carga |
 
 > **Nota**: Domain Packs são opcionais. O Core permanece domain-agnostic.
 

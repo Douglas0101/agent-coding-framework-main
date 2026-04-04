@@ -1,27 +1,52 @@
 # Agent Mode Contract: autocoder
 # Primary autocode execution mode for code generation and modification
+# Supports Hybrid Core Execution Engine (1x/2x profiles)
 
 agent_mode_contract:
   metadata:
     name: "autocoder"
-    version: "1.0.0"
+    version: "1.1.0"
     parent_contract: "orchestration-contract.yaml"
     created: "2026-04-03T00:00:00Z"
-    last_modified: "2026-04-03T00:00:00Z"
+    last_modified: "2026-04-04T00:00:00Z"
     author: "core-team"
 
+  hybrid_core:
+    description: "Hybrid Core Execution Engine — 1x/2x profiles"
+    default_profile: default_1x
+    profiles:
+      - profile: default_1x
+        adapter: "modes/autocoder/adapters/default-1x.yaml"
+        tier: tier_1_universal
+      - profile: performance_2x
+        adapters:
+          - tier: tier_2_algorithmic
+            adapter: "modes/autocoder/adapters/performance-2x-tier-2.yaml"
+          - tier: tier_3_competitive
+            adapter: "modes/autocoder/adapters/performance-2x-tier-3.yaml"
+    scope_detection: "core/scope-detection-engine.yaml"
+    universal_contract: "core/universal-quality-contract.yaml"
+    frontier_contract: "core/algorithmic-frontier-contract.yaml"
+
   mission:
-    description: "Generate, modify, and refactor code based on task specifications while adhering to project conventions and constitutional invariants."
+    description: "Generate, modify, and refactor code based on task specifications while adhering to project conventions, constitutional invariants, and the Hybrid Core Execution Engine (1x/2x profiles)."
     success_criteria:
       - "Code changes implement the requested task"
       - "Changes follow existing project conventions"
       - "No secrets or credentials introduced"
-      - "Output conforms to output_schema"
+      - "Output conforms to output_schema for active profile"
+      - "Execution profile correctly matches task scope"
+      - "NOU compliance verified for all outputs"
+      - "NOE compliance verified when performance_2x is active"
     failure_conditions:
       - "Task scope exceeds budget"
       - "Cannot safely modify target files"
       - "Schema or contract violation in output"
       - "Security gate fails"
+      - "NOU gate violation"
+      - "NOE gate violation when performance_2x is active"
+      - "Over-engineering detected in tier_1 task"
+      - "Under-engineering detected in tier_2/tier_3 task"
     priority: "critical"
 
   scope:

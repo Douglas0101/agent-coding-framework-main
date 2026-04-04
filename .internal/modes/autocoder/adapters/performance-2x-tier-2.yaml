@@ -1,0 +1,119 @@
+# Autocoder Adapter — Performance 2x, Tier 2 (Algorithmic)
+# Advanced data structures and optimization patterns
+
+version: 1.0.0
+kind: AutocoderAdapter
+profile: performance_2x
+tier: tier_2_algorithmic
+domain: modes.autocoder.adapters
+
+description: |
+  Performance adapter for Tier 2 algorithmic tasks. Applies NOU + NOE with focus
+  on advanced data structures, optimization patterns, and strong complexity control.
+  Activated when scope detection identifies algorithmic requirements.
+
+activation:
+  condition: "scope_detection triggers tier_2_algorithmic"
+  triggers:
+    - "n >= 100000"
+    - "q >= 100000"
+    - "range query patterns detected"
+    - "graph/tree structure with performance constraints"
+    - "optimization request with measurable constraints"
+
+context_injection:
+  contracts:
+    - ".internal/specs/core/execution-profiles.yaml"
+    - ".internal/specs/core/universal-quality-contract.yaml"
+    - ".internal/specs/core/algorithmic-frontier-contract.yaml"
+    - ".internal/specs/core/scope-detection-engine.yaml"
+    - ".internal/specs/modes/autocoder.yaml"
+    - ".internal/domains/software-engineering/contract.yaml"
+    - ".internal/domains/ioi-gold-compiler/contract.yaml"
+    - ".internal/domains/ioi-gold-compiler/frontier-algorithmic-core.yaml"
+    - ".internal/domains/ioi-gold-compiler/algorithm-selection-map.yaml"
+    - ".internal/domains/ioi-gold-compiler/frontier-validation-gates.yaml"
+    - ".internal/domains/ioi-gold-compiler/structural-memory.yaml"
+
+  instructions: |
+    You are operating in performance_2x profile, Tier 2: Algorithmic.
+
+    OBLIGATIONS (NOU — always active):
+    1. All types must be explicit
+    2. Null/None values handled explicitly
+    3. Architecture invariants respected
+    4. Code clarity maintained
+    5. Security validated
+    6. Error handling consistent
+    7. Tests for business logic
+    8. Project conventions followed
+    9. Changes justified
+
+    ADDITIONAL OBLIGATIONS (NOE — Tier 2):
+    1. ALGORITHM SELECTION RATIONALE: Explain why chosen algorithm fits
+    2. COMPLEXITY CERTIFICATE: State time and space complexity for all critical ops
+    3. INVARIANT DOCUMENTATION: Document loop and data structure invariants
+    4. EDGE CASE ANALYSIS: Cover empty, single, max, duplicate, overflow cases
+    5. STRESS TEST PLAN: Describe methodology for validation under load
+    6. MEMORY BOUND ESTIMATE: Estimate peak memory usage
+
+    AVAILABLE TECHNIQUES (Tier 2):
+    - Segment Tree, Fenwick Tree, DSU/Rollback
+    - Sparse Table, Dijkstra/0-1 BFS, SCC
+    - Bridges/Articulation, HLD Basic
+    - Digit DP, SOS DP, Binary Search on Answer
+    - Parallel Binary Search
+
+    OUTPUT FORMAT:
+    - execution_profile: performance_2x
+    - scope_classification: tier_2_algorithmic
+    - summary: brief description
+    - problem_analysis: breakdown of problem structure
+    - algorithm_selection_rationale: why this algorithm, rejected alternatives
+    - complexity_certificate: time/space for all critical operations
+    - edge_case_analysis: boundary conditions covered
+    - stress_test_plan: validation methodology
+    - memory_bound_estimate: peak memory analysis
+    - code_changes: list of modifications
+    - compliance_notes: NOU + NOE compliance status
+    - tests: test commands including stress tests
+    - risks: identified risks and mitigations
+
+    DO NOT:
+    - Use Tier 3 techniques without explicit justification
+    - Relax any NOU requirement
+    - Provide naive solution when constraints require better
+
+output_schema:
+  required_fields:
+    - name: execution_profile
+      type: string
+      value: performance_2x
+    - name: scope_classification
+      type: string
+      value: tier_2_algorithmic
+    - name: summary
+      type: string
+    - name: problem_analysis
+      type: string
+    - name: algorithm_selection_rationale
+      type: string
+    - name: complexity_certificate
+      type: object
+    - name: edge_case_analysis
+      type: object
+    - name: stress_test_plan
+      type: string
+    - name: memory_bound_estimate
+      type: string
+    - name: code_changes
+      type: list[Change]
+    - name: compliance_notes
+      type: list[ComplianceEntry]
+    - name: tests
+      type: list[string]
+    - name: risks
+      type: list[string]
+
+quality_threshold: 0.95
+early_exit: false
