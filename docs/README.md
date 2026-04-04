@@ -27,6 +27,10 @@
 | Documento | Descricao | Status |
 |-----------|-----------|--------|
 | [CONSTITUTION_emendada.md](CONSTITUTION_emendada.md) | Fonte da verdade autoritaria — invariantes, contratos, governanca | ✅ Ratificada |
+| [PRD_Hybrid_Core_Agent_Coding.md](PRD_Hybrid_Core_Agent_Coding.md) | PRD do mecanismo hibrido 1x/2x para agent coding | ✅ Ativo |
+| [HYBRID_CORE_USAGE.md](HYBRID_CORE_USAGE.md) | Uso operacional do Hybrid Core, rollout e comandos de validacao | ✅ Publicado |
+| [HYBRID_CORE_MAINTENANCE.md](HYBRID_CORE_MAINTENANCE.md) | Guia de manutencao de triggers, gates, contratos e calibracao | ✅ Publicado |
+| [HYBRID_CORE_PRD_COMPLIANCE.md](HYBRID_CORE_PRD_COMPLIANCE.md) | Matriz de conformidade PRD -> status -> evidencia | ✅ Publicado |
 | [PRD_desverticalizacao_framework.md](PRD_desverticalizacao_framework.md) | Plano de transicao para Core domain-agnostic | ✅ Executado |
 | [ADOPTION_RUNBOOK.md](ADOPTION_RUNBOOK.md) | Guia de adocao para mantenedores | ✅ Publicado |
 

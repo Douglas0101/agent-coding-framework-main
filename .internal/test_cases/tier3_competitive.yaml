@@ -1,0 +1,71 @@
+# Tier 3 Test Cases — Competitive/Frontier (Performance 2x)
+
+## Test Case 3.1: Link-Cut Tree
+```yaml
+task: "Implement Link-Cut Tree for dynamic forest with path maximum queries and link/cut operations"
+expected_tier: tier_3_competitive
+expected_profile: performance_2x
+```
+
+## Test Case 3.2: Wavelet Tree
+```yaml
+task: "Implement Wavelet Tree for k-th smallest element queries in range, static array with 10^5 elements"
+expected_tier: tier_3_competitive
+expected_profile: performance_2x
+```
+
+## Test Case 3.3: Eertree (Palindrome Tree)
+```yaml
+task: "Implement Eertree to count distinct palindromic substrings in a string of length 10^5"
+expected_tier: tier_3_competitive
+expected_profile: performance_2x
+```
+
+## Test Case 3.4: Persistent Data Structures
+```yaml
+task: "Implement Persistent Segment Tree for k-th smallest queries across multiple versions"
+expected_tier: tier_3_competitive
+expected_profile: performance_2x
+```
+
+## Test Case 3.5: Min-Cost Max-Flow with Potentials
+```yaml
+task: "Implement Min-Cost Max-Flow with potentials for transportation problem with 5000 nodes"
+expected_tier: tier_3_competitive
+expected_profile: performance_2x
+```
+
+## Test Case 3.6: Centroid Decomposition
+```yaml
+task: "Use Centroid Decomposition to count paths of length K in tree with 10^5 nodes"
+expected_tier: tier_3_competitive
+expected_profile: performance_2x
+```
+
+## Test Case 3.7: Suffix Automaton
+```yaml
+task: "Build Suffix Automaton to count distinct substrings and find longest common substring"
+expected_tier: tier_3_competitive
+expected_profile: performance_2x
+```
+
+## Test Case 3.8: Simulated Annealing
+```yaml
+task: "Use Simulated Annealing for TSP with 50 cities when exact solution is infeasible"
+expected_tier: tier_3_competitive
+expected_profile: performance_2x
+```
+
+## Test Case 3.9: Dynamic Tree Online
+```yaml
+task: "Handle online link/cut operations with queries for maximum edge weight on path"
+expected_tier: tier_3_competitive
+expected_profile: performance_2x
+```
+
+## Test Case 3.10: Range Quantile with Updates
+```yaml
+task: "Answer k-th smallest in range queries with point updates, n=200000, q=200000"
+expected_tier: tier_3_competitive
+expected_profile: performance_2x
+```

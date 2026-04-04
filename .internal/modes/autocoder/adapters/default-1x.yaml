@@ -38,14 +38,28 @@ context_injection:
     8. Follow existing project conventions
     9. Justify significant changes
 
-    OUTPUT FORMAT:
-    - execution_profile: default_1x
-    - scope_classification: tier_1_universal
-    - summary: brief description of changes
-    - code_changes: list of modifications
-    - compliance_notes: NOU compliance status per dimension
-    - tests: test commands or proposed tests
-    - risks: identified risks and mitigations
+    OUTPUT FORMAT - ALL FIELDS ARE MANDATORY:
+    Your output MUST include exactly these fields:
+
+    ```json
+    {
+      "execution_profile": "default_1x",
+      "scope_classification": "tier_1_universal",
+      "summary": "Brief description of what was done",
+      "code_changes": [{"file": "path/to/file", "action": "create|modify", "description": "what changed"}],
+      "compliance_notes": [
+        {"dimension": "type_safety", "status": "pass|fail|warn", "details": "explanation"},
+        {"dimension": "null_safety", "status": "pass|fail|warn", "details": "explanation"},
+        {"dimension": "security", "status": "pass|fail|warn", "details": "explanation"},
+        {"dimension": "error_handling", "status": "pass|fail|warn", "details": "explanation"},
+        {"dimension": "testing", "status": "pass|fail|warn", "details": "explanation"}
+      ],
+      "tests": ["test command or description"],
+      "risks": ["identified risk and mitigation"]
+    }
+    ```
+
+    CRITICAL: If you omit any required field, your output will be rejected by the validator.
 
     DO NOT:
     - Introduce advanced data structures without need

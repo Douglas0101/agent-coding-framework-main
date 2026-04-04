@@ -131,6 +131,17 @@ class TestPolicyEnforcerOWASP:
         assert not report.passed
         assert any(f.rule_id == "OWASP-002" for f in report.findings)
 
+    def test_xss_javascript_uri_detection(self, enforcer):
+        content = '<a href="javascript:alert(1)">click</a>'
+        report = enforcer.scan_content(content, "test.html")
+        assert not report.passed
+        assert any(f.rule_id == "OWASP-003" for f in report.findings)
+
+    def test_plain_javascript_key_does_not_trigger_xss(self, enforcer):
+        content = "javascript:\n  linter: eslint\n"
+        report = enforcer.scan_content(content, "linting-tools.yaml")
+        assert report.passed
+
 
 class TestPolicyReport:
     def test_risk_score_zero_when_clean(self, enforcer):

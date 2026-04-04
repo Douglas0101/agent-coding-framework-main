@@ -135,7 +135,11 @@ OWASP_PATTERNS = [
         "Potential SQL injection",
     ),
     ("OWASP-002", r"(?i)<script[^>]*>.*</script>", "Potential XSS via script tag"),
-    ("OWASP-003", r"(?i)javascript\s*:", "Potential XSS via javascript: URI"),
+    (
+        "OWASP-003",
+        r"(?i)(?:href|src|action|location)\s*=\s*['\"]\s*javascript\s*:|['\"]\s*javascript\s*:",
+        "Potential XSS via javascript: URI",
+    ),
     (
         "OWASP-004",
         r"(?i)on(load|error|click|mouseover)\s*=",

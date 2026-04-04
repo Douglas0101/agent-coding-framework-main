@@ -1,0 +1,91 @@
+name: Hybrid Core Regression
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - ".github/workflows/hybrid-core-regression.yml"
+      - ".internal/scripts/calibrate_scope_detector.py"
+      - ".internal/scripts/run_hybrid_core_tests.sh"
+      - ".internal/runtime/scope_detector.py"
+      - ".internal/runtime/profile_activator.py"
+      - ".internal/runtime/gate_executor.py"
+      - ".internal/runtime/output_validator.py"
+      - ".internal/runtime/hybrid_core_validator.py"
+      - ".internal/runtime/hybrid_core_config.py"
+      - ".internal/runtime/hybrid_core_engine.py"
+      - ".internal/runtime/hybrid_core_observability.py"
+      - ".internal/runtime/regression_harness.py"
+      - ".internal/specs/core/scope-detection-engine.yaml"
+      - ".internal/specs/core/execution-profiles.yaml"
+      - ".internal/specs/modes/autocoder.yaml"
+      - ".internal/modes/autocoder/adapters/*.yaml"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/hybrid-core-regression.yml"
+      - ".internal/scripts/calibrate_scope_detector.py"
+      - ".internal/scripts/run_hybrid_core_tests.sh"
+      - ".internal/runtime/**"
+      - ".internal/specs/core/scope-detection-engine.yaml"
+      - ".internal/specs/core/execution-profiles.yaml"
+      - ".internal/specs/modes/autocoder.yaml"
+      - ".internal/modes/autocoder/adapters/**"
+
+permissions:
+  contents: read
+
+jobs:
+  hybrid-core-regression:
+    name: Hybrid Core 1x/2x Regression
+    runs-on: ubuntu-latest
+    env:
+      OPENCODE_TARGET_ACCURACY: "0.95"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install pyyaml pytest
+
+      - name: Run Hybrid Core tests
+        run: |
+          python -m pytest .internal/runtime/tests/ -v --tb=short
+
+      - name: Run contract tests
+        run: |
+          python -m pytest .internal/tests/test_hybrid_core_contracts.py .internal/tests/test_mode_contracts.py -v --tb=short
+
+      - name: Run calibration analysis
+        id: calibration
+        run: |
+          python .internal/scripts/calibrate_scope_detector.py --json > calibration_report.json
+          cat calibration_report.json
+
+      - name: Check pass rate threshold
+        run: |
+          PASS_RATE=$(python -c "import json; r=json.load(open('calibration_report.json')); print(r['pass_rate'])")
+          echo "Pass rate: $PASS_RATE"
+          python -c "
+          import json, os, sys
+          r = json.load(open('calibration_report.json'))
+          target = float(os.environ.get('OPENCODE_TARGET_ACCURACY', '0.95'))
+          if r['pass_rate'] < target:
+              print(f'FAIL: Pass rate {r[\"pass_rate\"]:.1%} below {target:.0%} threshold')
+              sys.exit(1)
+          print(f'PASS: Pass rate {r[\"pass_rate\"]:.1%} above {target:.0%} threshold')
+          "
+
+      - name: Upload calibration report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: calibration-report
+          path: calibration_report.json
+          retention-days: 30
