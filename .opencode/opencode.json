@@ -1,9 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "default_agent": "autocoder",
-  "instructions": [
-    "Sanitized public contract. private repository only for operational config."
-  ],
   "agent": {
     "autocoder": {
       "description": "Primary autocode execution path.",
@@ -31,7 +28,7 @@
   "command": {
     "autocode": {
       "template": "{{args}}",
-      "description": "Autocode command. private repository only for full operational prompts.",
+      "description": "Autocode command.",
       "agent": "autocoder"
     },
     "analyze": {

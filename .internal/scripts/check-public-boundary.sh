@@ -4,12 +4,41 @@ set -euo pipefail
 fail=0
 
 echo "[boundary] Checking disallowed internal directories..."
-if disallowed_paths=$(git ls-files | grep -nE '(^|/)\.(agent|codex|opencode)(/|$)' || true); then
+if disallowed_paths=$(git ls-files | grep -nE '(^|/)\.(agent|codex)(/|$)' || true); then
   if [[ -n "$disallowed_paths" ]]; then
     echo "Found internal artifacts in public repo:"
     echo "$disallowed_paths"
     fail=1
   fi
+fi
+
+echo "[boundary] Checking .opencode public-contract allowlist..."
+if ! disallowed_opencode=$(python - <<'PY'
+import subprocess
+
+allowed = {
+    ".opencode/opencode.json",
+    ".opencode/specs/README.md",
+    ".opencode/specs/handoff-contract.sanitized.json",
+    ".opencode/manifests/README.md",
+    ".opencode/manifests/sanitized/run-manifest.example.json",
+}
+
+tracked = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+opencode_files = [path for path in tracked if path.startswith(".opencode/")]
+disallowed = sorted(set(opencode_files) - allowed)
+
+if disallowed:
+    for path in disallowed:
+        print(path)
+    raise SystemExit(1)
+PY
+); then
+  if [[ -n "${disallowed_opencode:-}" ]]; then
+    echo "Disallowed .opencode files in public repo:"
+    echo "$disallowed_opencode"
+  fi
+  fail=1
 fi
 
 echo "[boundary] Checking sensitive operational keywords..."

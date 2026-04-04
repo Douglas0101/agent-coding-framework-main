@@ -1,15 +1,28 @@
 {
+  "$schema": "https://opencode.ai/config.json",
   "default_agent": "autocoder",
-  "maxSteps": 6,
-  "note": "example-only. private repository only for real runtime configuration.",
-  "providers": {
-    "openai": {
-      "api_key": "${OPENAI_API_KEY_PLACEHOLDER}",
-      "base_url": "https://api.example.com/v1"
+  "instructions": [
+    "Example-only sanitized config. private repository only for real runtime configuration.",
+    "Use OPENAI_API_KEY_PLACEHOLDER and ANTHROPIC_API_KEY_PLACEHOLDER via environment or private repository only config.",
+    "Example endpoint reference: https://api.example.com/v1"
+  ],
+  "agent": {
+    "autocoder": {
+      "description": "Example autocode agent.",
+      "mode": "primary",
+      "maxSteps": 6
     },
-    "anthropic": {
-      "api_key": "${ANTHROPIC_API_KEY_PLACEHOLDER}",
-      "base_url": "https://api.example.com/v1"
+    "general": {
+      "description": "Example general agent.",
+      "mode": "primary",
+      "maxSteps": 50
+    }
+  },
+  "command": {
+    "autocode": {
+      "template": "{{args}}",
+      "description": "Example autocode command.",
+      "agent": "autocoder"
     }
   }
 }

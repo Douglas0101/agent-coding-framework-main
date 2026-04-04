@@ -1,15 +1,28 @@
-name: Public Repo Validation
+name: Routing Regression (Required)
 
 on:
   push:
-    branches: [main, master]
+    branches: [main, master, develop]
+    paths:
+      - '.github/workflows/routing-regression.yml'
+      - '.internal/tests/test_stable_execution.py'
+      - '.internal/tests/test_public_boundary.py'
+      - '.opencode/**'
+      - 'opencode.json'
   pull_request:
-    branches: [main, master]
+    branches: [main, master, develop]
+    paths:
+      - '.github/workflows/routing-regression.yml'
+      - '.internal/tests/test_stable_execution.py'
+      - '.internal/tests/test_public_boundary.py'
+      - '.opencode/**'
+      - 'opencode.json'
 
 jobs:
-  public-tests:
-    name: Public Template Tests
+  routing-regression:
+    name: Routing Regression (Required)
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,5 +37,89 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install pytest
 
-      - name: Run tests
-        run: python -m pytest .internal/tests/test_stable_execution.py -v
+      - name: Validate OpenCode config presence and parity
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          root = Path('opencode.json')
+          dot = Path('.opencode/opencode.json')
+
+          if not root.exists() or not dot.exists():
+              missing = [str(p) for p in (root, dot) if not p.exists()]
+              raise SystemExit(f"Missing required OpenCode configs: {', '.join(missing)}")
+
+          root_json = json.loads(root.read_text(encoding='utf-8'))
+          dot_json = json.loads(dot.read_text(encoding='utf-8'))
+
+          # Policy: compare only critical routing fields, not full JSON equality
+          # This matches the policy documented in AGENTS.md and enforced by run-autocode.sh
+          CRITICAL_FIELDS = (
+              "default_agent",
+              "command.autocode.agent",
+              "agent.autocoder.maxSteps",
+              "agent.general.maxSteps",
+          )
+
+          def get_path(data, path):
+              current = data
+              for part in path.split("."):
+                  if not isinstance(current, dict) or part not in current:
+                      return None
+                  current = current[part]
+              return current
+
+          errors = []
+          for field in CRITICAL_FIELDS:
+              root_val = get_path(root_json, field)
+              dot_val = get_path(dot_json, field)
+              if root_val is None or dot_val is None:
+                  errors.append(f"'{field}': missing required critical field (root={root_val!r}, dot={dot_val!r})")
+                  continue
+              if root_val != dot_val:
+                  errors.append(f"'{field}': root={root_val!r}, dot={dot_val!r}")
+
+          if errors:
+              raise SystemExit("Config drift in critical routing fields: " + "; ".join(errors))
+
+          print('OpenCode config parity check passed (critical fields only).')
+          PY
+
+      - name: Run stable execution regression suite
+        run: |
+          mkdir -p .internal/artifacts/ci/routing-regression
+          python -m pytest .internal/tests/test_stable_execution.py -vv \
+            --junitxml=.internal/artifacts/ci/routing-regression/pytest-junit.xml \
+            | tee .internal/artifacts/ci/routing-regression/pytest-raw.log
+
+      - name: Sanitize routing evidence logs
+        if: always()
+        run: |
+          python - <<'PY'
+          import re
+          from pathlib import Path
+
+          src = Path('.internal/artifacts/ci/routing-regression/pytest-raw.log')
+          dst = Path('.internal/artifacts/ci/routing-regression/pytest-sanitized.log')
+
+          if not src.exists():
+              raise SystemExit('No pytest log to sanitize.')
+
+          text = src.read_text(encoding='utf-8', errors='replace')
+          text = re.sub(r'/home/runner/work/[^\s]+', '/home/runner/work/<redacted>', text)
+          text = re.sub(r'ghp_[A-Za-z0-9_]+', 'ghp_<redacted>', text)
+          text = re.sub(r'(AKIA|ASIA)[A-Z0-9]{16}', r'\1<redacted>', text)
+          dst.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Upload routing evidence artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: routing-regression-evidence
+          path: |
+            .internal/artifacts/ci/routing-regression/pytest-junit.xml
+            .internal/artifacts/ci/routing-regression/pytest-sanitized.log
+          if-no-files-found: warn
+          retention-days: 14

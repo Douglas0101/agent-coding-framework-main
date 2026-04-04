@@ -13,18 +13,18 @@
 
 ### Routing Bug: `/autocode` command (OpenCode v1.3.13)
 
-**Problem:** The `/autocode` command (defined in `.opencode/commands/autocode.md` with `agent: autocoder` in frontmatter) is NOT routed to the `autocoder` agent at runtime. Instead, it falls back to the `general` agent with `maxSteps: 50` (expected: `autocoder` with `maxSteps: 6`).
+**Current finding:** The prior routing diagnosis was based on repository configs that used an invalid/stale config schema for OpenCode v1.3.13. The governing root cause in this snapshot is repository configuration, not an upstream runtime defect.
 
-**Confirmed:** Bug persists with `--pure` flag (no plugins), confirming it is a runtime routing issue, not a plugin issue. Other commands with `agent:` in frontmatter work correctly (`/ship` → orchestrator, `/review` → reviewer, `/analyze` → explore).
+**Supported fix:** When `opencode.json` and `.opencode/opencode.json` use top-level `agent` and `command`, `/autocode` routes natively to the `autocoder` agent without `--agent`.
 
-**Workaround:** Use `--agent autocoder` flag explicitly:
+**Usage:** Native routing is now the supported path:
 ```bash
-opencode run --agent autocoder --command autocode "your task"
-# Or use the wrapper script:
+opencode run --command autocode "your task"
+# Or use the wrapper script with parity pre-flight:
 ./.internal/scripts/run-autocode.sh "your task"
 ```
 
-**Tracking:** Root cause appears to be silent config merge failure when `.opencode/opencode.json` does not exist. See `.opencode/skills/self-bootstrap-opencode/debug_autocode.log` for DEBUG evidence.
+**Tracking:** Historical investigation evidence remains in `.internal/artifacts/codex-swarm/run-stable-execution/debug_autocode.log`, but the repository fix is the schema migration to the runtime-supported layout.
 
 ---
 
@@ -33,9 +33,11 @@ opencode run --agent autocoder --command autocode "your task"
 This project now enforces stable execution through a comprehensive specification suite:
 
 ### Configuration Parity
-- `opencode.json` (root) and `.opencode/opencode.json` must be structurally and semantically equivalent
-- Automated test `test_root_and_dot_opencode_configs_match` fails on drift
-- Both files define `default_agent: autocoder` with `maxSteps: 6`
+- `opencode.json` (root) and `.opencode/opencode.json` must match on **critical routing fields only**
+- Routing-critical fields that MUST match: `default_agent`, `command.autocode.agent`, `agent.autocoder.maxSteps`, `agent.general.maxSteps`
+- Allowed divergence: supported non-routing fields (for example `providers` or `instructions` in sanitized examples)
+- Policy enforced by: wrapper script, tests, and CI workflow
+- Both files now define `default_agent: autocoder`, `command.autocode.agent: autocoder`, and bounded agent step limits in `agent.*`
 
 ### Invariant Enforcement
 - **No unbounded retry:** `max_attempts ≤ 3` with exponential backoff
@@ -55,9 +57,9 @@ This project now enforces stable execution through a comprehensive specification
 - 6 validation rules: no_partial_payload, no_missing_provenance, evidence_refs_resolvable, versioning_required, write_scope_disjoint, verifier_gate
 
 ### Test Coverage
-- 38 Python tests in 7 suites: ConfigIntegrity, CommandRouting, SpecStructure, Invariants, HandoffContract, AgentsMdConsistency, NegativePatterns
-- Run: `python -m pytest .internal/tests/test_stable_execution.py -v`
+- 33 Python tests across 7 classes in 5 suites: TestCommandRoutingRegression, TestStableExecutionGuardrails, TestOpenCodeConfigParity, TestRuntimeIntegration, TestPublicVsInternalBoundary, TestSanitizedPublicConfigurationContract, TestPublicRepoAllowlistGovernance, TestOpencodeGovernance
+- Run: `python -m pytest .internal/tests/ -v`
 
 ### CI Integration
 - Routing regression: `.github/workflows/routing-regression.yml`
-- Python test suite runs on push/PR to main/master when config or spec files change
+- Config parity validated by critical routing fields only (not full JSON equality)

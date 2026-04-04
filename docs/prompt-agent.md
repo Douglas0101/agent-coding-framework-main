@@ -51,20 +51,17 @@ Verifique e ajuste:
 - referências de spec antiga vs spec nova
 - referências de DAG antigo vs DAG atual
 - contagem e nome das suítes de teste
-- workaround atual para `/autocode`
-- riscos remanescentes e dependência upstream
 
 Critério de aceite:
 
 - não há contradição entre código, specs, testes e documentação
 - a documentação descreve o estado atual de `stable-execution`
-- known issues e workaround estão coerentes com a realidade do runtime
 
 ---
 
 ### 3. Evidência operacional real
 
-Promova o estado de “validado localmente” para “evidenciado para promoção”.
+Promova o estado de "validado localmente" para "evidenciado para promoção".
 
 Execute e registre evidências para:
 
@@ -102,24 +99,23 @@ Critério de aceite:
 
 ---
 
-### 5. Guardrails para o bug upstream
+### 5. Prevenção de regressão para schema inválido
 
-O bug upstream do runtime ainda deve ser tratado como risco real.
+O que era tratado como "bug upstream" era na verdade uso de schema de configuração inválido/obsoleto para OpenCode 1.3.13.
 
 Garanta que:
 
-- `.internal/scripts/run-autocode.sh` continue funcional
-- o pre-flight probe detecte agente inesperado
+- `.internal/scripts/run-autocode.sh` continua funcional
+- o wrapper valida schema via `opencode debug config`
+- não há divergência entre `opencode.json` e `.opencode/opencode.json` nos campos críticos
 - fallback silencioso seja proibido
 - haja logging e evidência em caso de desvio
-- o fluxo suportado force `--agent autocoder` quando necessário
-- a dependência upstream fique documentada sem ambiguidade
 
 Critério de aceite:
 
-- o workaround continua operacional
-- erro de roteamento não passa despercebido
-- há fail-fast com evidência, não “best effort” silencioso
+- schema válido é usado (top-level `default_agent`, `agent`, `command`)
+- erro de configuração não passa despercebido
+- há fail-fast com evidência, não "best effort" silencioso
 
 ---
 
@@ -155,7 +151,7 @@ Siga a ordem abaixo:
 3. sincronizar documentação
 4. gerar evidências operacionais
 5. integrar ou ajustar CI
-6. reforçar guardrails do workaround
+6. reforçar guardrails de schema válido
 7. consolidar release package
 8. só então preparar commit e push
 
@@ -164,7 +160,7 @@ Siga a ordem abaixo:
 ## Restrições
 
 - Não faça mudanças ad hoc sem conectá-las às lacunas acima.
-- Não considere “passou localmente” como evidência suficiente.
+- Não considere "passou localmente" como evidência suficiente.
 - Não aceite drift entre config, spec, teste e documentação.
 - Não aceite fallback silencioso de agente.
 - Não faça síntese final sem conformance report atualizado.

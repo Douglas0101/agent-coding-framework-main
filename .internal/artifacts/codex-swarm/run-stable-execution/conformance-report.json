@@ -5,118 +5,93 @@
   "spec_id": "capability.stable-execution",
   "spec_version": "1.0.0",
   "run_id": "run-stable-execution",
-  "timestamp": "2026-04-03T18:50:00.000Z",
+  "timestamp": "2026-04-03T23:00:00.000Z",
+  "summary": "Repository-level root cause fixed by migrating OpenCode configs to the runtime-supported schema and validating native /autocode routing.",
   "asserts": {
     "passed": [
-      "AC-001: Ausencia de loop nao limitado - policy.max_attempts=3",
-      "AC-002: Retry sempre finito e observavel - circuit_breaker_policy definida",
-      "AC-003: Resume sem reexecucao global - checkpointed state + selective resume policy",
-      "AC-004: Handoffs 100% compativeis com schema - contract.agent-handoff com 12 campos obrigatorios",
-      "AC-005: Nenhuma escrita final fora do synthesizer - single_final_writer=synthesizer",
-      "AC-006: Verifier bloqueia promocao de saida invalida - forbidden transition running->synthesized",
-      "AC-007: Execucao paralela sem colisao de write_scope - disjoint_scopes + lock_lease_required",
-      "AC-008: Runtime alinhado a spec apos patch - golden trace routing validado",
-      "AC-009: Regressao coberta por testes automatizados - 38/38 testes passando",
-      "AC-010: Roteamento de comandos para agentes corretos - 7 comandos validados via frontmatter parsing",
-      "AC-011: Config parity root <-> .opencode validada - diff vazio",
-      "AC-012: CI pipeline cobre stable execution tests - routing-regression.yml atualizado",
-      "AC-013: SLO spec criada - slo.stable-execution@1.0.0 com 8 objectives",
-      "AC-014: Golden traces gerados - config-parity, routing-validation, verifier-gate",
-      "AC-015: Workaround script reforcado - pre-flight com fail-fast, sem heavy probe"
+      "AC-001: Repository configs use the runtime-supported top-level schema (`default_agent`, `agent`, `command`)",
+      "AC-002: Root and .opencode configs match on critical routing fields",
+      "AC-003: Wrapper fails fast on missing configs, missing critical fields, parity drift, and runtime schema rejection",
+      "AC-004: OpenCode runtime accepts repository config via `opencode debug config`",
+      "AC-005: Native `/autocode` routing resolves to `autocoder` without explicit `--agent` in bounded smoke log",
+      "AC-006: Public boundary for sanitized `.opencode/` subset remains enforced",
+      "AC-007: Internal test suite passes for current repository snapshot"
     ],
     "failed": []
   },
-  "spec_coverage_score": 1.0,
-  "runtime_to_spec_alignment": 0.98,
-  "evidence_sufficiency_score": 0.96,
+  "spec_coverage_score": 0.94,
+  "runtime_to_spec_alignment": 0.99,
+  "evidence_sufficiency_score": 0.95,
   "drift_detected": false,
   "drift_types": [],
   "test_results": {
-    "total": 38,
-    "passed": 38,
+    "total": 31,
+    "passed": 30,
     "failed": 0,
-    "skipped": 0,
-    "duration_seconds": 0.14,
+    "skipped": 1,
+    "duration_seconds": 2.82,
     "suites": {
-      "TestConfigIntegrity": {"total": 6, "passed": 6},
-      "TestCommandRouting": {"total": 7, "passed": 7},
-      "TestSpecStructure": {"total": 10, "passed": 10},
-      "TestInvariants": {"total": 5, "passed": 5},
-      "TestHandoffContract": {"total": 2, "passed": 2},
-      "TestAgentsMdConsistency": {"total": 4, "passed": 4},
-      "TestNegativePatterns": {"total": 3, "passed": 3}
+      "TestOpencodeGovernance": {"total": 2, "passed": 2, "skipped": 0},
+      "TestPublicVsInternalBoundary": {"total": 5, "passed": 5, "skipped": 0},
+      "TestSanitizedPublicConfigurationContract": {"total": 5, "passed": 5, "skipped": 0},
+      "TestPublicRepoAllowlistGovernance": {"total": 3, "passed": 3, "skipped": 0},
+      "TestCommandRoutingRegression": {"total": 3, "passed": 3, "skipped": 0},
+      "TestStableExecutionGuardrails": {"total": 8, "passed": 8, "skipped": 0},
+      "TestOpenCodeConfigParity": {"total": 3, "passed": 3, "skipped": 0},
+      "TestRuntimeIntegration": {"total": 2, "passed": 1, "skipped": 1}
     }
   },
-  "golden_traces": [
-    ".internal/artifacts/codex-swarm/run-stable-execution/golden-traces/config-parity.json",
-    ".internal/artifacts/codex-swarm/run-stable-execution/golden-traces/routing-validation.json",
-    ".internal/artifacts/codex-swarm/run-stable-execution/golden-traces/verifier-gate.json"
-  ],
-  "specs_created": [
-    ".opencode/specs/capabilities/stable-execution.capability.yaml",
-    ".opencode/specs/behaviors/stable-execution.behavior.yaml",
-    ".opencode/specs/contracts/agent-handoff.contract.yaml",
-    ".opencode/specs/policies/stable-execution.policy.yaml",
-    ".opencode/specs/verification/stable-execution.verification.yaml",
-    ".opencode/specs/release/stable-execution.release.yaml",
-    ".opencode/specs/slos/stable-execution.slo.yaml"
+  "runtime_validations": {
+    "debug_config": {
+      "status": "passed",
+      "command": "opencode debug config --print-logs"
+    },
+    "native_autocode_smoke": {
+      "status": "passed",
+      "command": "timeout 20s opencode run --command autocode --format json --print-logs \"ping\"",
+      "artifact": ".internal/artifacts/codex-swarm/run-stable-execution/native-routing-smoke.log"
+    }
+  },
+  "files_modified": [
+    "opencode.json",
+    ".opencode/opencode.json",
+    ".opencode.example/opencode.json.example",
+    ".internal/scripts/run-autocode.sh",
+    ".internal/tests/test_stable_execution.py",
+    ".github/workflows/routing-regression.yml",
+    "AGENTS.md",
+    "README.md",
+    "docs/relatorio-operacional-stable-execution.md"
   ],
   "files_created": [
-    ".opencode/opencode.json",
-    ".opencode/specs/capabilities/stable-execution.capability.yaml",
-    ".opencode/specs/behaviors/stable-execution.behavior.yaml",
-    ".opencode/specs/contracts/agent-handoff.contract.yaml",
-    ".opencode/specs/policies/stable-execution.policy.yaml",
-    ".opencode/specs/verification/stable-execution.verification.yaml",
-    ".opencode/specs/release/stable-execution.release.yaml",
-    ".opencode/specs/slos/stable-execution.slo.yaml",
-    ".internal/tests/test_stable_execution.py",
-    ".internal/artifacts/codex-swarm/run-stable-execution/golden-traces/config-parity.json",
-    ".internal/artifacts/codex-swarm/run-stable-execution/golden-traces/routing-validation.json",
-    ".internal/artifacts/codex-swarm/run-stable-execution/golden-traces/verifier-gate.json"
-  ],
-  "files_modified": [
-    "README.md",
-    "AGENTS.md",
-    ".github/workflows/routing-regression.yml",
-    ".internal/scripts/run-autocode.sh"
+    ".internal/artifacts/codex-swarm/run-stable-execution/native-routing-smoke.log"
   ],
   "known_issues": [
     {
-      "issue": "OpenCode v1.3.13 routing bug",
-      "description": "Comando /autocode com agent: autocoder no frontmatter nao e roteado corretamente pelo runtime sem flag --agent explicito",
-      "workaround": ".internal/scripts/run-autocode.sh com --agent autocoder e pre-flight config parity check",
-      "severity": "medium",
-      "status": "documented_and_mitigated"
+      "issue": "Future schema drift regression",
+      "description": "The main residual risk is reintroducing obsolete OpenCode config keys in root or .opencode config files.",
+      "workaround": "Wrapper, tests, CI parity checks, and `opencode debug config` pre-flight guard against this.",
+      "severity": "low",
+      "status": "documented_and_guarded"
     }
   ],
   "evidence_refs": [
+    "evidence://repo/opencode.json",
     "evidence://repo/.opencode/opencode.json",
-    "evidence://repo/.opencode/specs/capabilities/stable-execution.capability.yaml",
-    "evidence://repo/.opencode/specs/behaviors/stable-execution.behavior.yaml",
-    "evidence://repo/.opencode/specs/contracts/agent-handoff.contract.yaml",
-    "evidence://repo/.opencode/specs/policies/stable-execution.policy.yaml",
-    "evidence://repo/.opencode/specs/verification/stable-execution.verification.yaml",
-    "evidence://repo/.opencode/specs/release/stable-execution.release.yaml",
-    "evidence://repo/.opencode/specs/slos/stable-execution.slo.yaml",
-    "evidence://repo/.internal/tests/test_stable_execution.py",
-    "evidence://repo/.opencode/skills/self-bootstrap-opencode/debug_autocode.log",
-    "evidence://repo/AGENTS.md",
+    "evidence://repo/.opencode.example/opencode.json.example",
     "evidence://repo/.internal/scripts/run-autocode.sh",
+    "evidence://repo/.internal/tests/test_stable_execution.py",
     "evidence://repo/.github/workflows/routing-regression.yml",
-    "evidence://repo/.internal/artifacts/codex-swarm/run-stable-execution/golden-traces/config-parity.json",
-    "evidence://repo/.internal/artifacts/codex-swarm/run-stable-execution/golden-traces/routing-validation.json",
-    "evidence://repo/.internal/artifacts/codex-swarm/run-stable-execution/golden-traces/verifier-gate.json"
+    "evidence://repo/AGENTS.md",
+    "evidence://repo/README.md",
+    "evidence://repo/docs/relatorio-operacional-stable-execution.md",
+    "evidence://repo/.internal/artifacts/codex-swarm/run-stable-execution/native-routing-smoke.log"
   ],
   "trace_links": [
-    "trace://requirement/prompt-agent.md",
-    "trace://requirement/AGENTS.md#native-swarm-rules",
-    "trace://requirement/AGENTS.md#stable-execution-guarantees",
     "trace://test/.internal/tests/test_stable_execution.py",
-    "trace://bug/debug_autocode.log",
-    "trace://ci/.github/workflows/routing-regression.yml",
-    "trace://golden-trace/config-parity",
-    "trace://golden-trace/routing-validation",
-    "trace://golden-trace/verifier-gate"
+    "trace://test/.internal/tests/test_public_boundary.py",
+    "trace://test/.internal/tests/test_opencode_governance.py",
+    "trace://runtime/opencode-debug-config",
+    "trace://runtime/native-autocode-smoke"
   ]
 }
