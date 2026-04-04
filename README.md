@@ -470,7 +470,170 @@ opencode run --command autocode "sua tarefa aqui"
 
 ---
 
-## Requisitos do Sistema
+## Como Usar (Quick Start)
+
+### Pré-requisitos
+
+| Requisito | Versão Mínima | Descrição |
+|-----------|---------------|-----------|
+| **OpenCode** | 1.3.13+ | CLI de agent coding |
+| **Python** | 3.10+ | Para testes e scripts |
+| **Git** | 2.30+ | Controle de versão |
+| **Docker** | 20.10+ | Para ferramentas MCP (opcional) |
+
+### 1. Clone do Repositório
+
+```bash
+# Clone o repositório
+git clone https://github.com/Douglas0101/agent-coding-framework-main.git
+cd agent-coding-framework-main
+```
+
+### 2. Instalação do OpenCode
+
+```bash
+# Via npm (recomendado)
+npm install -g opencode-ai
+
+# Ou via script oficial
+curl -sL https://get.opencode.ai | bash
+```
+
+Consulte a [documentação oficial](https://opencode.ai/docs) para outras opções de instalação.
+
+### 3. Primeiro Uso
+
+```bash
+# Execute o wrapper com verificação de paridade
+.internal/scripts/run-autocode.sh "Olá, crie um arquivo hello.py que打印a Hello World"
+
+# Ou diretamente via OpenCode
+opencode run --command autocode "Crie um arquivo hello.py comOlá Mundo em Python"
+```
+
+### 4. Comandos Principais
+
+| Comando | Descrição |
+|---------|-----------|
+| `./internal/scripts/run-autocode.sh "tarefa"` | Executa tarefa via wrapper com validação Hybrid Core |
+| `opencode run --command autocode "tarefa"` | Execução direta (sem validação Hybrid Core) |
+| `opencode run --command analyze "tarefa"` | Modo exploration (identificar padrões) |
+| `opencode run --command review "tarefa"` | Modo reviewer (análise técnica) |
+| `opencode run --command ship "tarefa"` | Modo orchestrator (workflow completo) |
+
+### 5. Executando Testes
+
+```bash
+# Todos os testes do framework
+python -m pytest .internal/ -v
+
+# Apenas testes de contratos
+python -m pytest .internal/tests/ -v
+
+# Apenas testes de runtime
+python -m pytest .internal/runtime/tests/ -v
+```
+
+### 6. Configuração de Ambiente
+
+O framework usa variáveis de ambiente para controle de recursos:
+
+```bash
+# Habilitar Hybrid Core (1x/2x profiles)
+export OPENCODE_HYBRID_CORE=enabled
+
+# Alvo de acurácia para CI
+export OPENCODE_TARGET_ACCURACY=0.95
+```
+
+### 7. Estrutura de Arquivos Gerados
+
+Ao executar tarefas, o framework cria:
+
+```
+.internal/artifacts/
+├── codex-swarm/          # Runs de swarm
+├── hybrid-core/           # Validação Hybrid Core
+├── ledger/               # Registro de artefatos
+├── evidence/             # Armazenamento de evidências
+└── handoffs/            # Histórico de handoffs
+```
+
+---
+
+## Integração em Novo Projeto
+
+Para usar este framework em outro projeto:
+
+### Opção A: Cópia Direta
+
+```bash
+# No seu projeto
+mkdir -p .internal
+cp -r /caminho/para/agent-coding-framework-main/.internal/* ./
+cp /caminho/para/agent-coding-framework-main/opencode.json ./
+cp /caminho/para/agent-coding-framework-main/.opencode/ ./
+```
+
+### Opção B: Submódulo Git
+
+```bash
+# No seu projeto
+git submodule add https://github.com/Douglas0101/agent-coding-framework-main.git .internal/framework
+
+# Configure o caminho
+ln -s .internal/framework/opencode.json opencode.json
+ln -s .internal/framework/.opencode .opencode
+```
+
+### Opção C: Referência via PATH
+
+```bash
+# Adicione ao seu .bashrc ou .zshrc
+export OPENCODE_PROJECT_PATH="/caminho/para/agent-coding-framework-main"
+
+# O wrapper detectará automaticamente
+.internal/scripts/run-autocode.sh "sua tarefa"
+```
+
+---
+
+## Solução de Problemas
+
+### OpenCode não encontrado
+
+```bash
+# Verifique a instalação
+which opencode
+opencode --version
+
+# Reinstale se necessário
+npm install -g opencode-ai
+```
+
+### Erro de paridade de configuração
+
+```bash
+# Execute a validação manualmente
+python -m pytest .internal/tests/test_stable_execution.py -k parity -v
+```
+
+### Tests falhando
+
+```bash
+# Execute apenas a suite de sanity
+python -m pytest .internal/tests/test_stable_execution.py -v
+python -m pytest .internal/runtime/tests/test_hybrid_core_validator.py -v
+```
+
+---
+
+## Próximos Passos
+
+1. **Explore os contratos**: Leia `.internal/specs/modes/` para entender os modos disponíveis
+2. **Customize os adapters**: Edite `.internal/modes/autocoder/adapters/` para ajustar perfis 1x/2x
+3. **Adicione Domain Packs**: Siga o modelo em `.internal/domains/` para extensões垂直
+4. **Configure CI/CD**: Copie os workflows de `.github/workflows/` para seu projeto
 
 - **CLI**: OpenCode
 - **Python**: 3.10+ (para testes e scripts)
