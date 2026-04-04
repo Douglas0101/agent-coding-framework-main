@@ -1,0 +1,130 @@
+# Autocoder Adapter — Performance 2x, Tier 3 (Competitive/Frontier)
+# Frontier algorithms, correctness proofs, competitive patterns
+
+version: 1.0.0
+kind: AutocoderAdapter
+profile: performance_2x
+tier: tier_3_competitive
+domain: modes.autocoder.adapters
+
+description: |
+  Performance adapter for Tier 3 competitive/frontier tasks. Applies NOU + NOE
+  with focus on frontier algorithms, correctness proofs, and competitive patterns.
+  Activated when scope detection identifies frontier-class requirements.
+
+activation:
+  condition: "scope_detection triggers tier_3_competitive"
+  triggers:
+    - "explicit IOI/ICPC mention"
+    - "dynamic tree operations (link/cut)"
+    - "advanced string algorithms (suffix, palindrome)"
+    - "min-cost max-flow with negative edges"
+    - "persistent data structure requirements"
+    - "centroid decomposition patterns"
+    - "weighted score >= 5.0 in scope detection"
+
+context_injection:
+  contracts:
+    - ".internal/specs/core/execution-profiles.yaml"
+    - ".internal/specs/core/universal-quality-contract.yaml"
+    - ".internal/specs/core/algorithmic-frontier-contract.yaml"
+    - ".internal/specs/core/scope-detection-engine.yaml"
+    - ".internal/specs/modes/autocoder.yaml"
+    - ".internal/domains/software-engineering/contract.yaml"
+    - ".internal/domains/ioi-gold-compiler/contract.yaml"
+    - ".internal/domains/ioi-gold-compiler/frontier-algorithmic-core.yaml"
+    - ".internal/domains/ioi-gold-compiler/algorithm-selection-map.yaml"
+    - ".internal/domains/ioi-gold-compiler/frontier-validation-gates.yaml"
+    - ".internal/domains/ioi-gold-compiler/structural-memory.yaml"
+
+  instructions: |
+    You are operating in performance_2x profile, Tier 3: Competitive/Frontier.
+
+    OBLIGATIONS (NOU — always active, never relaxed):
+    1. All types must be explicit
+    2. Null/None values handled explicitly
+    3. Architecture invariants respected
+    4. Code clarity maintained — cleverness does not override clarity
+    5. Security validated
+    6. Error handling consistent
+    7. Tests for business logic
+    8. Project conventions followed
+    9. Changes justified
+
+    ADDITIONAL OBLIGATIONS (NOE — Tier 3):
+    1. ALGORITHM SELECTION RATIONALE: Detailed justification with rejected alternatives
+    2. COMPLEXITY CERTIFICATE: Full analysis including amortized when applicable
+    3. INVARIANT DOCUMENTATION: Loop, data structure, and correctness invariants
+    4. EDGE CASE ANALYSIS: Comprehensive boundary analysis
+    5. STRESS TEST PLAN: Robust validation including brute-force comparison
+    6. MEMORY BOUND ESTIMATE: Detailed memory analysis including cache behavior
+
+    AVAILABLE TECHNIQUES (Tier 3):
+    - Link-Cut Tree, Wavelet Tree, Eertree
+    - Persistent Data Structures
+    - Min-Cost Max-Flow with Potentials
+    - Centroid Decomposition, Suffix Automaton
+    - Simulated Annealing (only when exact is infeasible)
+
+    PITFALL AWARENESS:
+    - Review structural-memory.yaml for technique-specific pitfalls
+    - LCT: splay tree correctness, lazy propagation complexity
+    - Eertree: dual root nodes, suffix link subtleties
+    - Wavelet Tree: coordinate compression for large value ranges
+    - Suffix Automaton: link tree vs automaton transitions
+    - MCMF: potential initialization, negative cycle detection
+
+    OUTPUT FORMAT:
+    - execution_profile: performance_2x
+    - scope_classification: tier_3_competitive
+    - summary: brief description
+    - problem_analysis: deep breakdown of problem structure and constraints
+    - algorithm_selection_rationale: detailed justification, all alternatives considered
+    - complexity_certificate: complete time/space analysis
+    - edge_case_analysis: comprehensive boundary conditions
+    - stress_test_plan: robust validation strategy
+    - memory_bound_estimate: detailed memory and cache analysis
+    - code_changes: list of modifications
+    - compliance_notes: NOU + NOE compliance status
+    - tests: test commands including stress tests and brute-force comparison
+    - risks: identified risks and mitigations
+
+    DO NOT:
+    - Use frontier techniques without problem-structure justification
+    - Relax any NOU requirement under any circumstances
+    - Use simulated annealing when exact solution exists
+    - Introduce complexity that cannot be verified
+
+output_schema:
+  required_fields:
+    - name: execution_profile
+      type: string
+      value: performance_2x
+    - name: scope_classification
+      type: string
+      value: tier_3_competitive
+    - name: summary
+      type: string
+    - name: problem_analysis
+      type: string
+    - name: algorithm_selection_rationale
+      type: string
+    - name: complexity_certificate
+      type: object
+    - name: edge_case_analysis
+      type: object
+    - name: stress_test_plan
+      type: string
+    - name: memory_bound_estimate
+      type: string
+    - name: code_changes
+      type: list[Change]
+    - name: compliance_notes
+      type: list[ComplianceEntry]
+    - name: tests
+      type: list[string]
+    - name: risks
+      type: list[string]
+
+quality_threshold: 0.95
+early_exit: false

@@ -39,8 +39,8 @@ env/
 # Framework internal artifacts — only docs/ is public surface
 # .internal/ is versioned EXCEPT for runtime artifacts
 .internal/artifacts/
-specs/
-domains/
-registry/
-templates/
+/specs/
+/domains/
+/registry/
+/templates/
 sonar-project.properties

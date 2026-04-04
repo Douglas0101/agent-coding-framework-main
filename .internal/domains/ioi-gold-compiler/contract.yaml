@@ -1,0 +1,188 @@
+# IOI Gold Compiler — Domain Pack Contract
+# Advanced algorithmic and competitive programming capabilities
+
+contract:
+  version: 1.0.0
+  kind: DomainPackContract
+  domain: ioi-gold-compiler
+  pack_id: pack-ioi-gold-compiler
+  description: |
+    Domain pack providing advanced algorithmic, competitive programming,
+    and performance-critical code generation capabilities. Implements the
+    NOE (Núcleo Obrigatório Especializado) for the Hybrid Core 1x/2x system.
+  core_version_required: ">=1.0.0"
+
+domain:
+  name: IOI Gold Compiler
+  type: vertical
+  description: |
+    Provides agents and contracts for algorithmic problem solving,
+    competitive programming patterns, and performance-critical code generation.
+    Activated conditionally by the Scope Detection Engine when task signals
+    indicate algorithmic complexity, large constraints, or frontier requirements.
+  capabilities:
+    - frontier_algorithm_selection
+    - complexity_certification
+    - stress_test_generation
+    - memory_bound_analysis
+    - algorithmic_validation
+    - competitive_pattern_recognition
+    - invariant_documentation
+
+agents:
+  - name: algorithm_selector
+    role: analysis
+    description: Analyzes problem constraints and suggests optimal algorithm/structure
+    capabilities:
+      - constraint_parsing
+      - algorithm_matching
+      - complexity_analysis
+    input_schema:
+      type: object
+      properties:
+        problem_description:
+          type: string
+        constraints:
+          type: object
+          properties:
+            max_n:
+              type: integer
+            max_q:
+              type: integer
+            time_limit:
+              type: string
+            memory_limit:
+              type: string
+      required: [problem_description]
+    output_schema:
+      type: object
+      properties:
+        suggested_algorithm:
+          type: string
+        alternatives:
+          type: array
+        complexity_certificate:
+          type: object
+        rationale:
+          type: string
+
+  - name: frontier_validator
+    role: validation
+    description: Validates algorithmic solutions against frontier gates
+    capabilities:
+      - constraint_satisfaction
+      - invariant_verification
+      - stress_test_planning
+      - memory_audit
+    input_schema:
+      type: object
+      properties:
+        solution:
+          type: object
+        problem_constraints:
+          type: object
+        selected_algorithm:
+          type: string
+      required: [solution, problem_constraints, selected_algorithm]
+    output_schema:
+      type: object
+      properties:
+        gate_results:
+          type: array
+        overall_status:
+          type: string
+          enum: [pass, fail, warn]
+        issues:
+          type: array
+
+gates:
+  - name: algorithmic_gate
+    type: algorithmic
+    description: Validates algorithmic correctness and constraint compatibility
+    config:
+      strict_mode: true
+      fail_fast: true
+    validation_rules:
+      - rule: constraint_compatibility
+        params:
+          fail_on_naive: true
+          max_n_threshold: 100000
+      - rule: complexity_certificate
+        params:
+          require_time: true
+          require_space: true
+      - rule: invariant_document
+        params:
+          require_loop_invariants: true
+          require_data_structure_invariants: true
+
+  - name: stress_test_gate
+    type: performance
+    description: Validates stress test strategy and edge case coverage
+    config:
+      strict_mode: true
+      fail_fast: false
+    validation_rules:
+      - rule: edge_case_coverage
+        params:
+          require_empty_input: true
+          require_max_input: true
+          require_boundary: true
+      - rule: brute_force_comparison
+        params:
+          required_for_n_below: 1000
+
+  - name: memory_gate
+    type: resource
+    description: Validates memory usage and allocation patterns
+    config:
+      strict_mode: false
+      fail_fast: false
+    validation_rules:
+      - rule: memory_bound_estimate
+        params:
+          require_peak_estimate: true
+          require_allocation_analysis: true
+
+dependencies:
+  required:
+    - pack-software-engineering
+  optional: []
+
+compliance:
+  invariant_enforcement:
+    - invariant: INV-NOU-001
+      method: contract_validation
+      verify: "All NOU requirements are satisfied before NOE evaluation"
+    - invariant: INV-NOE-001
+      method: static_analysis
+      verify: "Algorithm selection is compatible with problem constraints"
+    - invariant: INV-NOE-002
+      method: contract_validation
+      verify: "Complexity certificate is present and coherent"
+    - invariant: INV-NOE-003
+      method: static_analysis
+      verify: "No frontier technique used without scope justification"
+
+  compatibility:
+    core_protocols:
+      - Verifier
+      - Synthesizer
+      - Handoff
+    contract_version: "1.0.0"
+    execution_profiles:
+      - default_1x
+      - performance_2x
+
+metadata:
+  author: Framework Team
+  license: MIT
+  repository: ""
+  tags:
+    - vertical
+    - algorithmic
+    - competitive
+    - performance
+  created: 2026-04-04
+  updated: 2026-04-04
+  status: experimental

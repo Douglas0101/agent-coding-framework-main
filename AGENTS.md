@@ -65,13 +65,11 @@ Domain Packs are contractual extensions registered via `registry/registry.yaml`.
 | Pack | Type | Status | Description |
 |------|------|--------|-------------|
 | `software-engineering` | functional | active | Default development workflow capabilities |
-| `ml-ai` | vertical | experimental | ML/AI training, optimization, experiment tracking |
-| `medical-imaging` | vertical | experimental | Medical image analysis and reporting |
+| `ml-ai` | vertical | experimental | ML/AI training, optimization, experiment tracking (optional, illustrative) |
+| `medical-imaging` | vertical | experimental | Medical image analysis and reporting (optional, illustrative) |
+| `ioi-gold-compiler` | vertical | experimental | Advanced algorithmic and competitive programming (optional, illustrative) |
 
-To add a new Domain Pack:
-1. Create `domains/<domain-name>/` with `contract.yaml` and `manifest.json`
-2. Register in `registry/registry.yaml`
-3. Validate against Core protocols
+> **Note:** Only `software-engineering` is active by default. All vertical packs are optional extensions. The Core does not depend on any Domain Pack.
 
 ## Known Issues
 

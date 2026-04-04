@@ -1,0 +1,91 @@
+{
+  "manifest_version": "1.0.0",
+  "pack_id": "pack-ioi-gold-compiler",
+  "name": "IOI Gold Compiler",
+  "version": "1.0.0",
+  "domain": "ioi-gold-compiler",
+  "description": "Advanced algorithmic, competitive programming, and performance-critical code generation capabilities. Implements NOE for Hybrid Core 1x/2x system.",
+  "core_version": ">=1.0.0",
+  "status": "experimental",
+  "type": "vertical",
+  "metadata": {
+    "author": "Framework Team",
+    "license": "MIT",
+    "repository": "",
+    "created": "2026-04-04",
+    "updated": "2026-04-04"
+  },
+  "dependencies": {
+    "required": ["pack-software-engineering"],
+    "optional": []
+  },
+  "capabilities": [
+    "frontier_algorithm_selection",
+    "complexity_certification",
+    "stress_test_generation",
+    "memory_bound_analysis",
+    "algorithmic_validation",
+    "competitive_pattern_recognition",
+    "invariant_documentation"
+  ],
+  "agents": [
+    {
+      "name": "algorithm_selector",
+      "role": "analysis",
+      "capabilities": ["constraint_parsing", "algorithm_matching", "complexity_analysis"]
+    },
+    {
+      "name": "frontier_validator",
+      "role": "validation",
+      "capabilities": ["constraint_satisfaction", "invariant_verification", "stress_test_planning", "memory_audit"]
+    }
+  ],
+  "operational_skills": [
+    "advanced-layered-engineering",
+    "data-structures-rigor",
+    "complexity-reduction",
+    "performance-profiling"
+  ],
+  "gates": [
+    {
+      "name": "algorithmic_gate",
+      "type": "algorithmic",
+      "config": {
+        "strict_mode": true,
+        "fail_fast": true
+      }
+    },
+    {
+      "name": "stress_test_gate",
+      "type": "performance",
+      "config": {
+        "strict_mode": true,
+        "fail_fast": false
+      }
+    },
+    {
+      "name": "memory_gate",
+      "type": "resource",
+      "config": {
+        "strict_mode": false,
+        "fail_fast": false
+      }
+    }
+  ],
+  "contracts": {
+    "primary": "contract.yaml",
+    "schemas": ["agents", "gates"],
+    "frontier": [
+      "frontier-algorithmic-core.yaml",
+      "algorithm-selection-map.yaml",
+      "frontier-validation-gates.yaml",
+      "structural-memory.yaml"
+    ]
+  },
+  "tags": ["vertical", "algorithmic", "competitive", "performance", "optional"],
+  "compatibility": {
+    "core_protocols": ["Verifier", "Synthesizer", "Handoff"],
+    "protocol_version": "1.0.0",
+    "execution_profiles": ["default_1x", "performance_2x"]
+  }
+}

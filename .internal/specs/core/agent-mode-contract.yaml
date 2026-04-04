@@ -99,6 +99,21 @@ agent_mode_contract:
     on_tool_failure: enum [fail, retry, skip, degrade]
     on_schema_violation: enum [reject, warn_and_continue, fail_fast]
 
+  # ── Hybrid Core Execution Engine (Optional) ──────────────
+  hybrid_core:
+    description: string                  # Hybrid Core description
+    default_profile: enum[default_1x, performance_2x]
+    profiles:
+      - profile: string
+        adapter: string                  # Path to adapter YAML
+        tier: string                     # Operational tier
+        adapters:                        # Alternative: multiple tier adapters
+          - tier: string
+            adapter: string
+    scope_detection: string              # Path to scope detection engine
+    universal_contract: string           # Path to NOU contract
+    frontier_contract: string            # Path to NOE contract
+
   # ── Skills (Incremental Capabilities) ─────────────────────
   skills:
     - name: string                       # Unique skill identifier
@@ -137,6 +152,8 @@ agent_mode_contract:
 | MC-011 | Skills must have valid budget_share (0.0-1.0) | Schema validation |
 | MC-012 | Skills source must reference known origin (opencode-builtin, internal, domain-pack) | CI validation |
 | MC-013 | Sum of skill budget_share must not exceed 1.0 | Static analysis |
+| MC-014 | hybrid_core is optional; when present must have default_profile and profiles | Schema validation |
+| MC-015 | hybrid_core adapter paths must resolve to existing files | CI validation |
 
 ---
 
