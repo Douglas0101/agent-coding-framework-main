@@ -50,17 +50,16 @@ agent-orchestration-framework/
 │   ├── GIT-FLOW-GUIDE.md
 │   └── README.md
 ├── .internal/                     # TODA a estrutura operacional
-│   ├── specs/
-│   │   ├── core/                  # Core domain-agnostic (nível 0)
-│   │   │   ├── orchestration-contract.yaml
-│   │   │   ├── agent-mode-contract.yaml
-│   │   │   ├── memory-model.yaml
-│   │   │   └── planner-subcontract.yaml
-│   │   └── modes/                 # Contratos por modo (nível 1)
-│   │       ├── explore.yaml       (v1.2.0 — 4 skills)
-│   │       ├── reviewer.yaml      (v1.2.0 — 5 skills)
-│   │       ├── orchestrator.yaml  (v1.2.0 — 6 skills)
-│   │       └── autocoder.yaml     (v1.1.0 — execution-pure)
+│   ├── specs/core/                # Core domain-agnostic (nível 0)
+│   │   ├── orchestration-contract.yaml
+│   │   ├── agent-mode-contract.yaml
+│   │   ├── memory-model.yaml
+│   │   └── planner-subcontract.yaml
+│   ├── specs/modes/               # Contratos por modo (nível 1)
+│   │   ├── explore.yaml           (v1.2.0 — 4 skills)
+│   │   ├── reviewer.yaml          (v1.2.0 — 5 skills)
+│   │   ├── orchestrator.yaml      (v1.2.0 — 6 skills)
+│   │   └── autocoder.yaml         (v1.1.0 — execution-pure)
 │   ├── runtime/                   # Runtime governado (7 módulos)
 │   │   ├── contract_verifier.py
 │   │   ├── policy_enforcer.py
