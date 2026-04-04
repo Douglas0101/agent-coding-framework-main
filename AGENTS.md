@@ -1,4 +1,20 @@
-# Native Swarm Rules
+# Native Swarm Rules — Agent Orchestration Framework
+
+**Architecture:** Core domain-agnostic + Domain Packs (contractual extensions)  
+**Reference:** `specs/core/orchestration-contract.yaml`, `docs/CONSTITUTION_emendada.md`
+
+## Core Protocols (Nivel 0)
+
+The following are **protocols** defined by the Core. Domain Packs may provide implementations but cannot alter the protocol definitions.
+
+| Protocol | Role | Contract |
+|----------|------|----------|
+| `Verifier` | Mandatory pre-synthesis gate | Must validate evidence integrity, handoff compliance, boundary constraints |
+| `Synthesizer` | Single final writer for run package | Must produce final artifact, summary report, trace links |
+| `Handoff` | Formal transfer of control between agents | 12 required fields, 6 validation rules |
+| `Evidence` | Immutable, auditable data produced by agents | Cryptographic integrity, cross-domain, forbidden operations |
+
+## Swarm Rules
 
 - Use MCP only for context that lives outside the repository or changes frequently.
 - Check `/mcp` before starting a multi-agent swarm run and stop if a required server is missing.
@@ -8,6 +24,21 @@
 - `verifier` is the mandatory gate before `synthesizer`.
 - `synthesizer` is the single final writer for the run package.
 - When live session state matters, pass a `--session-snapshot` JSON file to `.internal/scripts/codex_swarm_prepare.py` so the run manifest records the effective overrides.
+
+## Domain Packs
+
+Domain Packs are contractual extensions registered via `registry/registry.yaml`. They implement Core protocols but do not define them.
+
+| Pack | Type | Status | Description |
+|------|------|--------|-------------|
+| `software-engineering` | functional | active | Default development workflow capabilities |
+| `ml-ai` | vertical | experimental | ML/AI training, optimization, experiment tracking |
+| `medical-imaging` | vertical | experimental | Medical image analysis and reporting |
+
+To add a new Domain Pack:
+1. Create `domains/<domain-name>/` with `contract.yaml` and `manifest.json`
+2. Register in `registry/registry.yaml`
+3. Validate against Core protocols
 
 ## Known Issues
 
@@ -25,6 +56,8 @@ opencode run --command autocode "your task"
 ```
 
 **Tracking:** Historical investigation evidence remains in `.internal/artifacts/codex-swarm/run-stable-execution/debug_autocode.log`, but the repository fix is the schema migration to the runtime-supported layout.
+
+---
 
 ---
 
@@ -62,4 +95,5 @@ This project now enforces stable execution through a comprehensive specification
 
 ### CI Integration
 - Routing regression: `.github/workflows/routing-regression.yml`
+- Constitutional compliance: `.github/workflows/constitutional-compliance.yml`
 - Config parity validated by critical routing fields only (not full JSON equality)

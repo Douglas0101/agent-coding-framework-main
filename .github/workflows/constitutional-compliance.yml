@@ -1,0 +1,504 @@
+name: Constitutional Compliance
+
+on:
+  push:
+    branches: [main, master, develop]
+    paths:
+      - 'specs/core/**'
+      - 'domains/**'
+      - 'registry/**'
+      - 'README.md'
+      - 'AGENTS.md'
+      - 'docs/CONSTITUTION_emendada.md'
+      - '.github/workflows/constitutional-compliance.yml'
+  pull_request:
+    branches: [main, master, develop]
+    paths:
+      - 'specs/core/**'
+      - 'domains/**'
+      - 'registry/**'
+      - 'README.md'
+      - 'AGENTS.md'
+      - 'docs/CONSTITUTION_emendada.md'
+      - '.github/workflows/constitutional-compliance.yml'
+
+permissions:
+  contents: read
+  security-events: write
+  pull-requests: read
+
+jobs:
+  invariant-enforcement:
+    name: Constitutional Invariant Enforcement
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pyyaml
+
+      - name: INV-001 — Core is domain-agnostic
+        run: |
+          python - <<'PY'
+          import sys
+          from pathlib import Path
+
+          core_spec = Path('specs/core/orchestration-contract.yaml')
+          if not core_spec.exists():
+              print("FAIL: specs/core/orchestration-contract.yaml not found")
+              sys.exit(1)
+
+          content = core_spec.read_text(encoding='utf-8').lower()
+
+          forbidden_domains = [
+              'ml-ai', 'medical', 'healthcare', 'finance', 'legal',
+              'radiology', 'pathology', 'cardiology'
+          ]
+
+          violations = []
+          for domain in forbidden_domains:
+              if domain in content:
+                  violations.append(domain)
+
+          if violations:
+              print(f"FAIL: INV-001 violated — Core spec contains domain-specific references: {', '.join(violations)}")
+              sys.exit(1)
+
+          print("PASS: INV-001 — Core is domain-agnostic (no vertical domain references)")
+          PY
+
+      - name: INV-002 — Domain Packs implement DomainPack contract
+        run: |
+          python - <<'PY'
+          import sys
+          import yaml
+          from pathlib import Path
+
+          domains_dir = Path('domains')
+          if not domains_dir.exists():
+              print("FAIL: domains/ directory not found")
+              sys.exit(1)
+
+          errors = []
+          packs_found = 0
+
+          for domain_dir in domains_dir.iterdir():
+              if not domain_dir.is_dir():
+                  continue
+              if domain_dir.name.startswith('.'):
+                  continue
+
+              contract = domain_dir / 'contract.yaml'
+              manifest = domain_dir / 'manifest.json'
+
+              if not contract.exists():
+                  errors.append(f"{domain_dir.name}: missing contract.yaml")
+                  continue
+
+              if not manifest.exists():
+                  errors.append(f"{domain_dir.name}: missing manifest.json")
+                  continue
+
+              packs_found += 1
+
+              # Validate contract structure
+              try:
+                  with open(contract, 'r') as f:
+                      contract_data = yaml.safe_load(f)
+
+                  required_keys = ['contract', 'domain', 'compliance']
+                  missing = [k for k in required_keys if k not in contract_data]
+                  if missing:
+                      errors.append(f"{domain_dir.name}: contract missing keys: {', '.join(missing)}")
+                      continue
+
+                  # Check contract header
+                  contract_header = contract_data.get('contract', {})
+                  if not contract_header.get('kind', '').endswith('DomainPackContract'):
+                      errors.append(f"{domain_dir.name}: contract.kind must be DomainPackContract")
+
+                  # Check compliance section
+                  compliance = contract_data.get('compliance', {})
+                  invariants = compliance.get('invariant_enforcement', [])
+                  if not invariants:
+                      errors.append(f"{domain_dir.name}: no invariant_enforcement rules defined")
+
+              except yaml.YAMLError as e:
+                  errors.append(f"{domain_dir.name}: invalid YAML — {e}")
+
+          if errors:
+              print("FAIL: INV-002 violations:")
+              for err in errors:
+                  print(f"  - {err}")
+              sys.exit(1)
+
+          print(f"PASS: INV-002 — {packs_found} Domain Pack(s) implement valid DomainPack contracts")
+          PY
+
+      - name: INV-003 — Evidence Trail immutability in contracts
+        run: |
+          python - <<'PY'
+          import sys
+          import yaml
+          from pathlib import Path
+
+          core_spec = Path('specs/core/orchestration-contract.yaml')
+          content = core_spec.read_text(encoding='utf-8')
+
+          # Check that Evidence protocol defines immutability
+          if 'immutable' not in content.lower():
+              print("FAIL: INV-003 — Core Evidence protocol does not define immutability")
+              sys.exit(1)
+
+          if 'forbidden_operations' not in content.lower():
+              print("FAIL: INV-003 — Core Evidence protocol does not define forbidden operations")
+              sys.exit(1)
+
+          print("PASS: INV-003 — Evidence Trail immutability defined in Core protocol")
+          PY
+
+      - name: INV-004 — Handoff Contract backward compatibility
+        run: |
+          python - <<'PY'
+          import sys
+          import yaml
+          from pathlib import Path
+
+          core_spec = Path('specs/core/orchestration-contract.yaml')
+          content = core_spec.read_text(encoding='utf-8')
+
+          required_handoff_fields = [
+              'schema_version', 'artifact_type', 'producer_agent',
+              'consumer_agent', 'spec_id', 'spec_version', 'run_id',
+              'timestamp', 'evidence_refs', 'risk_level',
+              'compatibility_assessment', 'trace_links'
+          ]
+
+          missing = []
+          for field in required_handoff_fields:
+              if field not in content:
+                  missing.append(field)
+
+          if missing:
+              print(f"FAIL: INV-004 — Handoff Contract missing fields: {', '.join(missing)}")
+              sys.exit(1)
+
+          print("PASS: INV-004 — Handoff Contract contains all 12 required fields")
+          PY
+
+      - name: INV-005 — Verifier/Synthesizer are Core protocols
+        run: |
+          python - <<'PY'
+          import sys
+          from pathlib import Path
+
+          core_spec = Path('specs/core/orchestration-contract.yaml')
+          content = core_spec.read_text(encoding='utf-8').lower()
+
+          if 'verifier' not in content:
+              print("FAIL: INV-005 — Verifier protocol not defined in Core")
+              sys.exit(1)
+
+          if 'synthesizer' not in content:
+              print("FAIL: INV-005 — Synthesizer protocol not defined in Core")
+              sys.exit(1)
+
+          print("PASS: INV-005 — Verifier and Synthesizer defined as Core protocols")
+          PY
+
+      - name: INV-007 — Public contracts are sanitized
+        run: |
+          python - <<'PY'
+          import sys
+          from pathlib import Path
+
+          # Check that no secrets or sensitive data exist in public contracts
+          sensitive_patterns = [
+              'api_key', 'secret', 'password', 'token',
+              'AKIA', 'ghp_', 'private_key', 'pem'
+          ]
+
+          violations = []
+          for path in Path('.').rglob('*.yaml'):
+              if 'node_modules' in str(path):
+                  continue
+              if path.is_dir():
+                  continue
+
+              content = path.read_text(encoding='utf-8', errors='replace').lower()
+              for pattern in sensitive_patterns:
+                  if pattern.lower() in content:
+                      # Check if it's a placeholder or reference
+                      lines = path.read_text(encoding='utf-8', errors='replace').splitlines()
+                      for i, line in enumerate(lines, 1):
+                          if pattern.lower() in line.lower():
+                              # Allow if it's a comment, placeholder, or schema reference
+                              stripped = line.strip()
+                              if stripped.startswith('#'):
+                                  continue
+                              if '${' in line or 'placeholder' in line.lower() or 'redacted' in line.lower():
+                                  continue
+                              if 'schema' in line.lower() or 'type:' in line.lower():
+                                  continue
+                              violations.append(f"{path}:{i}: {stripped}")
+
+          if violations:
+              print("FAIL: INV-007 — Potential sensitive data in public contracts:")
+              for v in violations[:10]:  # Limit output
+                  print(f"  - {v}")
+              if len(violations) > 10:
+                  print(f"  ... and {len(violations) - 10} more")
+              sys.exit(1)
+
+          print("PASS: INV-007 — Public contracts are properly sanitized")
+          PY
+
+      - name: Upload compliance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: constitutional-compliance-evidence
+          path: |
+            specs/core/
+            domains/*/contract.yaml
+            domains/*/manifest.json
+            registry/registry.yaml
+          if-no-files-found: warn
+          retention-days: 14
+
+  contract-compliance:
+    name: Contract Compliance Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: invariant-enforcement
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pyyaml jsonschema
+
+      - name: Validate Domain Pack contracts against Core
+        run: |
+          python - <<'PY'
+          import sys
+          import yaml
+          import json
+          from pathlib import Path
+
+          core_spec = Path('specs/core/orchestration-contract.yaml')
+          domains_dir = Path('domains')
+          errors = []
+
+          # Parse Core required protocols
+          core_content = core_spec.read_text(encoding='utf-8')
+
+          for domain_dir in domains_dir.iterdir():
+              if not domain_dir.is_dir() or domain_dir.name.startswith('.'):
+                  continue
+
+              contract_file = domain_dir / 'contract.yaml'
+              if not contract_file.exists():
+                  continue
+
+              try:
+                  with open(contract_file, 'r') as f:
+                      contract = yaml.safe_load(f)
+
+                  compliance = contract.get('compliance', {})
+                  core_protocols = compliance.get('compatibility', {}).get('core_protocols', [])
+
+                  required_protocols = ['Verifier', 'Synthesizer', 'Handoff']
+                  for proto in required_protocols:
+                      if proto not in core_protocols:
+                          errors.append(f"{domain_dir.name}: missing required Core protocol '{proto}'")
+
+                  # Check core_version_required
+                  core_version = contract.get('contract', {}).get('core_version_required', '')
+                  if not core_version:
+                      errors.append(f"{domain_dir.name}: missing core_version_required")
+
+              except yaml.YAMLError as e:
+                  errors.append(f"{domain_dir.name}: invalid YAML — {e}")
+
+          if errors:
+              print("FAIL: Contract compliance violations:")
+              for err in errors:
+                  print(f"  - {err}")
+              sys.exit(1)
+
+          print("PASS: All Domain Pack contracts comply with Core requirements")
+          PY
+
+      - name: Validate Registry consistency
+        run: |
+          python - <<'PY'
+          import sys
+          import yaml
+          from pathlib import Path
+
+          registry_file = Path('registry/registry.yaml')
+          domains_dir = Path('domains')
+
+          if not registry_file.exists():
+              print("FAIL: registry/registry.yaml not found")
+              sys.exit(1)
+
+          # Get list of domain directories
+          domain_dirs = set()
+          for d in domains_dir.iterdir():
+              if d.is_dir() and not d.name.startswith('.'):
+                  domain_dirs.add(d.name)
+
+          # Parse registry and check all domains are registered
+          with open(registry_file, 'r') as f:
+              content = f.read()
+
+          missing_from_registry = []
+          for domain in domain_dirs:
+              if domain not in content:
+                  missing_from_registry.append(domain)
+
+          if missing_from_registry:
+              print(f"FAIL: Domains not registered in registry: {', '.join(missing_from_registry)}")
+              sys.exit(1)
+
+          print("PASS: All Domain Packs are registered in Extension Registry")
+          PY
+
+  drift-detection:
+    name: Contract Drift Detection
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: invariant-enforcement
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pyyaml
+
+      - name: Detect contract drift (manifest vs contract)
+        run: |
+          python - <<'PY'
+          import sys
+          import yaml
+          import json
+          from pathlib import Path
+
+          domains_dir = Path('domains')
+          errors = []
+
+          for domain_dir in domains_dir.iterdir():
+              if not domain_dir.is_dir() or domain_dir.name.startswith('.'):
+                  continue
+
+              contract_file = domain_dir / 'contract.yaml'
+              manifest_file = domain_dir / 'manifest.json'
+
+              if not contract_file.exists() or not manifest_file.exists():
+                  continue
+
+              # Parse contract
+              with open(contract_file, 'r') as f:
+                  contract = yaml.safe_load(f)
+
+              # Parse manifest
+              with open(manifest_file, 'r') as f:
+                  manifest = json.load(f)
+
+              # Check pack_id consistency
+              contract_id = contract.get('contract', {}).get('pack_id', '')
+              manifest_id = manifest.get('pack_id', '')
+
+              if contract_id and manifest_id and contract_id != manifest_id:
+                  errors.append(f"{domain_dir.name}: pack_id mismatch — contract={contract_id}, manifest={manifest_id}")
+
+              # Check domain consistency
+              contract_domain = contract.get('contract', {}).get('domain', '')
+              manifest_domain = manifest.get('domain', '')
+
+              if contract_domain and manifest_domain and contract_domain != manifest_domain:
+                  errors.append(f"{domain_dir.name}: domain mismatch — contract={contract_domain}, manifest={manifest_domain}")
+
+              # Check capabilities consistency
+              contract_caps = set(contract.get('domain', {}).get('capabilities', []))
+              manifest_caps = set(manifest.get('capabilities', []))
+
+              if contract_caps != manifest_caps:
+                  missing_in_manifest = contract_caps - manifest_caps
+                  missing_in_contract = manifest_caps - contract_caps
+                  if missing_in_manifest:
+                      errors.append(f"{domain_dir.name}: capabilities in contract but not manifest: {', '.join(missing_in_manifest)}")
+                  if missing_in_contract:
+                      errors.append(f"{domain_dir.name}: capabilities in manifest but not contract: {', '.join(missing_in_contract)}")
+
+          if errors:
+              print("FAIL: Contract drift detected:")
+              for err in errors:
+                  print(f"  - {err}")
+              sys.exit(1)
+
+          print("PASS: No contract drift detected between manifests and contracts")
+          PY
+
+      - name: Detect documentation drift
+        run: |
+          python - <<'PY'
+          import sys
+          from pathlib import Path
+
+          readme = Path('README.md')
+          if not readme.exists():
+              print("FAIL: README.md not found")
+              sys.exit(1)
+
+          content = readme.read_text(encoding='utf-8')
+
+          # Check that README references the constitution
+          if 'CONSTITUTION_emendada.md' not in content and 'constitution' not in content.lower():
+              print("FAIL: README.md does not reference the Constitution")
+              sys.exit(1)
+
+          # Check that README references specs/core
+          if 'specs/core' not in content:
+              print("FAIL: README.md does not reference specs/core/")
+              sys.exit(1)
+
+          # Check that README references domains
+          if 'domains/' not in content:
+              print("FAIL: README.md does not reference domains/")
+              sys.exit(1)
+
+          print("PASS: README.md references Constitution, Core specs, and Domain Packs")
+          PY
