@@ -24,6 +24,11 @@ domain:
     - vulnerability_detection
     - documentation_generation
     - dependency_management
+    - backend_reliability
+    - data_structures_rigor
+    - dba_governance
+    - design_patterns
+    - test_coverage
 
 agents:
   - name: analyze

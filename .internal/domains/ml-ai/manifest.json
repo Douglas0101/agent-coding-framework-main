@@ -46,6 +46,9 @@
       "capabilities": ["hyperparameter_search", "quantization", "pruning", "distillation"]
     }
   ],
+  "operational_skills": [
+    "etl-ml-readiness"
+  ],
   "gates": [
     {
       "name": "ml_validation_gate",

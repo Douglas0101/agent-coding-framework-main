@@ -35,3 +35,12 @@ env/
 # Internal operational directories must stay out of the public repository
 .agent/
 .codex/
+
+# Framework internal artifacts — only docs/ is public surface
+# .internal/ is versioned EXCEPT for runtime artifacts
+.internal/artifacts/
+specs/
+domains/
+registry/
+templates/
+sonar-project.properties

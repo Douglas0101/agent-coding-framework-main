@@ -6,12 +6,28 @@
 
 ---
 
+## Política de Superfície Pública
+
+**Regra fundamental**: este diretório `docs/` é a **única** superfície pública do framework. Todo aprimoramento, especificação, contrato, registro, template, script e teste reside em `.internal/`.
+
+| Camada | Localização | Acesso |
+|--------|-------------|--------|
+| Documentação pública | `docs/` | Público |
+| Especificações do Core | `.internal/specs/` | Interno |
+| Domain Packs | `.internal/domains/` | Interno |
+| Extension Registry | `.internal/registry/` | Interno |
+| Templates | `.internal/templates/` | Interno |
+| Scripts e testes | `.internal/scripts/`, `.internal/tests/` | Interno |
+| Artefatos de execução | `.internal/artifacts/` | Interno |
+
+---
+
 ## Documentos Principais
 
 | Documento | Descricao | Status |
 |-----------|-----------|--------|
 | [CONSTITUTION_emendada.md](CONSTITUTION_emendada.md) | Fonte da verdade autoritaria — invariantes, contratos, governanca | ✅ Ratificada |
-| [PRD_desverticalizacao_framework.md](PRD_desverticalizacao_framework.md) | Plano de transicao para Core domain-agnostic | ✅ Em execucao |
+| [PRD_desverticalizacao_framework.md](PRD_desverticalizacao_framework.md) | Plano de transicao para Core domain-agnostic | ✅ Executado |
 | [ADOPTION_RUNBOOK.md](ADOPTION_RUNBOOK.md) | Guia de adocao para mantenedores | ✅ Publicado |
 
 ---
@@ -20,24 +36,24 @@
 
 ### Core (Nivel 0)
 
-- `specs/core/orchestration-contract.yaml` — Interfaces e protocolos do Core
+- `.internal/specs/core/orchestration-contract.yaml` — Interfaces e protocolos do Core
 - O Core define a gramatica de orquestracao, nao a semantica de dominio
 - Protocolos: Verifier, Synthesizer, Handoff, Evidence
 - Invariantes: INV-001 a INV-007 (ver Constituicao)
 
 ### Domain Packs
 
-- `domains/software-engineering/` — Pack funcional default (ativo)
-- `domains/ml-ai/` — Pack ML/AI (experimental, opcional)
-- `domains/medical-imaging/` — Pack Medical Imaging (experimental, opcional)
+- `.internal/domains/software-engineering/` — Pack funcional default (ativo)
+- `.internal/domains/ml-ai/` — Pack ML/AI (experimental, opcional)
+- `.internal/domains/medical-imaging/` — Pack Medical Imaging (experimental, opcional)
 
 ### Extension Registry
 
-- `registry/registry.yaml` — Catalogo de todos os Domain Packs registrados
+- `.internal/registry/registry.yaml` — Catalogo de todos os Domain Packs registrados
 
 ### Templates
 
-- `templates/domain-pack/` — Templates oficiais para criacao de novos packs
+- `.internal/templates/domain-pack/` — Templates oficiais para criacao de novos packs
 
 ---
 

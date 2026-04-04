@@ -1,7 +1,8 @@
 # Native Swarm Rules — Agent Orchestration Framework
 
 **Architecture:** Core domain-agnostic + Domain Packs (contractual extensions)  
-**Reference:** `specs/core/orchestration-contract.yaml`, `docs/CONSTITUTION_emendada.md`
+**Reference:** `.internal/specs/core/orchestration-contract.yaml`, `docs/CONSTITUTION_emendada.md`  
+**Policy:** Only `docs/` is public surface. All improvements go to `.internal/`.
 
 ## Core Protocols (Nivel 0)
 

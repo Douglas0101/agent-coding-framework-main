@@ -64,6 +64,9 @@
       "capabilities": ["report_generation", "guidelines_compliance"]
     }
   ],
+  "operational_skills": [
+    "vulnerability-scanner"
+  ],
   "gates": [
     {
       "name": "medical_quality_gate",

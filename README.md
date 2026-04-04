@@ -32,21 +32,25 @@ Este framework foi projetado para automatizar orquestração de agentes em qualq
 
 ```
 agent-orchestration-framework/
-├── specs/core/              # Core domain-agnostic (nível 0)
-│   └── orchestration-contract.yaml
-├── domains/                 # Domain Packs (extensões contratuais)
-│   ├── software-engineering/   # Functional pack (default)
-│   ├── ml-ai/                    # Domain pack (experimental)
-│   └── medical-imaging/          # Domain pack (experimental)
-├── registry/                # Extension Registry
-│   └── registry.yaml
-├── templates/               # Templates para novos packs
-│   └── domain-pack/
-├── .opencode/              # Configuração OpenCode
-├── .codex/                 # Orquestração multi-agente
-├── .agent/                 # Skills operacionais
-├── .internal/             # Scripts e testes
-└── docs/                  # Documentação constitucional
+├── docs/                  # ÚNICA superfície pública documental
+│   ├── CONSTITUTION_emendada.md
+│   ├── PRD_desverticalizacao_framework.md
+│   ├── ADOPTION_RUNBOOK.md
+│   └── README.md
+├── .internal/             # TODA a estrutura operacional
+│   ├── specs/core/           # Core domain-agnostic (nível 0)
+│   ├── domains/              # Domain Packs (extensões contratuais)
+│   ├── registry/             # Extension Registry
+│   ├── templates/            # Templates para novos packs
+│   ├── scripts/              # Scripts operacionais
+│   ├── tests/                # Suite de testes
+│   └── artifacts/            # Artefatos de execução
+├── .opencode/              # Configuração OpenCode (interno)
+├── .codex/                 # Orquestração multi-agente (interno)
+├── .agent/                 # Skills operacionais (interno)
+├── README.md               # Interface pública
+├── AGENTS.md               # Regras de swarm
+└── opencode.json           # Config pública sanitizada
 ```
 
 ### Camadas Arquiteturais
@@ -75,199 +79,50 @@ agent-orchestration-framework/
 
 ## Estrutura de Diretórios
 
-### `specs/core/` — Core Domain-Agnostic
+> **Regra**: apenas `docs/` é superfície pública. Toda estrutura operacional (`specs/`, `domains/`, `registry/`, `templates/`, scripts, testes) reside em `.internal/`.
 
-Especificações do Core que definem a gramática de orquestração:
+### `.internal/` — Núcleo Operacional
 
-- `orchestration-contract.yaml` — Interfaces e protocolos do Core
-- O Core NÃO contém lógica de domínio vertical
+Todo aprimoramento do framework acontece aqui:
 
-### `domains/` — Domain Packs
+| Subdiretório | Conteúdo |
+|--------------|----------|
+| `.internal/specs/core/` | Contratos de orquestração domain-agnostic |
+| `.internal/domains/` | Domain Packs (software-engineering, ml-ai, medical-imaging) |
+| `.internal/registry/` | Extension Registry (catálogo de packs) |
+| `.internal/templates/` | Templates para criação de novos packs |
+| `.internal/scripts/` | Scripts operacionais e wrappers |
+| `.internal/tests/` | Suite de testes de regressão |
+| `.internal/artifacts/` | Artefatos de execução e evidências |
 
-Extensões contratuais que fornecem capacidades específicas de domínio:
+### `docs/` — Superfície Pública Documental
 
-- `software-engineering/` — Pack funcional default (ativo)
-- `ml-ai/` — Pack de ML/AI (experimental, opcional)
-- `medical-imaging/` — Pack de imagens médicas (experimental, opcional)
+Único diretório exposto publicamente:
 
-### `registry/` — Extension Registry
-
-Catálogo de todos os Domain Packs registrados:
-- `registry.yaml` — Lista de packs disponíveis com metadados
-
-### `.opencode/` — Configuração OpenCode
-
-Configuração do runtime de execução (não versionada publicamente):
-- `opencode.json` — Configuração pública sanitizada
-- `agents/` — Definições de agentes
-- `commands/` — Comandos disponíveis
-- `specs/` — Contratos e especificações
-- `manifests/` — Manifestos de execução
-
-> **Nota**: O diretório `.opencode/` operacional permanece interno. Apenas configurações sanitizadas e contratos são públicos.
+| Arquivo | Conteúdo |
+|---------|----------|
+| `CONSTITUTION_emendada.md` | Fonte da verdade arquitetural |
+| `PRD_desverticalizacao_framework.md` | Plano de desverticalização |
+| `ADOPTION_RUNBOOK.md` | Guia de adoção para mantenedores |
+| `README.md` | Índice de documentação |
 
 ---
-
-## Criando Novo Domain Pack
-
-Para adicionar um novo domínio ao framework:
-
-1. **Crie o diretório**: `domains/<seu-dominio>/`
-2. **Adicione o contrato**: Copie `templates/domain-pack/contract.yaml`
-3. **Adicione o manifesto**: Copie `templates/domain-pack/manifest.json`
-4. **Registre no registry**: Adicione ao `registry/registry.yaml`
-5. **Valide conformidade**: Execute testes de constitucionalidade
-
-Consulte `templates/domain-pack/` para templates oficiais.
-
-- `opencode.json` — Arquivo de configuração principal
-- `agents/` — Definições dos agentes (autocoder, explore, reviewer, etc.)
-- `commands/` — Comandos disponíveis (/analyze, /review, /autocode, etc.)
-- `plugins/` — Plugins TypeScript para extensibilidade
-- `tools/` — Ferramentas adicionais disponíveis aos agentes
-- `specs/` — Specifications de comportamento e contratos
-  - `handoff-contract.sanitized.json` — Contrato de handoff entre agentes
-  - `README.md` — Documentação das specs
-- `manifests/` — Manifestos de execução
-  - `sanitized/run-manifest.example.json` — Exemplo de manifesto sanitizado
-  - `README.md` — Documentação dos manifests
-- `context/` — Contexto de sessão e estado operacional
-
-#### Public vs Internal Artifacts
-
-Para governança de repositório público, a pasta `.opencode/` é tratada como **deny-by-default**, com exceções explícitas apenas para contratos sanitizados.
-
-| Subpasta / Arquivo | Classificação | Política |
-|--------------------|---------------|----------|
-| `.opencode/opencode.json` | **Público** | Contrato de configuração sanitizada versionável |
-| `.opencode/specs/*.sanitized.json` | **Público** | Specs de contrato sem estado de runtime |
-| `.opencode/manifests/sanitized/*.json` | **Público** | Exemplos de manifests sanitizados |
-| `.opencode/node_modules/` | **Interno** | Dependências efêmeras (não versionar) |
-| `.opencode/memory/` | **Interno** | Memória/estado transitório de agentes |
-| `.opencode/context/` | **Interno** | Contexto de sessão e dados operacionais |
-| `.opencode/evidence/`, `.opencode/artifacts/`, `.opencode/tmp/` | **Interno** | Evidências e artefatos transitórios |
-
-> Regra prática: qualquer dado live/sensível fica fora do Git; somente contratos e exemplos sanitizados entram no repositório público.
-
-### `.codex/` — Orquestração Multi-Agente
-
-Configuração do Codex para swarms multi-agente:
-
-- `config.toml` — Configuração principal do swarm
-- `agents/` — Definições de agentes Codex (synthesizer, verifier, etc.)
-- `workflows/` — Fluxos de trabalho para diferentes cenários
-
-### `.agent/` — Skills e Workflows
-
-Conjunto completo de skills especializadas:
-
-- `skills/` — 57+ skills covering different domains
-- `workflows/` — Workflows pré-definidos para tarefas comuns
-
-### `.internal/` — Scripts e Testes Operacionais
-
-Scripts, testes e artefatos de validação:
-
-```
-.internal/
-├── scripts/
-│   ├── security_patterns.py        # Padrões de segurança compartilhados
-│   ├── scan_sensitive_patterns.py # Scanner de padrões sensíveis
-│   ├── check-public-boundary.sh   # Verificação de boundary público
-│   └── run-autocode.sh            # Wrapper para /autocode
-├── tests/
-│   ├── test_stable_execution.py           # Regressão de routing + guardrails (16 testes, 4 classes)
-│   ├── test_public_boundary.py            # Boundary público vs interno (7 testes, 1 classe)
-│   ├── test_public_config_sanitization.py # Contrato de config/doc sanitizados (5 testes)
-│   ├── test_public_repo_allowlist.py      # Governança de allowlist pública (3 testes)
-│   └── test_opencode_governance.py        # Governança de config pública (2 testes)
-└── artifacts/
-    └── codex-swarm/
-        ├── run-stable-execution/   # Relatórios de conformidade
-        └── run-advanced-analysis/  # Relatórios de análise de segurança
-```
-
----
-
 
 ## Public vs Internal Artifacts
 
-Este repositório público mantém apenas artefatos sanitizados. Diretórios operacionais (`.agent/`, `.codex/`, `.opencode/`) permanecem fora do versionamento público e devem ser materializados localmente em ambiente interno.
+**Regra fundamental**: apenas `docs/` é superfície pública. Todo aprimoramento, spec, contract, registry, template, script e teste reside em `.internal/`.
 
-Para garantir execução estável sem expor dados sensíveis:
-
-- `opencode.json` (raiz) define a interface pública sanitizada e os campos críticos de routing.
-- `.opencode/opencode.json` é a configuração operacional local e deve manter paridade nos campos críticos.
-- Campos não críticos podem divergir conforme a política documentada na seção **Execução Estável (Stable Execution)**.
-
----
-
-## Uso como Template
-
-### Instalação
-
-Para usar este framework como template em um novo projeto:
-
-```bash
-# 1. Clone o repositório template
-git clone https://github.com/organization/agent-coding-framework.git /tmp/agent-framework
-
-# 2. Copie a estrutura para seu projeto
-cp -r /tmp/agent-framework/.opencode seu-projeto/
-cp -r /tmp/agent-framework/.codex seu-projeto/
-cp -r /tmp/agent-framework/.agent seu-projeto/
-cp /tmp/agent-framework/AGENTS.md seu-projeto/
-
-# 3. Instale as dependências
-cd seu-projeto/.opencode
-bun install
-
-# 4. Customize para seu projeto
-# - Edite conventions.md para refletir convenções do seu projeto
-# - Atualize AGENTS.md com agentes específicos do seu contexto
-# - Configure credenciais em .env (não versionar!)
-```
-
-### Configuração de Ambiente
-
-Crie um arquivo `.env` no diretório `.opencode/` com suas credenciais:
-
-```bash
-# OpenAI
-OPENAI_API_KEY=sk-...
-
-# Anthropic (opcional)
-ANTHROPIC_API_KEY=sk-ant-...
-
-# Outras variáveis de ambiente necessárias
-```
-
-> ⚠️ **Importante**: O arquivo `.env` deve ser adicionado ao `.gitignore` e nunca deve ser versionado.
-
----
-
-## Comandos Disponíveis
-
-O framework oferece comandos especializados para diferentes tarefas:
-
-| Comando | Agente | Descrição |
-|---------|--------|-----------|
-| `/analyze` | explore | Análise rápida de código |
-| `/autocode` | autocoder | Geração e refatoração de código |
-| `/review` | reviewer | Revisão técnica com classificação de severidade |
-| `/check` | validation | Verificação de conclusões |
-| `/test` | tester | Execução de testes e validação |
-| `/search` | docs_researcher | Pesquisa de documentação externa |
-
-### Executando Comandos
-
-```bash
-# Usando OpenCode diretamente
-opencode run --command autocode "gere uma função para..."
-
-# Usando o wrapper (recomendado para /autocode)
-.internal/scripts/run-autocode.sh "sua tarefa aqui"
-```
+| Camada | Localização | Acesso |
+|--------|-------------|--------|
+| Documentação pública | `docs/` | Público |
+| Especificações do Core | `.internal/specs/` | Interno |
+| Domain Packs | `.internal/domains/` | Interno |
+| Extension Registry | `.internal/registry/` | Interno |
+| Templates | `.internal/templates/` | Interno |
+| Scripts e testes | `.internal/scripts/`, `.internal/tests/` | Interno |
+| Config OpenCode pública | `opencode.json` (raiz) | Público (sanitizado) |
+| Config OpenCode operacional | `.opencode/` | Interno |
+| Runtime e skills | `.agent/`, `.codex/` | Interno |
 
 ---
 
@@ -285,7 +140,7 @@ O pack funcional padrão fornece capacidades de desenvolvimento:
 
 ### ML/AI Pack (Experimental, Opcional)
 
-Disponível em `domains/ml-ai/`. Fornece:
+Disponível em `.internal/domains/ml-ai/`. Fornece:
 
 | Agente | Descrição |
 |--------|-----------|
@@ -295,7 +150,7 @@ Disponível em `domains/ml-ai/`. Fornece:
 
 ### Medical Imaging Pack (Experimental, Opcional)
 
-Disponível em `domains/medical-imaging/`. Requer ML/AI Pack. Fornece:
+Disponível em `.internal/domains/medical-imaging/`. Requer ML/AI Pack. Fornece:
 
 | Agente | Descrição |
 |--------|-----------|
