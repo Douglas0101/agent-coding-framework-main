@@ -21,6 +21,7 @@ allowed = {
     ".opencode/specs/README.md",
     ".opencode/specs/handoff-contract.sanitized.json",
     ".opencode/manifests/README.md",
+    ".opencode/manifests/.keep",
     ".opencode/manifests/sanitized/run-manifest.example.json",
 }
 
