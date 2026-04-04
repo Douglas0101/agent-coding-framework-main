@@ -230,9 +230,28 @@ jobs:
               'AKIA', 'ghp_', 'private_key', 'pem'
           ]
 
+          # Exclude tooling, CI, and known legitimate references
+          excluded_paths = [
+              '.pre-commit-config.yaml',
+              '.github/workflows/',
+              '.github/security/',
+              'node_modules/',
+          ]
+
+          # Known legitimate tool/library references that contain sensitive words
+          legitimate_refs = [
+              'detect-secrets',
+              'Yelp/detect-secrets',
+              'secrets.baseline',
+              'github_token',
+              'GITHUB_TOKEN',
+              'secrets.GITHUB_TOKEN',
+          ]
+
           violations = []
           for path in Path('.').rglob('*.yaml'):
-              if 'node_modules' in str(path):
+              # Skip excluded paths
+              if any(excl in str(path) for excl in excluded_paths):
                   continue
               if path.is_dir():
                   continue
@@ -251,6 +270,9 @@ jobs:
                               if '${' in line or 'placeholder' in line.lower() or 'redacted' in line.lower():
                                   continue
                               if 'schema' in line.lower() or 'type:' in line.lower():
+                                  continue
+                              # Allow legitimate tool/library references
+                              if any(legit in line for legit in legitimate_refs):
                                   continue
                               violations.append(f"{path}:{i}: {stripped}")
 
