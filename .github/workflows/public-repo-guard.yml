@@ -2,13 +2,14 @@ name: Public Repo Guard
 
 on:
   pull_request:
-    branches: [main, master]
+    branches: [main, master, develop]
   push:
-    branches: [main, master]
+    branches: [main, master, develop]
 
 permissions:
   contents: read
   security-events: write
+  pull-requests: read
 
 jobs:
   public-repo-guard:
