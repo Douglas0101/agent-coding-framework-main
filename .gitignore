@@ -37,7 +37,8 @@ env/
 .codex/
 
 # Framework internal artifacts — only docs/ is public surface
-.internal/
+# .internal/ is versioned EXCEPT for runtime artifacts
+.internal/artifacts/
 specs/
 domains/
 registry/

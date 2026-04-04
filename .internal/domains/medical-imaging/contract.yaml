@@ -1,0 +1,136 @@
+contract:
+  version: 1.0.0
+  kind: DomainPackContract
+  domain: medical-imaging
+  pack_id: pack-medical-imaging
+  description: |
+    Optional domain pack for medical imaging analysis workflows.
+    Provides capabilities for classification, segmentation, specialist ensemble,
+    and medical report generation. This pack requires ML/AI capabilities.
+  core_version_required: ">=1.0.0"
+
+domain:
+  name: Medical Imaging
+  type: vertical
+  description: |
+    Specializes in medical imaging workflows including X-ray, CT, MRI analysis
+    for healthcare applications. Provides specialist ensemble for multi-pathology
+    detection and structured medical reporting.
+  capabilities:
+    - image_classification
+    - semantic_segmentation
+    - specialist_ensemble
+    - medical_reporting
+    - radiology_workflow
+    - medical_guidelines
+    - multi_label_classification
+
+agents:
+  - name: radiologist-assistant
+    role: analysis
+    description: Assists radiologists with image analysis and findings
+    capabilities:
+      - image_preprocessing
+      - feature_extraction
+      - pathology_detection
+
+  - name: specialist-group-a
+    role: specialist
+    description: "Specialist for diffuse lung opacities (Pneumonia, Infiltration, etc.)"
+    capabilities:
+      - opacity_detection
+      - pattern_classification
+
+  - name: specialist-group-b
+    role: specialist
+    description: "Specialist for gross structural abnormalities (Hernia, Cardiomegaly, Emphysema)"
+    capabilities:
+      - structural_analysis
+      - anatomy_detection
+
+  - name: specialist-group-c
+    role: specialist
+    description: "Specialist for focal lesions (Nodules, Masses) and Fibrosis"
+    capabilities:
+      - lesion_detection
+      - fibrosis_assessment
+
+  - name: specialist-group-d
+    role: specialist
+    description: "Specialist for heart-lung interaction and pleural space pathologies"
+    capabilities:
+      - cardiomegaly_detection
+      - pleural_analysis
+
+  - name: medical-reporter
+    role: synthesis
+    description: Generates structured medical reports from analysis results
+    capabilities:
+      - report_generation
+      - guidelines_compliance
+
+gates:
+  - name: medical_quality_gate
+    type: validation
+    description: Validates medical analysis quality and compliance
+    config:
+      strict_mode: true
+      fail_fast: true
+    validation_rules:
+      - rule: clinical_validity
+        params:
+          min_confidence: 0.8
+      - rule: guidelines_compliance
+        params:
+          enforce: true
+      - name: hipaa_compliance
+        type: security
+        description: Ensures HIPAA compliance for medical data
+        config:
+          strict_mode: true
+          fail_fast: true
+
+dependencies:
+  required:
+    - pack_id: pack-software-engineering
+      version: ">=1.0.0"
+    - pack_id: pack-ml-ai
+      version: ">=1.0.0"
+  optional: []
+
+compliance:
+  invariant_enforcement:
+    - invariant: INV-001
+      method: static_analysis
+      verify: "No domain-specific logic in core layer"
+    - invariant: INV-002
+      method: contract_validation
+      verify: "Implements DomainPack interface"
+    - invariant: INV-003
+      method: cryptographic_verification
+      verify: "Evidence trail immutable"
+    - invariant: INV-006
+      method: static_analysis
+      verify: "No raw medical data in core; only references and metadata"
+
+  compatibility:
+    core_protocols:
+      - Verifier
+      - Synthesizer
+      - Handoff
+    contract_version: "1.0.0"
+
+metadata:
+  author: Framework Team
+  license: MIT
+  repository: ""
+  tags:
+    - domain
+    - medical
+    - imaging
+    - optional
+    - experimental
+    - healthcare
+  created: 2026-04-03
+  updated: 2026-04-03
+  status: experimental

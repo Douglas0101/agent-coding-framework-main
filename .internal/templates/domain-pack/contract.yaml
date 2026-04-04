@@ -1,0 +1,168 @@
+# Domain Pack Contract Template
+
+**Contract Version:** 1.0.0  
+**Kind:** DomainPackContract  
+**Status:** Template
+
+---
+
+## 1. Contract Header
+
+```yaml
+contract:
+  version: 1.0.0
+  kind: DomainPackContract
+  domain: <domain-name>
+  pack_id: <pack-id>
+  description: <description>
+  core_version_required: ">=1.0.0"
+```
+
+---
+
+## 2. Domain Specification
+
+```yaml
+domain:
+  name: <Domain Name>
+  type: enum[functional, vertical, infrastructure]
+  description: |
+    <Brief description of what this domain provides>
+  
+  capabilities:
+    - <capability-1>
+    - <capability-2>
+    # Add more as needed
+
+  boundaries:
+    may_access:
+      - <allowed external resources>
+    must_not_access:
+      - <forbidden resources>
+```
+
+---
+
+## 3. Agent Definitions
+
+```yaml
+agents:
+  - name: <agent-name>
+    role: <role>
+    description: <description>
+    capabilities:
+      - <capability>
+    input_schema: <JSON Schema>
+    output_schema: <JSON Schema>
+    dependencies: []
+```
+
+---
+
+## 4. Gate Implementations
+
+```yaml
+gates:
+  - name: <gate-name>
+    type: <type>
+    description: <description>
+    config:
+      strict_mode: <true|false>
+      fail_fast: <true|false>
+    validation_rules:
+      - rule: <rule-name>
+        params: <parameters>
+```
+
+---
+
+## 5. Dependencies
+
+```yaml
+dependencies:
+  required:
+    - pack_id: <required-pack>
+      version: <version-constraint>
+  optional:
+    - pack_id: <optional-pack>
+      version: <version-constraint>
+```
+
+---
+
+## 6. Compliance
+
+```yaml
+compliance:
+  invariant_enforcement:
+    - invariant: INV-001
+      method: static_analysis
+      verify: "No domain-specific logic in core layer"
+    - invariant: INV-002
+      method: contract_validation
+      verify: "Implements DomainPack interface"
+    - invariant: INV-003
+      method: cryptographic_verification
+      verify: "Evidence trail immutable"
+
+  compatibility:
+    core_protocols:
+      - Verifier
+      - Synthesizer
+      - Handoff
+    contract_version: "1.0.0"
+```
+
+---
+
+## 7. Metadata
+
+```yaml
+metadata:
+  author: <author>
+  license: <license>
+  repository: <repository-url>
+  tags:
+    - <tag1>
+    - <tag2>
+  created: <ISO8601>
+  updated: <ISO8601>
+  status: enum[active, deprecated, experimental]
+```
+
+---
+
+## Example: Minimal Valid Contract
+
+```yaml
+contract:
+  version: 1.0.0
+  kind: DomainPackContract
+  domain: example
+  pack_id: pack-example
+  description: "Example domain pack for demonstration"
+  core_version_required: ">=1.0.0"
+
+domain:
+  name: Example Domain
+  type: functional
+  description: "Minimal example pack"
+  capabilities:
+    - example_capability
+
+compliance:
+  invariant_enforcement:
+    - invariant: INV-001
+      method: static_analysis
+      verify: "No domain-specific logic in core layer"
+    - invariant: INV-002
+      method: contract_validation
+      verify: "Implements DomainPack interface"
+
+metadata:
+  author: Framework Team
+  license: MIT
+  status: experimental
+  created: 2026-04-03
+  updated: 2026-04-03
+```

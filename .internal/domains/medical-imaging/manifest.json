@@ -1,0 +1,97 @@
+{
+  "manifest_version": "1.0.0",
+  "pack_id": "pack-medical-imaging",
+  "name": "Medical Imaging Domain Pack",
+  "version": "1.0.0",
+  "domain": "medical-imaging",
+  "description": "Optional domain pack for medical imaging analysis workflows including classification, segmentation, specialist ensemble, and medical reporting",
+  "core_version": ">=1.0.0",
+  "status": "experimental",
+  "type": "vertical",
+  "metadata": {
+    "author": "Framework Team",
+    "license": "MIT",
+    "repository": "",
+    "created": "2026-04-03",
+    "updated": "2026-04-03"
+  },
+  "dependencies": {
+    "required": ["pack-software-engineering", "pack-ml-ai"],
+    "optional": []
+  },
+  "capabilities": [
+    "image_classification",
+    "semantic_segmentation",
+    "specialist_ensemble",
+    "medical_reporting",
+    "radiology_workflow",
+    "medical_guidelines",
+    "multi_label_classification"
+  ],
+  "agents": [
+    {
+      "name": "radiologist-assistant",
+      "role": "analysis",
+      "capabilities": ["image_preprocessing", "feature_extraction", "pathology_detection"]
+    },
+    {
+      "name": "specialist-group-a",
+      "role": "specialist",
+      "capabilities": ["opacity_detection", "pattern_classification"],
+      "description": "Specialist for diffuse lung opacities"
+    },
+    {
+      "name": "specialist-group-b",
+      "role": "specialist",
+      "capabilities": ["structural_analysis", "anatomy_detection"],
+      "description": "Specialist for gross structural abnormalities"
+    },
+    {
+      "name": "specialist-group-c",
+      "role": "specialist",
+      "capabilities": ["lesion_detection", "fibrosis_assessment"],
+      "description": "Specialist for focal lesions and fibrosis"
+    },
+    {
+      "name": "specialist-group-d",
+      "role": "specialist",
+      "capabilities": ["cardiomegaly_detection", "pleural_analysis"],
+      "description": "Specialist for heart-lung interaction"
+    },
+    {
+      "name": "medical-reporter",
+      "role": "synthesis",
+      "capabilities": ["report_generation", "guidelines_compliance"]
+    }
+  ],
+  "operational_skills": [
+    "vulnerability-scanner"
+  ],
+  "gates": [
+    {
+      "name": "medical_quality_gate",
+      "type": "validation",
+      "config": {
+        "strict_mode": true,
+        "fail_fast": true
+      }
+    },
+    {
+      "name": "hipaa_compliance",
+      "type": "security",
+      "config": {
+        "strict_mode": true,
+        "fail_fast": true
+      }
+    }
+  ],
+  "contracts": {
+    "primary": "contract.yaml",
+    "schemas": ["agents", "gates"]
+  },
+  "tags": ["domain", "medical", "imaging", "optional", "experimental", "healthcare"],
+  "compatibility": {
+    "core_protocols": ["Verifier", "Synthesizer", "Handoff"],
+    "protocol_version": "1.0.0"
+  }
+}
