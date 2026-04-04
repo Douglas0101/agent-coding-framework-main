@@ -46,10 +46,18 @@ class TestSanitizedPublicConfigurationContract:
 
     def test_no_high_entropy_values_in_public_contract_files(self):
         token_pattern = re.compile(HIGH_ENTROPY_CANDIDATE_PATTERN)
+        known_legitimate_long_tokens = {
+            "PRD_Operacional_Arquitetura_Multiagente_Orientada_a_Contratos",
+            "docs/PRD_Operacional_Arquitetura_Multiagente_Orientada_a_Contratos",
+            "PRD_desverticalizacao_framework",
+            "CONSTITUTION_emendada",
+        }
         for rel_path in (*PUBLIC_CONFIG_FILES, *PUBLIC_DOC_FILES):
             content = (REPO_ROOT / rel_path).read_text(encoding="utf-8")
             for candidate in token_pattern.findall(content):
                 if "PLACEHOLDER" in candidate:
+                    continue
+                if candidate in known_legitimate_long_tokens:
                     continue
                 assert not high_entropy_candidate_has_mixed_charset(candidate), (
                     f"High-entropy candidate found in {rel_path}: {candidate}"

@@ -1,0 +1,151 @@
+# Agent Mode Contract: explore
+# Repository exploration and analysis mode
+
+agent_mode_contract:
+  metadata:
+    name: "explore"
+    version: "1.1.0"
+    parent_contract: "orchestration-contract.yaml"
+    created: "2026-04-03T00:00:00Z"
+    last_modified: "2026-04-04T00:00:00Z"
+    author: "core-team"
+
+  mission:
+    description: "Explore and analyze repository structure, code patterns, and dependencies to produce structured findings."
+    success_criteria:
+      - "All target files/directories identified and cataloged"
+      - "Code patterns and dependencies documented"
+      - "Output conforms to output_schema"
+      - "No forbidden tools invoked"
+    failure_conditions:
+      - "Target path does not exist or is inaccessible"
+      - "Budget exceeded before exploration completes"
+      - "Output schema validation fails"
+    priority: "high"
+
+  scope:
+    input_schema:
+      required_fields:
+        - name: "task"
+          type: "string"
+          description: "Exploration task description"
+          required: true
+        - name: "target_path"
+          type: "string"
+          description: "Path or pattern to explore"
+          required: true
+      optional_fields:
+        - name: "depth"
+          type: "integer"
+          description: "Maximum exploration depth"
+          required: false
+        - name: "focus_areas"
+          type: "list[string]"
+          description: "Specific areas to focus on"
+          required: false
+      forbidden_fields:
+        - "secrets"
+        - "credentials"
+        - "internal_tokens"
+
+    output_schema:
+      required_fields:
+        - name: "findings"
+          type: "list[Finding]"
+          description: "Structured exploration findings"
+          required: true
+        - name: "file_map"
+          type: "dict"
+          description: "Discovered file structure"
+          required: true
+        - name: "summary"
+          type: "string"
+          description: "Human-readable summary"
+          required: true
+      optional_fields:
+        - name: "recommendations"
+          type: "list[string]"
+          description: "Suggested next steps"
+          required: false
+        - name: "risk_flags"
+          type: "list[string]"
+          description: "Potential issues discovered"
+          required: false
+      format: "json"
+
+    tools_allowlist:
+      - "glob"
+      - "grep"
+      - "read"
+      - "task"
+      - "codesearch"
+      - "websearch"
+      - "webfetch"
+    tools_denylist:
+      - "edit"
+      - "write"
+      - "bash"
+      - "MCP_DOCKER_create_or_update_file"
+
+  resources:
+    max_input_tokens: 8000
+    max_output_tokens: 12000
+    max_context_tokens: 16000
+    max_retrieval_chunks: 20
+    max_iterations: 15
+    max_handoffs: 2
+    timeout_seconds: 300
+
+  memory:
+    operational_context:
+      max_tokens: 4000
+      retention: "ephemeral"
+      compressible: true
+    session_state:
+      max_tokens: 2000
+      retention: "session"
+      compressible: true
+    structural_memory:
+      max_tokens: 1000
+      retention: "persistent"
+      compressible: false
+    handoff_payload_budget:
+      max_tokens: 3000
+      compression_mode: "summary+refs"
+      rehydration_supported: true
+
+  satisficing:
+    mode: "BALANCED"
+    quality_threshold: 0.75
+    early_exit:
+      enabled: true
+      conditions:
+        - "All target files explored"
+        - "Quality threshold met with diminishing returns"
+        - "Budget utilization exceeds 80%"
+    trade_off: "Balanced exploration depth vs token cost; prioritizes coverage over exhaustive detail"
+
+  handoff:
+    allowed_targets:
+      - "reviewer"
+      - "autocoder"
+      - "orchestrator"
+    compression: "summary+refs"
+    verifier_required: true
+
+  error_policy:
+    retry_max: 2
+    timeout_seconds: 60
+    on_budget_exceeded: "fail_fast"
+    on_tool_failure: "skip"
+    on_schema_violation: "reject"
+
+  skills:
+    - name: "impact_analysis"
+      description: "Analyze blast radius, dependency chains, affected tests, and risk level of proposed changes"
+      source: "opencode-builtin:impact-analyst"
+      trigger: "automatic when task involves code changes, refactoring, or architecture modifications"
+      input_contract: "ImpactAnalysisInput { target_files, change_description, depth }"
+      output_contract: "ImpactReport { affected_files, dependency_chain, test_impact, risk_level, mitigation_suggestions }"
+      budget_share: 0.30
+      verifier_required: false

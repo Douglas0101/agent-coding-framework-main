@@ -1,0 +1,152 @@
+# Agent Mode Contract: autocoder
+# Primary autocode execution mode for code generation and modification
+
+agent_mode_contract:
+  metadata:
+    name: "autocoder"
+    version: "1.0.0"
+    parent_contract: "orchestration-contract.yaml"
+    created: "2026-04-03T00:00:00Z"
+    last_modified: "2026-04-03T00:00:00Z"
+    author: "core-team"
+
+  mission:
+    description: "Generate, modify, and refactor code based on task specifications while adhering to project conventions and constitutional invariants."
+    success_criteria:
+      - "Code changes implement the requested task"
+      - "Changes follow existing project conventions"
+      - "No secrets or credentials introduced"
+      - "Output conforms to output_schema"
+    failure_conditions:
+      - "Task scope exceeds budget"
+      - "Cannot safely modify target files"
+      - "Schema or contract violation in output"
+      - "Security gate fails"
+    priority: "critical"
+
+  scope:
+    input_schema:
+      required_fields:
+        - name: "task"
+          type: "string"
+          description: "Task description for code generation/modification"
+          required: true
+        - name: "context"
+          type: "dict"
+          description: "Relevant file paths, specs, and constraints"
+          required: true
+      optional_fields:
+        - name: "exploration_results"
+          type: "dict"
+          description: "Findings from prior explore phase"
+          required: false
+        - name: "review_feedback"
+          type: "dict"
+          description: "Feedback from prior review phase"
+          required: false
+      forbidden_fields:
+        - "secrets"
+        - "credentials"
+        - "internal_tokens"
+
+    output_schema:
+      required_fields:
+        - name: "changes"
+          type: "list[Change]"
+          description: "All code changes made"
+          required: true
+        - name: "files_modified"
+          type: "list[string]"
+          description: "Paths of all modified files"
+          required: true
+        - name: "files_created"
+          type: "list[string]"
+          description: "Paths of all new files created"
+          required: true
+        - name: "summary"
+          type: "string"
+          description: "Human-readable summary of changes"
+          required: true
+        - name: "compliance_notes"
+          type: "list[string]"
+          description: "Constitutional and spec compliance notes"
+          required: true
+        - name: "evidence_trail"
+          type: "list[Evidence]"
+          description: "Immutable evidence of changes made"
+          required: true
+      optional_fields:
+        - name: "test_commands"
+          type: "list[string]"
+          description: "Commands to verify changes"
+          required: false
+        - name: "migration_notes"
+          type: "list[string]"
+          description: "Notes for breaking changes"
+          required: false
+      format: "json"
+
+    tools_allowlist:
+      - "read"
+      - "edit"
+      - "write"
+      - "bash"
+      - "glob"
+      - "grep"
+      - "task"
+      - "codesearch"
+      - "MCP_DOCKER_create_or_update_file"
+      - "MCP_DOCKER_push_files"
+    tools_denylist: []
+
+  resources:
+    max_input_tokens: 16000
+    max_output_tokens: 24000
+    max_context_tokens: 32000
+    max_retrieval_chunks: 40
+    max_iterations: 25
+    max_handoffs: 3
+    timeout_seconds: 900
+
+  memory:
+    operational_context:
+      max_tokens: 8000
+      retention: "session"
+      compressible: true
+    session_state:
+      max_tokens: 4000
+      retention: "session"
+      compressible: true
+    structural_memory:
+      max_tokens: 3000
+      retention: "persistent"
+      compressible: false
+    handoff_payload_budget:
+      max_tokens: 5000
+      compression_mode: "summary+refs"
+      rehydration_supported: true
+
+  satisficing:
+    mode: "BALANCED"
+    quality_threshold: 0.80
+    early_exit:
+      enabled: true
+      conditions:
+        - "Task fully implemented and verified"
+        - "Budget utilization exceeds 85%"
+        - "Cannot make further safe modifications"
+    trade_off: "Balances implementation completeness with resource efficiency; prioritizes safety over speed"
+
+  handoff:
+    allowed_targets:
+      - "reviewer"
+      - "orchestrator"
+    compression: "summary+refs"
+    verifier_required: true
+
+  error_policy:
+    retry_max: 2
+    timeout_seconds: 120
+    on_budget_exceeded: "fail_fast"
+    on_tool_failure: "retry"
+    on_schema_violation: "fail_fast"
