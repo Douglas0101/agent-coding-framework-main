@@ -25,6 +25,27 @@ triggers:
       - throughput
       - time limit
       - memory limit
+      - algorithm
+      - complexity
+      - efficient
+      - fenwick
+      - segment tree
+      - binary indexed
+      - bit
+      - kosaraju
+      - tarjan
+      - bridge detection
+      - articulation point
+      - heavy-light
+      - hld
+      - centroid
+      - subset
+      - superset
+      - bitmask
+      - binary search
+      - max flow
+      - min cost
+      - mcmf
     weight: 1
 
   constraints:
@@ -39,18 +60,72 @@ triggers:
       - range query
       - dynamic tree
       - link cut
-      - path query
+      - link-cut
+      - link/cut
+      - link cut tree
+      - link-cut tree
       - subtree query
       - distinct elements
       - k-th element
+      - kth element
       - lowest common ancestor
       - shortest path
       - minimum spanning tree
       - max flow
       - min cost
+      - min-cost flow
+      - min-cost max-flow
       - string matching
       - suffix
       - palindrome tree
+      - segment tree
+      - fenwick tree
+      - fenwick
+      - binary indexed tree
+      - binary indexed
+      - bit
+      - sparse table
+      - sparse
+      - dijkstra
+      - bfs
+      - dfs
+      - topological sort
+      - strongly connected
+      - scc
+      - kosaraju
+      - tarjan
+      - bridge
+      - bridge detection
+      - articulation
+      - articulation point
+      - heavy light
+      - heavy-light
+      - heavy-light decomposition
+      - hld
+      - centroid
+      - centroid decomposition
+      - suffix automaton
+      - suffix array
+      - eertree
+      - wavelet
+      - persistent
+      - persistent segment
+      - persistent tree
+      - rollback
+      - dsu
+      - dsu rollback
+      - disjoint set
+      - subset sum
+      - superset sum
+      - bitmask dp
+      - binary search on answer
+      - parallel binary search
+      - lct
+      - link-cut tree
+      - link cut tree
+      - online dynamic
+      - dynamic tree operations
+      - min cost max flow
     weight: 1.5
 
   user_language:
@@ -118,7 +193,7 @@ anti_false_positive:
 
 scoring:
   method: weighted_sum
-  escalation_threshold_2x: 3.0
+  escalation_threshold_2x: 2.0
   escalation_threshold_tier3: 5.0
   max_score: 10.0
 

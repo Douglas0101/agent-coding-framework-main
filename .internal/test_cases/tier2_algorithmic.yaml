@@ -1,0 +1,85 @@
+# Tier 2 Test Cases — Algorithmic/Optimization (Performance 2x)
+
+## Test Case 2.1: Range Query with Updates
+```yaml
+task: "Implement segment tree for range minimum query with point updates, n=200000, q=100000"
+expected_tier: tier_2_algorithmic
+expected_profile: performance_2x
+```
+
+## Test Case 2.2: Prefix Sum Queries
+```yaml
+task: "Implement Fenwick tree for prefix sum queries with point updates"
+expected_tier: tier_2_algorithmic
+expected_profile: performance_2x
+```
+
+## Test Case 2.3: Graph Shortest Path
+```yaml
+task: "Implement Dijkstra's algorithm for shortest path in weighted graph with 10000 nodes"
+expected_tier: tier_2_algorithmic
+expected_profile: performance_2x
+```
+
+## Test Case 2.4: Dynamic Connectivity
+```yaml
+task: "Implement DSU with rollback for offline connectivity queries"
+expected_tier: tier_2_algorithmic
+expected_profile: performance_2x
+```
+
+## Test Case 2.5: Static Range Query
+```yaml
+task: "Implement sparse table for static RMQ (range minimum query)"
+expected_tier: tier_2_algorithmic
+expected_profile: performance_2x
+```
+
+## Test Case 2.6: Graph SCC
+```yaml
+task: "Implement Kosaraju's algorithm for strongly connected components"
+expected_tier: tier_2_algorithmic
+expected_profile: performance_2x
+```
+
+## Test Case 2.7: Bridges and Articulation
+```yaml
+task: "Find all bridges and articulation points in an undirected graph"
+expected_tier: tier_2_algorithmic
+expected_profile: performance_2x
+```
+
+## Test Case 2.8: Tree Path Queries
+```yaml
+task: "Implement Heavy-Light Decomposition for path queries on tree"
+expected_tier: tier_2_algorithmic
+expected_profile: performance_2x
+```
+
+## Test Case 2.9: Digit DP
+```yaml
+task: "Count numbers in range [1, 10^9] with digit sum divisible by 9"
+expected_tier: tier_2_algorithmic
+expected_profile: performance_2x
+```
+
+## Test Case 2.10: SOS DP
+```yaml
+task: "For each subset of size n<=20, compute sum over all supersets"
+expected_tier: tier_2_algorithmic
+expected_profile: performance_2x
+```
+
+## Test Case 2.11: Binary Search on Answer
+```yaml
+task: "Find minimum maximum distance to place k servers, monotonic feasibility check"
+expected_tier: tier_2_algorithmic
+expected_profile: performance_2x
+```
+
+## Test Case 2.12: Parallel Binary Search
+```yaml
+task: "Answer k-th smallest queries in subarrays offline using parallel binary search"
+expected_tier: tier_2_algorithmic
+expected_profile: performance_2x
+```

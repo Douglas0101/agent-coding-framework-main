@@ -1,0 +1,71 @@
+# Tier 1 Test Cases — Universal Engineering (Default 1x)
+
+## Test Case 1.1: Simple CRUD Endpoint
+```yaml
+task: "Create a REST API endpoint for user registration"
+expected_tier: tier_1_universal
+expected_profile: default_1x
+```
+
+## Test Case 1.2: Database Query
+```yaml
+task: "Write a function to fetch all active users from the database"
+expected_tier: tier_1_universal
+expected_profile: default_1x
+```
+
+## Test Case 1.3: Simple Refactor
+```yaml
+task: "Rename function calculate_total to compute_order_total"
+expected_tier: tier_1_universal
+expected_profile: default_1x
+```
+
+## Test Case 1.4: API Worker
+```yaml
+task: "Implement a background job to send welcome emails"
+expected_tier: tier_1_universal
+expected_profile: default_1x
+```
+
+## Test Case 1.5: Feature Delivery
+```yaml
+task: "Add pagination to the product listing page"
+expected_tier: tier_1_universal
+expected_profile: default_1x
+```
+
+## Test Case 1.6: Integration
+```yaml
+task: "Integrate with external payment API (Stripe)"
+expected_tier: tier_1_universal
+expected_profile: default_1x
+```
+
+## Test Case 1.7: Domain Refactor
+```yaml
+task: "Move validation logic from controller to service layer"
+expected_tier: tier_1_universal
+expected_profile: default_1x
+```
+
+## Test Case 1.8: Configuration
+```yaml
+task: "Add environment variable handling for database connection"
+expected_tier: tier_1_universal
+expected_profile: default_1x
+```
+
+## Test Case 1.9: Data Model
+```yaml
+task: "Create a new database table for audit logs"
+expected_tier: tier_1_universal
+expected_profile: default_1x
+```
+
+## Test Case 1.10: Error Handling
+```yaml
+task: "Add proper error handling for network timeouts"
+expected_tier: tier_1_universal
+expected_profile: default_1x
+```

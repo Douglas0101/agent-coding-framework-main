@@ -5,7 +5,7 @@
 agent_mode_contract:
   metadata:
     name: "autocoder"
-    version: "1.1.0"
+    version: "1.2.0"
     parent_contract: "orchestration-contract.yaml"
     created: "2026-04-03T00:00:00Z"
     last_modified: "2026-04-04T00:00:00Z"
@@ -27,6 +27,10 @@ agent_mode_contract:
     scope_detection: "core/scope-detection-engine.yaml"
     universal_contract: "core/universal-quality-contract.yaml"
     frontier_contract: "core/algorithmic-frontier-contract.yaml"
+    validator_module: "runtime/hybrid_core_validator.py"
+    validator_class: "HybridCoreValidator"
+    enforce_on_output: true
+    gate_results_in_output: true
 
   mission:
     description: "Generate, modify, and refactor code based on task specifications while adhering to project conventions, constitutional invariants, and the Hybrid Core Execution Engine (1x/2x profiles)."
@@ -34,10 +38,11 @@ agent_mode_contract:
       - "Code changes implement the requested task"
       - "Changes follow existing project conventions"
       - "No secrets or credentials introduced"
-      - "Output conforms to output_schema for active profile"
+      - "Output conforms to the base mode schema and the active profile adapter schema"
       - "Execution profile correctly matches task scope"
       - "NOU compliance verified for all outputs"
       - "NOE compliance verified when performance_2x is active"
+      - "Evidence trail captures the validated execution decision and resulting changes"
     failure_conditions:
       - "Task scope exceeds budget"
       - "Cannot safely modify target files"
@@ -76,34 +81,62 @@ agent_mode_contract:
 
     output_schema:
       required_fields:
-        - name: "changes"
-          type: "list[Change]"
-          description: "All code changes made"
+        - name: "execution_profile"
+          type: "string"
+          description: "Resolved execution profile for the active run (default_1x or performance_2x)"
           required: true
-        - name: "files_modified"
-          type: "list[string]"
-          description: "Paths of all modified files"
-          required: true
-        - name: "files_created"
-          type: "list[string]"
-          description: "Paths of all new files created"
+        - name: "scope_classification"
+          type: "string"
+          description: "Resolved operational tier for the task (tier_1_universal, tier_2_algorithmic, or tier_3_competitive)"
           required: true
         - name: "summary"
           type: "string"
           description: "Human-readable summary of changes"
           required: true
+        - name: "code_changes"
+          type: "list[Change]"
+          description: "Structured description of code changes made"
+          required: true
         - name: "compliance_notes"
+          type: "list[ComplianceEntry]"
+          description: "Structured NOU/NOE compliance notes for the active profile"
+          required: true
+        - name: "tests"
           type: "list[string]"
-          description: "Constitutional and spec compliance notes"
+          description: "Executed or proposed verification commands"
+          required: true
+        - name: "risks"
+          type: "list[string]"
+          description: "Known risks, caveats, and mitigations"
           required: true
         - name: "evidence_trail"
           type: "list[Evidence]"
-          description: "Immutable evidence of changes made"
+          description: "Immutable evidence of scope detection, validation, and resulting changes"
           required: true
       optional_fields:
-        - name: "test_commands"
-          type: "list[string]"
-          description: "Commands to verify changes"
+        - name: "problem_analysis"
+          type: "string"
+          description: "Profile-specific problem analysis for 2x executions"
+          required: false
+        - name: "algorithm_selection_rationale"
+          type: "string"
+          description: "Algorithm/data structure rationale required in performance_2x"
+          required: false
+        - name: "complexity_certificate"
+          type: "object"
+          description: "Complexity analysis required in performance_2x"
+          required: false
+        - name: "edge_case_analysis"
+          type: "object"
+          description: "Boundary and edge-case analysis for specialized executions"
+          required: false
+        - name: "stress_test_plan"
+          type: "string"
+          description: "Stress-testing strategy for specialized executions"
+          required: false
+        - name: "memory_bound_estimate"
+          type: "string"
+          description: "Memory/performance notes for specialized executions"
           required: false
         - name: "migration_notes"
           type: "list[string]"

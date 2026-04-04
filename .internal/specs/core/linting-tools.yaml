@@ -1,0 +1,167 @@
+version: 1.0.0
+description: Native tool configuration for linting, type checking, and security scanning
+
+tools:
+  python:
+    type_checker:
+      command: mypy
+      args:
+        - "--strict"
+        - "--ignore-missing-imports"
+        - "--no-error-summary"
+        - "--output-format=json"
+      timeout_sec: 30
+      parse_format: json
+      fail_on:
+        - error
+        - note
+      
+    linter:
+      command: ruff
+      args:
+        - "check"
+        - "--output-format=json"
+      timeout_sec: 15
+      parse_format: json
+      fail_on:
+        - error
+        - warning
+        
+    security:
+      command: bandit
+      args:
+        - "-r"
+        - "-f"
+        - "json"
+        - "-ll"
+      timeout_sec: 20
+      parse_format: json
+      fail_on:
+        - HIGH
+        - MEDIUM
+        
+  javascript:
+    type_checker:
+      command: npx
+      args:
+        - "tsc"
+        - "--noEmit"
+        - "--pretty"
+        - "false"
+      timeout_sec: 30
+      parse_format: text
+      fail_on:
+        - error
+        
+    linter:
+      command: npx
+      args:
+        - "eslint"
+        - "--format=json"
+      timeout_sec: 20
+      parse_format: json
+      fail_on:
+        - error
+        - warning
+        
+  typescript:
+    type_checker:
+      command: npx
+      args:
+        - "tsc"
+        - "--noEmit"
+        - "--pretty"
+        - "false"
+      timeout_sec: 30
+      parse_format: text
+      fail_on:
+        - error
+        
+    linter:
+      command: npx
+      args:
+        - "eslint"
+        - "--format=json"
+        - "--ext"
+        - ".ts"
+      timeout_sec: 20
+      parse_format: json
+      fail_on:
+        - error
+        - warning
+
+  go:
+    type_checker:
+      command: go
+      args:
+        - "vet"
+        - "./..."
+      timeout_sec: 30
+      parse_format: text
+      fail_on:
+        - error
+        
+    linter:
+      command: golint
+      args:
+        - "./..."
+      timeout_sec: 20
+      parse_format: text
+      fail_on:
+        - error
+        - warning
+
+  rust:
+    type_checker:
+      command: cargo
+      args:
+        - "clippy"
+        - "--message-format=json"
+        - "--all-targets"
+      timeout_sec: 60
+      parse_format: json
+      fail_on:
+        - error
+        - warning
+        
+    linter:
+      command: cargo
+      args:
+        - "fmt"
+        - "--check"
+      timeout_sec: 15
+      parse_format: text
+      fail_on:
+        - error
+
+  java:
+    type_checker:
+      command: javac
+      args:
+        - "-Xlint:all"
+      timeout_sec: 30
+      parse_format: text
+      fail_on:
+        - error
+        
+    linter:
+      command: checkstyle
+      args:
+        - "-c"
+        - "google_checks.xml"
+      timeout_sec: 20
+      parse_format: text
+      fail_on:
+        - error
+        - warning
+
+fallback_behavior:
+  tool_not_found:
+    status: warn
+    message: "Tool {tool} not installed. Install with: {install_command}"
+  timeout:
+    status: error
+    message: "Tool {tool} execution timed out after {timeout}s"
+  execution_error:
+    status: error
+    message: "Tool {tool} execution failed: {error}"

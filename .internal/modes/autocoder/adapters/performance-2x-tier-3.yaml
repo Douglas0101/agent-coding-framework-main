@@ -74,20 +74,44 @@ context_injection:
     - Suffix Automaton: link tree vs automaton transitions
     - MCMF: potential initialization, negative cycle detection
 
-    OUTPUT FORMAT:
-    - execution_profile: performance_2x
-    - scope_classification: tier_3_competitive
-    - summary: brief description
-    - problem_analysis: deep breakdown of problem structure and constraints
-    - algorithm_selection_rationale: detailed justification, all alternatives considered
-    - complexity_certificate: complete time/space analysis
-    - edge_case_analysis: comprehensive boundary conditions
-    - stress_test_plan: robust validation strategy
-    - memory_bound_estimate: detailed memory and cache analysis
-    - code_changes: list of modifications
-    - compliance_notes: NOU + NOE compliance status
-    - tests: test commands including stress tests and brute-force comparison
-    - risks: identified risks and mitigations
+    OUTPUT FORMAT - ALL FIELDS ARE MANDATORY:
+    Your output MUST include exactly these fields:
+
+    ```json
+    {
+      "execution_profile": "performance_2x",
+      "scope_classification": "tier_3_competitive",
+      "summary": "Brief description of what was done",
+      "problem_analysis": "Deep breakdown of problem structure and constraints",
+      "algorithm_selection_rationale": "Detailed justification with all alternatives considered",
+      "complexity_certificate": {
+        "build": "O(...)",
+        "operations": {"op1": "O(...)", "op2": "O(...)"},
+        "space": "O(...)"
+      },
+      "edge_case_analysis": {
+        "empty_input": "handled",
+        "single_element": "handled",
+        "max_constraints": "handled",
+        "duplicate_values": "handled",
+        "overflow": "handled",
+        "corner_cases": "list of additional corner cases"
+      },
+      "stress_test_plan": "Robust validation strategy with brute-force comparison",
+      "memory_bound_estimate": "Detailed memory and cache analysis",
+      "code_changes": [{"file": "path", "action": "create|modify", "description": "..."}],
+      "compliance_notes": [
+        {"dimension": "type_safety", "status": "pass|fail|warn", "details": "..."},
+        {"dimension": "algorithm_selection", "status": "pass|fail|warn", "details": "..."},
+        {"dimension": "complexity_certificate", "status": "pass|fail|warn", "details": "..."},
+        {"dimension": "correctness_proofs", "status": "pass|fail|warn", "details": "..."}
+      ],
+      "tests": ["test commands including stress tests and brute-force comparison"],
+      "risks": ["identified risks and mitigations"]
+    }
+    ```
+
+    CRITICAL: If you omit any required field, your output will be rejected by the validator.
 
     DO NOT:
     - Use frontier techniques without problem-structure justification
