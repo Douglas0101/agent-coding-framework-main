@@ -1,0 +1,97 @@
+# Advanced Coding Quality Standards
+# Software Engineering domain — extended quality dimensions for NOU compliance
+
+version: 1.0.0
+kind: AdvancedCodingQuality
+domain: software-engineering.standards
+
+dimensions:
+  - id: naming_conventions
+    name: Naming Conventions
+    description: Identifiers must be descriptive, consistent, and domain-aligned
+    rules:
+      - "Variable names describe their purpose"
+      - "Function names describe their action"
+      - "Class names describe their role"
+      - "Constants are UPPER_SNAKE_CASE"
+      - "No single-letter names except loop indices"
+
+  - id: function_design
+    name: Function Design
+    description: Functions must be focused, testable, and maintainable
+    rules:
+      - "Single Responsibility Principle"
+      - "Maximum 50 lines without justification"
+      - "Maximum 5 parameters (use objects/structs beyond that)"
+      - "No side effects unless explicitly documented"
+      - "Pure functions preferred for business logic"
+
+  - id: module_organization
+    name: Module Organization
+    description: Code must be organized into coherent, loosely-coupled modules
+    rules:
+      - "Related functionality grouped together"
+      - "Import order: stdlib, third-party, local"
+      - "No circular imports between modules"
+      - "Public API explicitly documented"
+
+  - id: documentation
+    name: Documentation
+    description: Public APIs and complex logic must be documented
+    rules:
+      - "Public functions have docstrings"
+      - "Complex algorithms have inline comments"
+      - "Non-obvious decisions have rationale comments"
+      - "API changes documented in changelog"
+
+  - id: test_quality
+    name: Test Quality
+    description: Tests must be meaningful, deterministic, and maintainable
+    rules:
+      - "Tests verify behavior, not implementation"
+      - "Test names describe the scenario being tested"
+      - "No test interdependencies"
+      - "Mock external dependencies"
+      - "Coverage threshold: 80% for business logic"
+
+  - id: error_strategy
+    name: Error Strategy
+    description: Errors must be handled consistently across the codebase
+    rules:
+      - "Use domain-specific exception types"
+      - "Error messages include context"
+      - "Recoverable errors have fallback paths"
+      - "Critical errors fail loudly with stack traces"
+      - "No silent error swallowing"
+
+  - id: resource_management
+    name: Resource Management
+    description: Resources must be acquired and released properly
+    rules:
+      - "Use context managers/RAII for resources"
+      - "No resource leaks on error paths"
+      - "Connection pools for database/network"
+      - "File handles closed explicitly or via context"
+
+  - id: concurrency_safety
+    name: Concurrency Safety
+    description: Concurrent code must be free of race conditions
+    rules:
+      - "Shared state protected by synchronization"
+      - "No mutable global state"
+      - "Thread-safe data structures for shared access"
+      - "Deadlock prevention strategy documented"
+
+compliance_integration:
+  description: >
+    These standards extend the NOU dimensions defined in
+    .internal/core/universal-quality-contract.yaml
+  relationship:
+    - "naming_conventions extends code_clarity"
+    - "function_design extends code_clarity"
+    - "module_organization extends architecture_invariants"
+    - "documentation extends change_justification"
+    - "test_quality extends testing"
+    - "error_strategy extends error_handling"
+    - "resource_management extends security"
+    - "concurrency_safety extends security"

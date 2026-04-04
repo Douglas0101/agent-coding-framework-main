@@ -1,0 +1,134 @@
+# Frontier Validation Gates
+# Additional validation gates for performance_2x profile
+
+version: 1.0.0
+kind: FrontierValidationGates
+domain: ioi-gold-compiler.gates
+applies_when: "profile == performance_2x"
+
+gates:
+  - id: algorithmic_validation
+    name: Algorithmic Validation
+    description: Verify the chosen algorithm is compatible with problem constraints
+    checks:
+      - id: constraint_compatibility
+        description: "Algorithm complexity must fit within declared constraints"
+        rule: "declared_time_complexity <= allowed_time_budget"
+        fail_message: "Selected algorithm exceeds time budget for given constraints"
+
+      - id: no_naive_solution
+        description: "Must not use naive O(n²) or worse when constraints require better"
+        rule: "if n >= 100000 then time_complexity must be O(n log n) or better"
+        fail_message: "Naive solution is infeasible for declared constraints"
+
+      - id: algorithm_justified
+        description: "Algorithm selection must have explicit rationale"
+        rule: "algorithm_selection_rationale is present and non-empty"
+        fail_message: "No algorithm selection rationale provided"
+
+  - id: constraint_satisfaction_check
+    name: Constraint Satisfaction
+    description: Verify all problem constraints are addressed
+    checks:
+      - id: n_constraint
+        description: "Solution handles maximum n value"
+        rule: "if max_n declared then solution must handle inputs of size max_n"
+        fail_message: "Solution does not handle declared maximum n"
+
+      - id: q_constraint
+        description: "Solution handles maximum q queries within time"
+        rule: "if max_q declared then total_time = q × query_cost <= time_limit"
+        fail_message: "Query count exceeds time budget"
+
+      - id: memory_constraint
+        description: "Solution fits within memory limits"
+        rule: "estimated_memory <= declared_memory_limit"
+        fail_message: "Estimated memory usage exceeds limit"
+
+      - id: overflow_check
+        description: "Potential integer overflow addressed"
+        rule: "if intermediate values can exceed 2^31 then use 64-bit or modular arithmetic"
+        fail_message: "Potential integer overflow not addressed"
+
+  - id: correctness_invariant_verification
+    name: Correctness Invariant Verification
+    description: Verify key invariants are documented and maintained
+    checks:
+      - id: loop_invariants
+        description: "Non-trivial loops have documented invariants"
+        rule: "if loop_body_complexity > threshold then invariant_documentation required"
+        fail_message: "Complex loop without documented invariant"
+
+      - id: data_structure_invariants
+        description: "Data structure invariants are maintained"
+        rule: "each data structure has documented invariants"
+        fail_message: "Data structure invariants not documented"
+
+      - id: base_cases
+        description: "All base cases handled"
+        rule: "recursive_or_iterative_solution handles all base cases"
+        fail_message: "Base cases not fully handled"
+
+  - id: stress_test_pass
+    name: Stress Test Pass
+    description: Stress test plan exists and is adequate
+    checks:
+      - id: stress_plan_exists
+        description: "Stress test plan is defined"
+        rule: "stress_test_plan is present and non-empty"
+        fail_message: "No stress test plan provided"
+
+      - id: brute_force_reference
+        description: "Brute force solution available for comparison when feasible"
+        rule: "if n <= 1000 for test cases then brute_force_comparison recommended"
+        fail_message: "Brute force comparison not provided for small test cases"
+
+      - id: edge_case_coverage
+        description: "Edge cases are covered in test strategy"
+        rule: "stress_test_plan covers minimum, maximum, and boundary inputs"
+        fail_message: "Edge cases not covered in stress test plan"
+
+  - id: memory_layout_audit
+    name: Memory Layout Audit
+    description: Verify memory usage patterns are optimal
+    checks:
+      - id: peak_memory_estimate
+        description: "Peak memory usage is estimated"
+        rule: "memory_bound_estimate is present with numeric value"
+        fail_message: "No peak memory estimate provided"
+
+      - id: allocation_pattern
+        description: "Allocation pattern is appropriate for problem size"
+        rule: "no excessive small allocations in hot paths"
+        fail_message: "Allocation pattern may cause performance issues"
+
+      - id: cache_awareness
+        description: "Cache behavior noted when relevant"
+        rule: "if data_access_pattern is sequential or localized then cache note included"
+        fail_message: "Cache behavior not considered for large data"
+
+  - id: cache_throughput_note
+    name: Cache/Throughput Note
+    description: Performance characteristics documented
+    checks:
+      - id: throughput_estimate
+        description: "Expected throughput or operations/second estimated"
+        rule: "throughput_estimate present for performance-critical paths"
+        fail_message: "No throughput estimate for critical path"
+
+      - id: bottleneck_identified
+        description: "Primary bottleneck identified"
+        rule: "bottleneck_analysis present"
+        fail_message: "Bottleneck not identified"
+
+rejection_criteria:
+  automatic_reject:
+    - "Any gate with status 'fail' on critical checks"
+    - "Algorithm incompatible with declared constraints"
+    - "Missing required 2x output fields"
+    - "NOU violation in generated code"
+
+  warn_but_pass:
+    - "Cache note missing but memory estimate present"
+    - "Brute force comparison not feasible for problem type"
+    - "Throughput estimate approximate"

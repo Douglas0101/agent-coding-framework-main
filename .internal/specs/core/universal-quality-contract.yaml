@@ -1,0 +1,112 @@
+# Universal Quality Contract (NOU)
+# Mandatory for ALL code generation and modification tasks — no exceptions
+
+version: 1.0.0
+kind: UniversalQualityContract
+domain: core.nou
+mandatory: true
+
+dimensions:
+  - id: type_safety
+    name: Explicit Typing
+    description: All variables, parameters, and return types must be explicitly declared
+    rules:
+      - "No implicit any/unknown types in typed languages"
+      - "Function signatures must declare all parameter and return types"
+      - "Generic type parameters must have explicit constraints"
+    fail_on: missing_typing
+
+  - id: null_safety
+    name: Null Safety
+    description: Null/None/nil values must be handled explicitly
+    rules:
+      - "Optional types must be declared as such"
+      - "Null checks required before dereference"
+      - "Default values preferred over null propagation"
+    fail_on: missing_null_handling
+
+  - id: architecture_invariants
+    name: Architecture Invariants
+    description: Code must respect project architectural boundaries
+    rules:
+      - "No cross-layer violations (e.g., domain importing infrastructure)"
+      - "Dependency direction must follow established patterns"
+      - "No circular dependencies between modules"
+    fail_on: architecture_violation
+
+  - id: code_clarity
+    name: Code Clarity
+    description: Functions and modules must be readable and maintainable
+    rules:
+      - "Functions should have a single responsibility"
+      - "Function length should not exceed 50 lines without justification"
+      - "Names must be descriptive and domain-aligned"
+      - "Cyclomatic complexity must not exceed 15 per function"
+    fail_on: excessive_complexity
+
+  - id: security
+    name: Security
+    description: Input/output must be validated and sanitized
+    rules:
+      - "All external inputs must be validated"
+      - "No hardcoded secrets or credentials"
+      - "SQL queries must use parameterized statements"
+      - "File paths must be validated against traversal"
+    fail_on: security_vulnerability
+
+  - id: error_handling
+    name: Error Handling
+    description: Errors must be handled consistently and explicitly
+    rules:
+      - "No bare except/catch blocks"
+      - "Error messages must be actionable"
+      - "Recoverable errors must have fallback strategies"
+      - "Critical failures must log sufficient context"
+    fail_on: missing_error_strategy
+
+  - id: testing
+    name: Testing
+    description: Business logic must have test coverage
+    rules:
+      - "All business logic functions must have at least one test"
+      - "Edge cases must be covered"
+      - "Tests must be deterministic and isolated"
+    fail_on: missing_tests_for_business_logic
+
+  - id: project_conventions
+    name: Project Conventions
+    description: Code must follow existing repository patterns
+    rules:
+      - "File organization must match project structure"
+      - "Naming conventions must be consistent"
+      - "Import ordering must follow project style"
+    fail_on: convention_violation
+
+  - id: change_justification
+    name: Change Justification
+    description: Significant changes must include rationale
+    rules:
+      - "Breaking changes require migration notes"
+      - "New dependencies require justification"
+      - "Architectural changes require ADR reference"
+    fail_on: unjustified_breaking_change
+
+enforcement:
+  fail_on:
+    - missing_typing
+    - missing_null_handling
+    - architecture_violation
+    - excessive_complexity
+    - security_vulnerability
+    - missing_error_strategy
+    - missing_tests_for_business_logic
+  warn_on:
+    - convention_violation
+    - unjustified_breaking_change
+  compliance_output:
+    field: compliance_notes
+    format: list[ComplianceEntry]
+    CompliantEntry:
+      dimension: string
+      status: enum[pass, fail, warn, na]
+      details: string

@@ -1,0 +1,264 @@
+# Algorithm Selection Map
+# Semantic routing: problem pattern → suggested algorithm/structure
+
+version: 1.0.0
+kind: AlgorithmSelectionMap
+domain: ioi-gold-compiler.selection
+
+mappings:
+  # ── Range Queries ──
+
+  - pattern: range_minimum_query_static
+    description: "RMQ on static array, no updates"
+    suggested: sparse_table
+    tier: 2
+    alternatives:
+      - algorithm: segment_tree
+        reason: "if updates may be added later"
+    complexity:
+      build: O(n log n)
+      query: O(1)
+
+  - pattern: range_minimum_query_dynamic
+    description: "RMQ with point or range updates"
+    suggested: segment_tree
+    tier: 2
+    alternatives:
+      - algorithm: fenwick_tree
+        reason: "if only prefix operations needed"
+    complexity:
+      update: O(log n)
+      query: O(log n)
+
+  - pattern: range_sum_with_updates
+    description: "Point update, range sum queries"
+    suggested: fenwick_tree
+    tier: 2
+    alternatives:
+      - algorithm: segment_tree
+        reason: "if more complex range operations needed"
+    complexity:
+      update: O(log n)
+      query: O(log n)
+
+  - pattern: range_quantile_static
+    description: "K-th smallest in range, static array"
+    suggested: wavelet_tree
+    tier: 3
+    alternatives:
+      - algorithm: persistent_segment_tree
+        reason: "if wavelet tree implementation too complex"
+    complexity:
+      build: O(n log n)
+      query: O(log n)
+
+  - pattern: range_quantile_dynamic
+    description: "K-th smallest in range with updates"
+    suggested: merge_sort_tree
+    tier: 3
+    alternatives:
+      - algorithm: parallel_binary_search
+        reason: "if offline processing acceptable"
+    complexity:
+      query: O(log³ n)
+
+  - pattern: range_distinct_count
+    description: "Count distinct elements in range"
+    suggested: offline_sweep_with_fenwick
+    tier: 2
+    alternatives:
+      - algorithm: wavelet_tree
+        reason: "if online queries needed"
+    complexity:
+      total: O((n + q) log n)
+
+  # ── Graph Algorithms ──
+
+  - pattern: shortest_path_non_negative
+    description: "Single-source shortest path, non-negative weights"
+    suggested: dijkstra_01bfs
+    tier: 2
+    alternatives:
+      - algorithm: 01bfs
+        reason: "if weights are only 0 or 1"
+    complexity: O((V + E) log V)
+
+  - pattern: shortest_path_negative_weights
+    description: "Single-source shortest path, may have negative weights"
+    suggested: bellman_ford
+    tier: 2
+    alternatives:
+      - algorithm: spfa
+        reason: "if average case performance matters"
+    complexity: O(V × E)
+
+  - pattern: all_pairs_shortest_path
+    description: "All-pairs shortest paths"
+    suggested: floyd_warshall
+    tier: 2
+    alternatives:
+      - algorithm: johnson_algorithm
+        reason: "if sparse graph with negative edges"
+    complexity: O(V³)
+
+  - pattern: strongly_connected_components
+    description: "Find SCCs in directed graph"
+    suggested: scc
+    tier: 2
+    alternatives: []
+    complexity: O(V + E)
+
+  - pattern: bridges_and_articulation
+    description: "Find bridges and articulation points"
+    suggested: bridges_articulation
+    tier: 2
+    alternatives: []
+    complexity: O(V + E)
+
+  - pattern: min_cost_flow_negative_edges
+    description: "Min-cost max-flow with potentially negative costs"
+    suggested: min_cost_max_flow_potentials
+    tier: 3
+    alternatives: []
+    complexity: O(f × E log V)
+
+  - pattern: max_flow
+    description: "Maximum flow in network"
+    suggested: dinic
+    tier: 2
+    alternatives:
+      - algorithm: edmonds_karp
+        reason: "if graph is very small"
+    complexity: O(V² × E)
+
+  # ── Tree Operations ──
+
+  - pattern: dynamic_tree_queries
+    description: "Link, cut, and path queries on dynamic forest"
+    suggested: link_cut_tree
+    tier: 3
+    alternatives:
+      - algorithm: eulertour_tree
+        reason: "if only connectivity needed, not path queries"
+    complexity: O(log n) amortized per operation
+
+  - pattern: static_tree_path_query
+    description: "Path queries on static tree"
+    suggested: hld_basic
+    tier: 2
+    alternatives:
+      - algorithm: binary_lifting_lca
+        reason: "if only LCA needed"
+    complexity: O(log² n) per query
+
+  - pattern: tree_distance_queries
+    description: "Count or sum paths of specific length"
+    suggested: centroid_decomposition
+    tier: 3
+    alternatives:
+      - algorithm: dsu_on_tree
+        reason: "if subtree aggregation sufficient"
+    complexity: O(n log n) build, O(log n) per query
+
+  - pattern: subtree_query_static
+    description: "Queries on subtrees of static tree"
+    suggested: dfs_order_with_fenwick
+    tier: 2
+    alternatives:
+      - algorithm: heavy_light_decomposition
+        reason: "if path queries also needed"
+    complexity: O(log n) per query
+
+  # ── String Algorithms ──
+
+  - pattern: distinct_palindromes_substring
+    description: "Count or enumerate distinct palindromic substrings"
+    suggested: eertree
+    tier: 3
+    alternatives:
+      - algorithm: manacher
+        reason: "if only longest palindrome at each position"
+    complexity: O(n) build
+
+  - pattern: substring_queries
+    description: "Pattern matching, distinct substring counting"
+    suggested: suffix_automaton
+    tier: 3
+    alternatives:
+      - algorithm: suffix_array_lcp
+        reason: "if less complex implementation acceptable"
+      - algorithm: kmp
+        reason: "if only single pattern matching"
+    complexity: O(n) build, O(m) query
+
+  - pattern: longest_common_substring
+    description: "Longest common substring of two or more strings"
+    suggested: suffix_automaton
+    tier: 3
+    alternatives:
+      - algorithm: suffix_array_lcp
+        reason: "if simpler implementation preferred"
+    complexity: O(n) build
+
+  # ── DP & Optimization ──
+
+  - pattern: digit_constraints_counting
+    description: "Count numbers in range satisfying digit constraints"
+    suggested: digit_dp
+    tier: 2
+    alternatives: []
+    complexity: O(digits × states)
+
+  - pattern: subset_aggregation_masks
+    description: "Aggregate over all subsets of a bitmask"
+    suggested: sos_dp
+    tier: 2
+    alternatives: []
+    complexity: O(n × 2^n)
+
+  - pattern: optimization_monotonic_feasibility
+    description: "Optimize value with monotonic feasibility check"
+    suggested: binary_search_on_answer
+    tier: 2
+    alternatives:
+      - algorithm: ternary_search
+        reason: "if unimodal but not monotonic"
+    complexity: O(log(range) × check_cost)
+
+  - pattern: offline_parallel_decisions
+    description: "Multiple queries with shared monotonic decisions"
+    suggested: parallel_binary_search
+    tier: 2
+    alternatives:
+      - algorithm: overall_binary_search
+        reason: "if simpler variant sufficient"
+    complexity: O((q + n) log(range) × operation_cost)
+
+  - pattern: approximate_optimization
+    description: "Optimization with no efficient exact solution"
+    suggested: simulated_annealing
+    tier: 3
+    alternatives:
+      - algorithm: genetic_algorithm
+        reason: "if population-based search preferred"
+    complexity: O(iterations × evaluation)
+
+  # ── Connectivity ──
+
+  - pattern: offline_dynamic_connectivity
+    description: "Connectivity queries with edge insertions and deletions, offline"
+    suggested: dsu_rollback
+    tier: 2
+    alternatives:
+      - algorithm: link_cut_tree
+        reason: "if online queries required"
+    complexity: O(log n) per operation amortized
+
+  - pattern: online_dynamic_connectivity_trees
+    description: "Connectivity on dynamic forest, online"
+    suggested: link_cut_tree
+    tier: 3
+    alternatives:
+      - algorithm: eulertour_tree
+        reason: "if only connectivity, not path queries"
+    complexity: O(log n) amortized

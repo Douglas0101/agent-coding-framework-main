@@ -1,0 +1,133 @@
+# Scope Detection Engine
+# Classifies tasks into operational tiers and determines execution profile
+
+version: 1.0.0
+kind: ScopeDetectionEngine
+domain: core.scope
+
+triggers:
+  complexity_indicators:
+    keywords:
+      - optimize
+      - performance
+      - low latency
+      - graph
+      - tree
+      - flow
+      - substring
+      - palindrome
+      - range query
+      - quantile
+      - dynamic connectivity
+      - competitive programming
+      - ioi
+      - icpc
+      - throughput
+      - time limit
+      - memory limit
+    weight: 1
+
+  constraints:
+    max_n_for_escalation: 100000
+    max_q_for_escalation: 100000
+    max_m_for_escalation: 100000
+    weight: 2
+
+  structural_patterns:
+    keywords:
+      - range update
+      - range query
+      - dynamic tree
+      - link cut
+      - path query
+      - subtree query
+      - distinct elements
+      - k-th element
+      - lowest common ancestor
+      - shortest path
+      - minimum spanning tree
+      - max flow
+      - min cost
+      - string matching
+      - suffix
+      - palindrome tree
+    weight: 1.5
+
+  user_language:
+    keywords:
+      - otimize
+      - alta performance
+      - limite
+      - competitivo
+      - ioi-grade
+      - baixa latência
+      - stress test
+      - n = 10
+      - n=10
+      - 10^5
+      - 10^6
+    weight: 1.5
+
+classification:
+  tier_1_universal:
+    description: General software engineering — CRUD, APIs, workers, refactors, features
+    profile: default_1x
+    activation: default (no triggers required)
+    confidence_threshold: 0.0
+    characteristics:
+      - "No algorithmic complexity signals"
+      - "Constraints within normal application bounds"
+      - "Standard engineering patterns suffice"
+
+  tier_2_algorithmic:
+    description: Advanced algorithmic problems — range queries, graphs, DP, optimization
+    profile: performance_2x
+    activation: >
+      Any of: (n >= 100000) OR (q >= 100000) OR
+      (2+ structural patterns matched) OR
+      (1+ structural pattern + 1+ complexity indicator) OR
+      (weighted score >= 3.0)
+    confidence_threshold: 0.6
+    characteristics:
+      - "Large input constraints"
+      - "Non-trivial data structure requirements"
+      - "Performance-sensitive workloads"
+
+  tier_3_competitive:
+    description: Frontier/competitive problems — dynamic trees, advanced strings, flow
+    profile: performance_2x
+    activation: >
+      Any of: (explicit IOI/ICPC mention) OR
+      (2+ tier_3 structural patterns) OR
+      (frontier technique required by problem structure) OR
+      (weighted score >= 5.0)
+    confidence_threshold: 0.8
+    characteristics:
+      - "Requires frontier algorithms"
+      - "Dynamic/online constraints"
+      - "Advanced string or tree structures"
+
+anti_false_positive:
+  description: Conditions that should NOT trigger escalation to 2x
+  rules:
+    - "Word 'fast' in non-technical context"
+    - "Presence of simple loops or lists"
+    - "Basic pagination or filtering"
+    - "CRUD with moderate volume but no critical constraints"
+    - "Standard database queries within normal bounds"
+
+scoring:
+  method: weighted_sum
+  escalation_threshold_2x: 3.0
+  escalation_threshold_tier3: 5.0
+  max_score: 10.0
+
+output:
+  required_fields:
+    - tier: enum[tier_1_universal, tier_2_algorithmic, tier_3_competitive]
+    - profile: enum[default_1x, performance_2x]
+    - confidence: float[0.0, 1.0]
+    - triggers_matched: list[TriggerRef]
+    - score: float
+    - rationale: string
+    - anti_false_positive_checked: boolean

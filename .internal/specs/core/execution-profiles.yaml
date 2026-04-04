@@ -1,0 +1,88 @@
+# Execution Profiles — Hybrid Core 1x/2x
+# Defines canonical operational profiles for Agent Coding
+
+version: 1.0.0
+kind: ExecutionProfiles
+domain: core.execution
+
+profiles:
+  default_1x:
+    description: >
+      Baseline universal execution profile. Applies the Núcleo Obrigatório
+      Universal (NOU) to 100% of code generation and modification tasks.
+      Focus: type safety, security, clarity, architecture, testing, conventions.
+    activates:
+      - universal_quality_core
+    requires:
+      - compliance_notes
+      - tests
+      - risk_assessment
+    early_exit: true
+    quality_threshold: 0.80
+    satisficing: BALANCED
+    output_schema:
+      - execution_profile
+      - scope_classification
+      - summary
+      - code_changes
+      - compliance_notes
+      - tests
+      - risks
+
+  performance_2x:
+    description: >
+      Specialized execution profile for algorithmic, performance-critical,
+      or frontier-class tasks. Applies NOU + Núcleo Obrigatório Especializado
+      (NOE). Activated only by scope detection triggers.
+    activates:
+      - universal_quality_core
+      - algorithmic_frontier_core
+    requires:
+      - compliance_notes
+      - tests
+      - risk_assessment
+      - algorithm_selection_rationale
+      - complexity_certificate
+      - edge_case_analysis
+      - stress_test_plan
+      - memory_bound_estimate
+    early_exit: false
+    quality_threshold: 0.95
+    satisficing: DEEP
+    frontier_tiers:
+      - tier_2_algorithmic
+      - tier_3_competitive
+    output_schema:
+      - execution_profile
+      - scope_classification
+      - summary
+      - problem_analysis
+      - algorithm_selection_rationale
+      - complexity_certificate
+      - edge_case_analysis
+      - stress_test_plan
+      - memory_bound_estimate
+      - code_changes
+      - compliance_notes
+      - tests
+      - risks
+
+precedence:
+  description: >
+    In any conflict between profiles or contracts, the following order applies.
+  rules:
+    - "Security wins over micro-optimization"
+    - "Correctness wins over perceived speed"
+    - "Architectural clarity wins over local cleverness"
+    - "NOU wins over NOE in guideline conflicts"
+    - "Performance 2x cannot relax any NOU requirement"
+
+activation_policy:
+  default_profile: default_1x
+  escalation:
+    requires: explicit_scope_signal
+    reversible: true
+    auditable: true
+  no_opt_out:
+    from_universal_core: true
+    from_frontier_without_signal: true

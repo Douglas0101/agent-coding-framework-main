@@ -1,0 +1,423 @@
+# Frontier Algorithmic Core
+# Technical catalog of advanced algorithms and data structures for NOE (2x mode)
+
+version: 1.0.0
+kind: FrontierAlgorithmicCore
+domain: ioi-gold-compiler.algorithms
+
+techniques:
+  # ── Tier 2: Advanced Data Structures & Optimization ──
+
+  - id: segment_tree
+    tier: 2
+    name: Segment Tree
+    problem_class: range queries with updates
+    time_complexity:
+      build: O(n)
+      update: O(log n)
+      query: O(log n)
+    space_complexity: O(n)
+    preconditions:
+      - "Static array size known upfront"
+      - "Operation must be associative"
+    limitations:
+      - "Memory overhead ~4x array size"
+      - "Not ideal for very sparse data"
+    pitfalls:
+      - "Off-by-one errors in indexing"
+      - "Lazy propagation complexity"
+      - "Merge function must be associative"
+    usage_example: "Range minimum/maximum/sum queries with point or range updates"
+    reasons_not_to_use:
+      - "Static data with no updates → use Sparse Table or Prefix Sums"
+      - "Non-associative operations → may need custom structure"
+
+  - id: fenwick_tree
+    tier: 2
+    name: Fenwick Tree (Binary Indexed Tree)
+    problem_class: prefix sums with point updates
+    time_complexity:
+      update: O(log n)
+      query: O(log n)
+    space_complexity: O(n)
+    preconditions:
+      - "Operation must be invertible (for range queries)"
+      - "1-indexed or 0-indexed with adjustment"
+    limitations:
+      - "Only supports prefix-based operations"
+      - "Range updates require difference array trick"
+    pitfalls:
+      - "Index 0 requires special handling"
+      - "Non-invertible operations (like min) need modification"
+    usage_example: "Prefix sums, frequency counts, inversion counting"
+    reasons_not_to_use:
+      - "Need arbitrary range operations → Segment Tree"
+      - "Non-invertible operations without modification"
+
+  - id: dsu_rollback
+    tier: 2
+    name: Disjoint Set Union with Rollback
+    problem_class: dynamic connectivity, offline problems
+    time_complexity:
+      union: O(log n) amortized
+      find: O(log n) amortized
+      rollback: O(1)
+    space_complexity: O(n)
+    preconditions:
+      - "Operations can be processed offline"
+      - "No path compression (use rank/size only)"
+    limitations:
+      - "Cannot support arbitrary deletions online"
+      - "Rollback stack limits memory"
+    pitfalls:
+      - "Path compression breaks rollback"
+      - "Stack overflow on deep recursion"
+    usage_example: "Offline dynamic connectivity, parallel binary search with DSU"
+    reasons_not_to_use:
+      - "Online queries required → Link-Cut Tree"
+      - "No rollback needed → standard DSU with path compression"
+
+  - id: sparse_table
+    tier: 2
+    name: Sparse Table
+    problem_class: static range queries (no updates)
+    time_complexity:
+      build: O(n log n)
+      query: O(1) for idempotent, O(log n) otherwise
+    space_complexity: O(n log n)
+    preconditions:
+      - "Array is static (no updates)"
+      - "Operation must be idempotent for O(1) queries"
+    limitations:
+      - "Cannot handle updates"
+      - "High memory for large n"
+    pitfalls:
+      - "O(1) only for idempotent ops (min, max, gcd)"
+      - "Sum requires O(log n) query"
+    usage_example: "Static RMQ, static range GCD"
+    reasons_not_to_use:
+      - "Updates required → Segment Tree"
+      - "Memory tight → consider sqrt decomposition"
+
+  - id: dijkstra_01bfs
+    tier: 2
+    name: Dijkstra / 0-1 BFS
+    problem_class: shortest paths in weighted graphs
+    time_complexity:
+      dijkstra: O((V + E) log V) with priority queue
+      01bfs: O(V + E) for 0/1 weights
+    space_complexity: O(V + E)
+    preconditions:
+      - "Non-negative edge weights"
+      - "0-1 BFS: weights must be exactly 0 or 1"
+    limitations:
+      - "Negative weights → Bellman-Ford or SPFA"
+      - "Dense graphs: O(V²) may be better"
+    pitfalls:
+      - "Negative edges break Dijkstra"
+      - "Priority queue overhead for dense graphs"
+    usage_example: "Shortest path, routing, grid problems with 0/1 costs"
+    reasons_not_to_use:
+      - "Negative weights present"
+      - "All-pairs needed → Floyd-Warshall for small n"
+
+  - id: scc
+    tier: 2
+    name: Strongly Connected Components (Tarjan/Kosaraju)
+    problem_class: graph decomposition, 2-SAT
+    time_complexity:
+      total: O(V + E)
+    space_complexity: O(V + E)
+    preconditions:
+      - "Directed graph"
+    limitations:
+      - "Only for directed graphs"
+    pitfalls:
+      - "Stack overflow on deep recursion for large graphs"
+      - "Kosaraju requires two passes"
+    usage_example: "2-SAT, condensation graphs, cycle detection"
+    reasons_not_to_use:
+      - "Undirected graph → use connected components"
+
+  - id: bridges_articulation
+    tier: 2
+    name: Bridges and Articulation Points
+    problem_class: graph connectivity analysis
+    time_complexity: O(V + E)
+    space_complexity: O(V + E)
+    preconditions:
+      - "Undirected graph"
+    limitations:
+      - "Single-source DFS based"
+    pitfalls:
+      - "Root of DFS tree is special case for articulation"
+      - "Multiple edges between same vertices"
+    usage_example: "Network reliability, biconnected components"
+    reasons_not_to_use:
+      - "Directed graph → use SCC instead"
+
+  - id: hld_basic
+    tier: 2
+    name: Heavy-Light Decomposition (Basic)
+    problem_class: path queries on trees
+    time_complexity:
+      query: O(log² n) with segment tree
+      update: O(log² n)
+    space_complexity: O(n)
+    preconditions:
+      - "Tree structure"
+      - "Static tree topology"
+    limitations:
+      - "Complex to implement"
+      - "O(log² n) per query"
+    pitfalls:
+      - "Chain decomposition errors"
+      - "Off-by-one in segment tree ranges"
+    usage_example: "Path sum/max on tree, subtree queries"
+    reasons_not_to_use:
+      - "Dynamic tree → Link-Cut Tree"
+      - "Simple subtree query → DFS order + Fenwick"
+
+  - id: digit_dp
+    tier: 2
+    name: Digit DP
+    problem_class: counting numbers with digit properties in range
+    time_complexity: O(digits × states)
+    space_complexity: O(digits × states)
+    preconditions:
+      - "Problem decomposable by digit position"
+    limitations:
+      - "Only for digit-based constraints"
+    pitfalls:
+      - "Tight bound flag errors"
+      - "Leading zero handling"
+    usage_example: "Count numbers in [L,R] with digit sum = K"
+    reasons_not_to_use:
+      - "Non-digit constraints → standard DP"
+
+  - id: sos_dp
+    tier: 2
+    name: Sum Over Subsets DP (SOS DP)
+    problem_class: subset aggregation, mask DP
+    time_complexity: O(n × 2^n)
+    space_complexity: O(2^n)
+    preconditions:
+      - "n <= 20 (practical limit)"
+      - "Problem expressible as subset sums"
+    limitations:
+      - "Exponential in n"
+    pitfalls:
+      - "Bit manipulation errors"
+      - "Direction of iteration matters"
+    usage_example: "Subset convolution, XOR problems, mask aggregation"
+    reasons_not_to_use:
+      - "n > 20 → consider meet-in-the-middle"
+      - "Non-subset structure → standard DP"
+
+  - id: binary_search_on_answer
+    tier: 2
+    name: Binary Search on Answer
+    problem_class: optimization with monotonic feasibility
+    time_complexity: O(log(range) × check_cost)
+    space_complexity: O(1) additional
+    preconditions:
+      - "Feasibility function must be monotonic"
+    limitations:
+      - "Only for monotonic problems"
+    pitfalls:
+      - "Non-monotonic feasibility → wrong answer"
+      - "Range bounds must be correct"
+    usage_example: "Minimize maximum, maximize minimum"
+    reasons_not_to_use:
+      - "Non-monotonic → ternary search or other approach"
+
+  - id: parallel_binary_search
+    tier: 2
+    name: Parallel Binary Search
+    problem_class: offline multiple queries with monotonic answers
+    time_complexity: O((q + n) log(range) log(n))
+    space_complexity: O(n + q)
+    preconditions:
+      - "All queries known offline"
+      - "Monotonic feasibility per query"
+    limitations:
+      - "Requires offline processing"
+    pitfalls:
+      - "DSU with rollback needed for some problems"
+      - "Complex coordination between queries"
+    usage_example: "K-th element in range, offline connectivity queries"
+    reasons_not_to_use:
+      - "Online queries required → persistent structures"
+
+  # ── Tier 3: Frontier Algorithms ──
+
+  - id: link_cut_tree
+    tier: 3
+    name: Link-Cut Tree
+    problem_class: dynamic tree operations (link, cut, path queries)
+    time_complexity:
+      link: O(log n) amortized
+      cut: O(log n) amortized
+      path_query: O(log n) amortized
+    space_complexity: O(n)
+    preconditions:
+      - "Forest of trees"
+      - "Operations are link/cut/path"
+    limitations:
+      - "Very complex to implement correctly"
+      - "High constant factor"
+    pitfalls:
+      - "Splay tree rotations must be correct"
+      - "Path queries require careful aggregation"
+      - "Lazy propagation on LCT is subtle"
+    usage_example: "Dynamic forest with path maximum, dynamic connectivity on trees"
+    reasons_not_to_use:
+      - "Static tree → HLD or DFS order"
+      - "Only subtree queries → Euler tour + segment tree"
+
+  - id: wavelet_tree
+    tier: 3
+    name: Wavelet Tree
+    problem_class: range queries on values (k-th, rank, quantile)
+    time_complexity:
+      build: O(n log σ)
+      kth_in_range: O(log σ)
+      rank_in_range: O(log σ)
+    space_complexity: O(n log σ)
+    preconditions:
+      - "σ = alphabet size (value range)"
+      - "Static array"
+    limitations:
+      - "Cannot handle updates efficiently"
+      - "Space grows with value range"
+    pitfalls:
+      - "Large value range → coordinate compression needed"
+      - "Implementation complexity"
+    usage_example: "K-th smallest in range, range distinct count"
+    reasons_not_to_use:
+      - "Updates needed → Merge Sort Tree or other"
+      - "Simple range sum → Fenwick/Segment Tree"
+
+  - id: eertree
+    tier: 3
+    name: Eertree (Palindrome Tree)
+    problem_class: palindrome counting and enumeration
+    time_complexity:
+      build: O(n)
+      count_palindromes: O(n)
+    space_complexity: O(n × σ)
+    preconditions:
+      - "String input"
+    limitations:
+      - "Only for palindrome problems"
+    pitfalls:
+      - "Two root nodes (length -1 and 0)"
+      - "Suffix link computation is subtle"
+    usage_example: "Count distinct palindromic substrings, longest palindrome at each position"
+    reasons_not_to_use:
+      - "General string matching → Suffix Automaton"
+      - "Only longest palindrome → Manacher's algorithm"
+
+  - id: persistent_data_structures
+    tier: 3
+    name: Persistent Data Structures
+    problem_class: historical queries, versioned data
+    time_complexity:
+      query: O(log n) per version
+      update: O(log n) creates new version
+    space_complexity: O(n + q log n)
+    preconditions:
+      - "Need to query previous versions"
+    limitations:
+      - "Space overhead for each version"
+      - "Cannot modify old versions"
+    pitfalls:
+      - "Memory limit exceeded with many versions"
+      - "Path copying must be correct"
+    usage_example: "Persistent segment tree for k-th in range, historical queries"
+    reasons_not_to_use:
+      - "No historical queries needed → standard structures"
+      - "Memory tight → consider offline approach"
+
+  - id: min_cost_max_flow_potentials
+    tier: 3
+    name: Min-Cost Max-Flow with Potentials (Successive Shortest Path)
+    problem_class: flow with minimum cost, assignment problems
+    time_complexity: O(f × E log V) with potentials and Dijkstra
+    space_complexity: O(V + E)
+    preconditions:
+      - "Network flow formulation possible"
+      - "Costs can be negative initially (handled by potentials)"
+    limitations:
+      - "Can be slow for large flows"
+      - "Complex to implement correctly"
+    pitfalls:
+      - "Negative cycles break the algorithm"
+      - "Potential initialization must be correct"
+      - "Overflow in cost accumulation"
+    usage_example: "Minimum cost assignment, transportation problems"
+    reasons_not_to_use:
+      - "Only max flow needed → Dinic's algorithm"
+      - "Small graph → successive SPFA may suffice"
+
+  - id: centroid_decomposition
+    tier: 3
+    name: Centroid Decomposition
+    problem_class: tree path queries, distance problems
+    time_complexity:
+      build: O(n log n)
+      query: O(log n) per level
+    space_complexity: O(n log n)
+    preconditions:
+      - "Tree structure"
+    limitations:
+      - "Usually offline or semi-online"
+      - "Complex recursion"
+    pitfalls:
+      - "Centroid finding must be O(subtree_size)"
+      - "Marking removed centroids correctly"
+    usage_example: "Count paths of length K, distance queries"
+    reasons_not_to_use:
+      - "Simple subtree query → DFS order"
+      - "Path query with updates → HLD or LCT"
+
+  - id: suffix_automaton
+    tier: 3
+    name: Suffix Automaton
+    problem_class: substring queries, pattern matching
+    time_complexity:
+      build: O(n)
+      substring_check: O(m) where m = pattern length
+    space_complexity: O(n × σ)
+    preconditions:
+      - "String input"
+    limitations:
+      - "Complex to understand and implement"
+    pitfalls:
+      - "Transition function must handle all characters"
+      - "Link tree vs automaton confusion"
+    usage_example: "Count distinct substrings, longest common substring, pattern occurrence"
+    reasons_not_to_use:
+      - "Only palindrome problems → Eertree"
+      - "Simple pattern match → KMP or Z-algorithm"
+
+  - id: simulated_annealing
+    tier: 3
+    name: Simulated Annealing
+    problem_class: optimization when exact solution is infeasible
+    time_complexity: O(iterations × cost_per_evaluation)
+    space_complexity: O(state_size)
+    preconditions:
+      - "No exact polynomial solution exists"
+      - "Solution space is searchable"
+    limitations:
+      - "No correctness guarantee"
+      - "Results vary between runs"
+    pitfalls:
+      - "Cooling schedule critical"
+      - "May get stuck in local optima"
+      - "Not deterministic"
+    usage_example: "TSP approximation, layout optimization, non-convex optimization"
+    reasons_not_to_use:
+      - "Exact solution exists and is efficient"
+      - "Deterministic output required"

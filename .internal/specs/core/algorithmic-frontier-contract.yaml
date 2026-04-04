@@ -1,0 +1,111 @@
+# Algorithmic Frontier Contract (NOE)
+# Mandatory when profile == performance_2x
+
+version: 1.0.0
+kind: AlgorithmicFrontierContract
+domain: core.noe
+mandatory_when:
+  - "profile == performance_2x"
+
+requires:
+  - id: algorithm_selection_rationale
+    description: Justification for the chosen algorithm/data structure
+    rules:
+      - "Must explain why the selected approach fits the problem"
+      - "Must list rejected alternatives with reasons"
+      - "Must reference problem constraints that influenced the choice"
+
+  - id: complexity_certificate
+    description: Formal complexity analysis of the solution
+    rules:
+      - "Time complexity must be stated for all critical operations"
+      - "Space complexity must be stated"
+      - "Must be compatible with declared problem constraints (n, q, m)"
+      - "Amortized complexity must include justification"
+
+  - id: invariant_documentation
+    description: Key invariants and correctness properties documented
+    rules:
+      - "Loop invariants must be stated for non-trivial loops"
+      - "Data structure invariants must be documented"
+      - "Pre/post conditions for critical functions"
+
+  - id: edge_case_analysis
+    description: Systematic analysis of boundary conditions
+    rules:
+      - "Empty input handling"
+      - "Single element input"
+      - "Maximum constraint input"
+      - "Duplicate/repeated values"
+      - "Overflow/underflow scenarios"
+
+  - id: stress_test_plan
+    description: Strategy for validating correctness under load
+    rules:
+      - "Must describe stress test methodology"
+      - "Must include brute-force comparison when feasible"
+      - "Must specify test generation strategy"
+      - "Must define pass/fail criteria"
+
+  - id: memory_bound_estimate
+    description: Memory usage analysis and bounds
+    rules:
+      - "Peak memory usage must be estimated"
+      - "Must be compatible with declared memory limits"
+      - "Cache behavior notes when relevant"
+      - "Allocation pattern analysis for large inputs"
+
+frontier_tiers:
+  tier_2_algorithmic:
+    focus:
+      - advanced_data_structures
+      - optimization_patterns
+      - strong_complexity_control
+    techniques:
+      - segment_tree
+      - fenwick_tree
+      - dsu_rollback
+      - sparse_table
+      - dijkstra_01bfs
+      - scc
+      - bridges_articulation
+      - hld_basic
+      - digit_dp
+      - sos_dp
+      - binary_search_on_answer
+      - parallel_binary_search
+
+  tier_3_competitive:
+    focus:
+      - frontier_algorithms
+      - correctness_proofs
+      - competitive_patterns
+    techniques:
+      - link_cut_tree
+      - wavelet_tree
+      - eertree
+      - persistent_data_structures
+      - min_cost_max_flow_potentials
+      - centroid_decomposition
+      - suffix_automaton
+      - simulated_annealing
+
+technique_requirements:
+  each_technique_must_include:
+    - name
+    - problem_class
+    - time_complexity
+    - space_complexity
+    - preconditions
+    - limitations
+    - pitfalls
+    - usage_example
+    - reasons_not_to_use
+
+precedence:
+  description: >
+    NOE cannot relax any NOU requirement. In conflicts, NOU takes precedence.
+  rules:
+    - "Security > micro-optimization"
+    - "Clarity > cleverness"
+    - "Correctness > speed"

@@ -1,0 +1,116 @@
+# Structural Memory
+# Persistent non-compressible knowledge for the Hybrid Core system
+
+version: 1.0.0
+kind: StructuralMemory
+domain: ioi-gold-compiler.memory
+retention: persistent
+compressible: false
+
+project_conventions:
+  description: "Persistent project-level conventions that all code must follow"
+  items:
+    - "All code changes must pass NOU gates"
+    - "2x mode requires NOU + NOE compliance"
+    - "Evidence references must NEVER be compressed in handoffs"
+    - "Write scopes must be disjoint across parallel workers"
+    - "Mode contracts in YAML are the source of truth"
+
+architectural_decisions:
+  description: "Persistent architectural decisions and their rationale"
+  items:
+    - id: ADR-001
+      decision: "Hybrid 1x/2x execution profiles"
+      rationale: "Prevents both under-engineering on hard problems and over-engineering on simple ones"
+      date: "2026-04-04"
+      status: active
+
+    - id: ADR-002
+      decision: "NOU takes precedence over NOE"
+      rationale: "Security, clarity, and correctness must never be compromised for performance"
+      date: "2026-04-04"
+      status: active
+
+    - id: ADR-003
+      decision: "Scope detection is heuristic-based with confidence scoring"
+      rationale: "Semantic pattern matching allows flexible escalation without rigid rules"
+      date: "2026-04-04"
+      status: active
+
+algorithmic_pattern_map:
+  description: "Persistent mapping of problem patterns to recommended approaches"
+  reference: "../algorithm-selection-map.yaml"
+  key_patterns:
+    - "range_query + update → segment_tree"
+    - "prefix_sum + point_update → fenwick_tree"
+    - "static_rmq → sparse_table"
+    - "dynamic_tree → link_cut_tree"
+    - "palindrome_counting → eertree"
+    - "substring_queries → suffix_automaton"
+    - "offline_connectivity → dsu_rollback"
+    - "kth_in_range_static → wavelet_tree"
+    - "digit_counting → digit_dp"
+    - "subset_aggregation → sos_dp"
+
+pitfall_notes:
+  description: "Common pitfalls by technique, accumulated from experience"
+  items:
+    - technique: segment_tree
+      pitfalls:
+        - "Lazy propagation order matters: push before processing children"
+        - "Array size must be 4*n for safe indexing"
+        - "Merge function must be associative"
+
+    - technique: fenwick_tree
+      pitfalls:
+        - "Index 0 is not valid in standard implementation"
+        - "Only supports invertible operations natively"
+        - "Range updates require difference array technique"
+
+    - technique: link_cut_tree
+      pitfalls:
+        - "Splay operations must maintain binary search tree property"
+        - "Path aggregation order depends on expose() direction"
+        - "Lazy propagation on LCT is significantly more complex"
+
+    - technique: dsu_rollback
+      pitfalls:
+        - "Cannot use path compression — breaks rollback stack"
+        - "Must use union by rank/size only"
+        - "Rollback stack can grow large for many operations"
+
+    - technique: eertree
+      pitfalls:
+        - "Two root nodes: length -1 (odd) and length 0 (even)"
+        - "Suffix link computation depends on correct failure transitions"
+        - "Character set size affects space complexity"
+
+    - technique: wavelet_tree
+      pitfalls:
+        - "Large value range requires coordinate compression"
+        - "Not suitable for dynamic arrays"
+        - "Space complexity grows with log of value range"
+
+    - technique: suffix_automaton
+      pitfalls:
+        - "Link tree and automaton transitions are different structures"
+        - "Clone node creation must copy all transitions"
+        - "Longest path in automaton ≠ longest substring"
+
+    - technique: parallel_binary_search
+      pitfalls:
+        - "Requires offline processing of all queries"
+        - "DSU with rollback needed for connectivity variants"
+        - "Termination condition must be exact"
+
+    - technique: min_cost_max_flow_potentials
+      pitfalls:
+        - "Initial potentials must eliminate negative edges"
+        - "Cost overflow possible with large flows"
+        - "Negative cycles make the problem infeasible"
+
+    - technique: simulated_annealing
+      pitfalls:
+        - "Cooling schedule is critical — too fast = local optimum, too slow = TLE"
+        - "Not deterministic — results vary between runs"
+        - "No correctness guarantee — always verify when possible"
