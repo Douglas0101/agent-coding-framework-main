@@ -4,10 +4,10 @@
 agent_mode_contract:
   metadata:
     name: "explore"
-    version: "1.1.0"
+    version: "1.2.0"
     parent_contract: "orchestration-contract.yaml"
     created: "2026-04-03T00:00:00Z"
-    last_modified: "2026-04-04T00:00:00Z"
+    last_modified: "2026-04-04T02:00:00Z"
     author: "core-team"
 
   mission:
@@ -147,5 +147,32 @@ agent_mode_contract:
       trigger: "automatic when task involves code changes, refactoring, or architecture modifications"
       input_contract: "ImpactAnalysisInput { target_files, change_description, depth }"
       output_contract: "ImpactReport { affected_files, dependency_chain, test_impact, risk_level, mitigation_suggestions }"
-      budget_share: 0.30
+      budget_share: 0.15
       verifier_required: false
+
+    - name: "repo_topology_map"
+      description: "Map repository structure, identify module boundaries, dependency chains, and produce structured topology report"
+      source: "internal:repo_topology_map"
+      trigger: "automatic when task involves repository exploration or codebase analysis"
+      input_contract: "TopologyInput { target_path, max_depth }"
+      output_contract: "TopologyReport { modules, dependency_graph, total_files, total_dirs }"
+      budget_share: 0.20
+      verifier_required: false
+
+    - name: "dependency_surface"
+      description: "Analyze dependency surface: import graphs, coupling metrics, circular dependencies, external package surface, and change blast radius"
+      source: "internal:dependency_surface"
+      trigger: "automatic when task involves dependency analysis or impact assessment"
+      input_contract: "DependencyInput { target_path, max_depth }"
+      output_contract: "DependencySurfaceReport { nodes, circular_dependencies, coupling, blast_radius, external_packages }"
+      budget_share: 0.20
+      verifier_required: false
+
+    - name: "change_impact_deep"
+      description: "Deep analysis of change impact across contracts, skills, domain packs, and runtime components with risk propagation"
+      source: "internal:change_impact_deep"
+      trigger: "conditional when dependency_surface detects high-risk changes"
+      input_contract: "ChangeImpactInput { changed_files, dependency_surface, change_description }"
+      output_contract: "ChangeImpactReport { findings, risk_propagation, migration_requirements, overall_risk }"
+      budget_share: 0.20
+      verifier_required: true
