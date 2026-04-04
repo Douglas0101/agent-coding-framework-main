@@ -1,0 +1,55 @@
+services:
+  web:
+    build:
+      context: ../../apps/web
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: "${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000/api/v2}"
+    depends_on:
+      api:
+        condition: service_healthy
+
+  api:
+    build:
+      context: ../../apps/api
+    ports:
+      - "${API_PORT:-8000}:8000"
+    env_file:
+      - ../env/api.env.example
+    environment:
+      DATABASE_URL: "postgresql+psycopg://vitruviano:${POSTGRES_PASSWORD:-vitruviano}@postgres:5432/vitruviano"
+      DICOM_STORAGE_PATH: "/opt/vitruviano/storage/dicom"
+      MODEL_PATH: "/opt/vitruviano/artifacts/${ARTIFACT_VERSION:-chestxray-example}/model.pth"
+      CALIBRATION_PATH: "/opt/vitruviano/artifacts/${ARTIFACT_VERSION:-chestxray-example}/calibration_results.json"
+    volumes:
+      - ../../storage/dicom:/opt/vitruviano/storage/dicom
+      - ../../artifacts:/opt/vitruviano/artifacts:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  postgres:
+    image: postgres:15-alpine
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    environment:
+      POSTGRES_DB: "${POSTGRES_DB:-vitruviano}"
+      POSTGRES_USER: "${POSTGRES_USER:-vitruviano}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-vitruviano}"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../../postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vitruviano} -d ${POSTGRES_DB:-vitruviano}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:

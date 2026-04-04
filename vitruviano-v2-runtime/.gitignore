@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+
+# Node
+node_modules/
+.next/
+
+# Runtime data
+storage/dicom/*
+storage/backups/*
+artifacts/chestxray-example/*
+
+# Dataset zones are local-only by default. Keep only structural markers in git.
+data-platform/datasets/raw/**
+data-platform/datasets/staging/**
+data-platform/datasets/curated/**
+data-platform/datasets/synthetic/**
+data-platform/datasets/external/**
+
+# Keep structural markers
+!storage/dicom/.gitkeep
+!storage/backups/.gitkeep
+!artifacts/chestxray-example/.gitkeep
+!data-platform/datasets/raw/.gitkeep
+!data-platform/datasets/staging/.gitkeep
+!data-platform/datasets/curated/.gitkeep
+!data-platform/datasets/synthetic/.gitkeep
+!data-platform/datasets/external/.gitkeep
