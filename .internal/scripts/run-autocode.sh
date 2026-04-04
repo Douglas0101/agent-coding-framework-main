@@ -135,7 +135,8 @@ fi
 
 echo "[run-autocode] Pre-flight: runtime schema validation OK"
 
-exec opencode run \
-  --command autocode \
-  --dir "$PROJECT_ROOT" \
+# Native runtime routing remains `opencode run --command autocode`; the Python
+# bridge captures the final JSON event stream and validates the final payload.
+exec python3 "$PROJECT_ROOT/.internal/runtime/hybrid_core_cli.py" \
+  run-autocode \
   "$@"

@@ -75,7 +75,8 @@ class ValidationResult:
     tier: str
     scope_result: ScopeResult | None = None
     gate_report: GateReport | None = None
-    output_validation: ValidationResult | None = None
+    output_validation: OutputValidationResult | None = None
+    profile_consistency_issues: list[str] = field(default_factory=list)
     quality_score: float = 0.0
     rejection_reasons: list[str] = field(default_factory=list)
     compliance_notes: list[str] = field(default_factory=list)
@@ -117,6 +118,7 @@ class ValidationResult:
             }
             if self.output_validation
             else None,
+            "profile_consistency_issues": self.profile_consistency_issues,
             "quality_score": self.quality_score,
             "rejection_reasons": self.rejection_reasons,
             "compliance_notes": self.compliance_notes,
@@ -233,11 +235,19 @@ class HybridCoreValidator:
             output=code_output,
             profile=scope_result.profile,
         )
+        profile_consistency_issues = (
+            self._output_validator.validate_profile_consistency(
+                code_output,
+                scope_result.profile,
+                scope_result.tier,
+            )
+        )
 
         overall_passed = (
             gate_report.passed
             and output_validation.valid
             and not gate_report.auto_reject
+            and not profile_consistency_issues
         )
 
         rejection_reasons = []
@@ -247,6 +257,7 @@ class HybridCoreValidator:
                 rejection_reasons.append(
                     f"Missing required fields: {', '.join(output_validation.missing_fields)}"
                 )
+            rejection_reasons.extend(profile_consistency_issues)
 
         quality_score = self._compute_quality_score(
             gate_report, output_validation, scope_result
@@ -278,6 +289,7 @@ class HybridCoreValidator:
             scope_result=scope_result,
             gate_report=gate_report,
             output_validation=output_validation,
+            profile_consistency_issues=profile_consistency_issues,
             quality_score=quality_score,
             rejection_reasons=rejection_reasons,
             compliance_notes=compliance_notes,
@@ -288,7 +300,7 @@ class HybridCoreValidator:
     def _compute_quality_score(
         self,
         gate_report: GateReport,
-        output_validation: ValidationResult,
+        output_validation: OutputValidationResult,
         scope_result: ScopeResult,
     ) -> float:
         """Compute overall quality score (0.0 to 1.0)."""
@@ -327,7 +339,7 @@ class HybridCoreValidator:
         self,
         passed: bool,
         gate_report: GateReport,
-        output_validation: ValidationResult,
+        output_validation: OutputValidationResult,
         scope_result: ScopeResult,
         quality_score: float,
     ) -> str:
@@ -386,7 +398,7 @@ class HybridCoreValidator:
     def _build_compliance_notes(
         self,
         gate_report: GateReport,
-        output_validation: ValidationResult,
+        output_validation: OutputValidationResult,
         scope_result: ScopeResult,
     ) -> list[str]:
         """Build compliance notes list."""
