@@ -1,0 +1,186 @@
+name: Mode Contract Compliance
+
+on:
+  push:
+    branches: [main, master, develop]
+    paths:
+      - '.internal/specs/modes/**'
+      - '.internal/specs/core/agent-mode-contract.yaml'
+      - '.internal/specs/core/memory-model.yaml'
+      - '.internal/specs/core/planner-subcontract.yaml'
+      - 'opencode.json'
+      - '.opencode/opencode.json'
+      - '.internal/tests/test_mode_contracts.py'
+      - '.internal/scripts/validate_mode_budgets.py'
+      - '.github/workflows/mode-contract-compliance.yml'
+  pull_request:
+    branches: [main, master, develop]
+    paths:
+      - '.internal/specs/modes/**'
+      - '.internal/specs/core/agent-mode-contract.yaml'
+      - '.internal/specs/core/memory-model.yaml'
+      - '.internal/specs/core/planner-subcontract.yaml'
+      - 'opencode.json'
+      - '.opencode/opencode.json'
+      - '.internal/tests/test_mode_contracts.py'
+      - '.internal/scripts/validate_mode_budgets.py'
+      - '.github/workflows/mode-contract-compliance.yml'
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  schema-validation:
+    name: Mode Contract Schema Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pyyaml pytest
+
+      - name: Validate mode contracts against schema
+        run: |
+          python -m pytest .internal/tests/test_mode_contracts.py -v
+
+  budget-governance:
+    name: Budget Governance
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pyyaml
+
+      - name: Validate mode budgets
+        run: |
+          python .internal/scripts/validate_mode_budgets.py --fail-on-violation
+
+      - name: Print budget report
+        run: |
+          python .internal/scripts/validate_mode_budgets.py --format json
+
+  config-parity:
+    name: Config-Contract Parity
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: schema-validation
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pyyaml pytest
+
+      - name: Verify config references existing contracts
+        run: |
+          python -m pytest .internal/tests/test_mode_contracts.py::TestModeContractDrift -v
+
+      - name: Verify routing fields match between configs
+        run: |
+          python -m pytest .internal/tests/test_stable_execution.py::TestOpenCodeConfigParity -v
+
+  handoff-integrity:
+    name: Handoff Contract Integrity
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: schema-validation
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pyyaml pytest
+
+      - name: Validate handoff targets and verifier gates
+        run: |
+          python -m pytest .internal/tests/test_mode_contracts.py::TestModeContractHandoffs -v
+
+  constitutional-compliance:
+    name: Constitutional Compliance
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: schema-validation
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pyyaml pytest
+
+      - name: Verify constitutional compliance
+        run: |
+          python -m pytest .internal/tests/test_mode_contracts.py::TestModeContractConstitutionalCompliance -v
+
+  full-suite:
+    name: Full Test Suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [schema-validation, budget-governance, config-parity, handoff-integrity, constitutional-compliance]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pyyaml pytest
+
+      - name: Run full test suite
+        run: |
+          python -m pytest .internal/tests/ -v --tb=short

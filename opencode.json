@@ -8,7 +8,8 @@
     "autocoder": {
       "description": "Primary autocode execution path.",
       "mode": "primary",
-      "maxSteps": 6
+      "maxSteps": 6,
+      "mode_contract": ".internal/specs/modes/autocoder.yaml"
     },
     "general": {
       "description": "General-purpose fallback agent.",
@@ -17,15 +18,18 @@
     },
     "explore": {
       "description": "Repository exploration agent.",
-      "mode": "primary"
+      "mode": "primary",
+      "mode_contract": ".internal/specs/modes/explore.yaml"
     },
     "reviewer": {
       "description": "Technical review agent.",
-      "mode": "primary"
+      "mode": "primary",
+      "mode_contract": ".internal/specs/modes/reviewer.yaml"
     },
     "orchestrator": {
       "description": "Swarm orchestration agent.",
-      "mode": "primary"
+      "mode": "primary",
+      "mode_contract": ".internal/specs/modes/orchestrator.yaml"
     }
   },
   "command": {

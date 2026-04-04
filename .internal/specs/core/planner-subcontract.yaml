@@ -1,0 +1,204 @@
+# Planner Sub-Contract Specification
+
+**Spec Version:** 1.0.0
+**Kind:** SubContract
+**Domain:** core.planner
+**Status:** Active
+
+---
+
+## Overview
+
+This specification formalizes the planning role as an explicit sub-contract of the orchestrator mode. Planning is no longer implicit; it produces structured plans with pre-conditions, post-conditions, and standardized output.
+
+## Planner Interface
+
+```yaml
+planner_contract:
+  metadata:
+    name: "planner"
+    version: "1.0.0"
+    parent_contract: "orchestration-contract.yaml"
+    type: "subcontract"
+    parent_mode: "orchestrator"
+
+  mission:
+    description: "Decompose complex tasks into executable plans with clear pre-conditions, post-conditions, and agent assignments."
+    success_criteria:
+      - "Plan is decomposable into independent or sequentially executable steps"
+      - "Each step has clear input/output schema"
+      - "Agent assignments match mode contract capabilities"
+      - "Total budget does not exceed parent allocation"
+    failure_conditions:
+      - "Task cannot be decomposed into valid steps"
+      - "No valid agent assignment for required capabilities"
+      - "Budget allocation exceeds parent budget"
+    priority: "critical"
+
+  scope:
+    input_schema:
+      required_fields:
+        - name: "task"
+          type: "string"
+          description: "High-level task description"
+          required: true
+        - name: "available_modes"
+          type: "list[string]"
+          description: "Available mode contracts for assignment"
+          required: true
+        - name: "parent_budget"
+          type: "dict"
+          description: "Budget allocation from parent orchestrator"
+          required: true
+      optional_fields:
+        - name: "constraints"
+          type: "list[string]"
+          description: "Additional constraints (time, tools, etc.)"
+          required: false
+        - name: "previous_plan"
+          type: "string"
+          description: "Reference to prior plan for revision"
+          required: false
+      forbidden_fields:
+        - "secrets"
+        - "credentials"
+
+    output_schema:
+      required_fields:
+        - name: "plan_id"
+          type: "string"
+          description: "Unique plan identifier"
+          required: true
+        - name: "steps"
+          type: "list[Step]"
+          description: "Ordered list of executable steps"
+          required: true
+        - name: "budget_allocation"
+          type: "dict"
+          description: "Budget assigned to each step"
+          required: true
+        - name: "dependencies"
+          type: "list[Dependency]"
+          description: "Step dependency graph"
+          required: true
+        - name: "risk_assessment"
+          type: "dict"
+          description: "Plan-level risk assessment"
+          required: true
+      optional_fields:
+        - name: "alternative_plans"
+          type: "list[Plan]"
+          description: "Alternative plan options"
+          required: false
+      format: "json"
+
+    tools_allowlist:
+      - "read"
+      - "glob"
+      - "grep"
+      - "task"
+      - "codesearch"
+    tools_denylist:
+      - "edit"
+      - "write"
+      - "bash"
+
+  resources:
+    max_input_tokens: 8000
+    max_output_tokens: 12000
+    max_context_tokens: 16000
+    max_retrieval_chunks: 15
+    max_iterations: 10
+    max_handoffs: 1
+    timeout_seconds: 180
+
+  memory:
+    operational_context:
+      max_tokens: 4000
+      retention: "ephemeral"
+      compressible: true
+    session_state:
+      max_tokens: 2000
+      retention: "session"
+      compressible: true
+    structural_memory:
+      max_tokens: 1000
+      retention: "persistent"
+      compressible: false
+    handoff_payload_budget:
+      max_tokens: 3000
+      compression_mode: "summary+refs"
+      rehydration_supported: true
+
+  satisficing:
+    mode: "BALANCED"
+    quality_threshold: 0.85
+    early_exit:
+      enabled: true
+      conditions:
+        - "Valid plan produced with all steps assignable"
+        - "Budget utilization exceeds 70%"
+    trade_off: "Balances plan completeness with planning overhead; avoids over-planning"
+
+  handoff:
+    allowed_targets:
+      - "orchestrator"
+    compression: "summary+refs"
+    verifier_required: true
+
+  error_policy:
+    retry_max: 2
+    timeout_seconds: 60
+    on_budget_exceeded: "fail_fast"
+    on_tool_failure: "retry"
+    on_schema_violation: "reject"
+```
+
+## Step Definition
+
+```yaml
+Step:
+  step_id: string                    # Unique step identifier (e.g., "step-1")
+  mode: string                       # Assigned mode contract
+  task: string                       # Specific task for this step
+  input: dict                        # Input data for the step
+  expected_output: dict              # Expected output schema
+  pre_conditions: list[string]       # Conditions that must be true before execution
+  post_conditions: list[string]      # Conditions that must be true after execution
+  budget: dict                       # Step-level budget allocation
+  fallback: optional[string]         # Fallback mode if primary fails
+```
+
+## Dependency Definition
+
+```yaml
+Dependency:
+  from_step: string                  # Source step ID
+  to_step: string                    # Target step ID
+  type: enum [sequential, parallel, conditional]
+  condition: optional[string]        # Condition for conditional dependencies
+```
+
+## Budget Conservation
+
+The planner MUST ensure:
+```
+sum(step.budget for all steps) <= parent_budget
+```
+
+With a 10% overhead buffer for coordination:
+```
+sum(step.budget) + coordination_overhead <= parent_budget
+coordination_overhead = sum(step.budget) * 0.10
+```
+
+## Validation Rules
+
+| Rule ID | Description | Enforcement |
+|---------|-------------|-------------|
+| PLN-001 | All steps must reference valid mode contracts | CI validation |
+| PLN-002 | No circular dependencies in step graph | Static analysis |
+| PLN-003 | Budget allocation must not exceed parent budget | Runtime validation |
+| PLN-004 | Each step must have at least one pre-condition | Schema validation |
+| PLN-005 | Each step must have at least one post-condition | Schema validation |
+| PLN-006 | Parallel steps must have disjoint write scopes | Static analysis |

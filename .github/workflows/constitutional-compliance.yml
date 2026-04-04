@@ -230,12 +230,16 @@ jobs:
               'AKIA', 'ghp_', 'private_key', 'pem'
           ]
 
-          # Exclude tooling, CI, and known legitimate references
+          # Exclude tooling, CI, internal specs, and known legitimate references
           excluded_paths = [
               '.pre-commit-config.yaml',
               '.github/workflows/',
               '.github/security/',
               'node_modules/',
+              '.internal/specs/',
+              '.internal/domains/',
+              '.internal/registry/',
+              '.internal/templates/',
           ]
 
           # Known legitimate tool/library references that contain sensitive words

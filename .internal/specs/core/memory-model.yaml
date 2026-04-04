@@ -1,0 +1,104 @@
+# Memory Model Specification
+
+**Spec Version:** 1.0.0
+**Kind:** MemoryPolicy
+**Domain:** core.memory
+**Status:** Active
+
+---
+
+## Overview
+
+This specification defines the formal memory model for Agent Mode Contracts. Memory is separated into three tiers with distinct retention policies, compression rules, and handoff budgets.
+
+## Memory Tiers
+
+### 1. Operational Context
+
+Purpose: Current operation state, active task context, and immediate working data.
+
+| Property | Value |
+|----------|-------|
+| Retention | `ephemeral` or `session` |
+| Compressible | Yes |
+| Max tokens | Defined per mode contract |
+| Cleared on | Mode completion or handoff |
+
+Rules:
+- Contains only data relevant to the current operation
+- Must be compressible via summarization
+- Cannot contain secrets or credentials
+- Must be included in handoff payload (compressed)
+
+### 2. Session State
+
+Purpose: State that persists across multiple operations within a single session/run.
+
+| Property | Value |
+|----------|-------|
+| Retention | `session` |
+| Compressible | Yes |
+| Max tokens | Defined per mode contract |
+| Cleared on | Session end or run completion |
+
+Rules:
+- Contains run-level state, accumulated findings, and intermediate results
+- May be selectively compressed for handoff
+- Must preserve evidence references (never compress evidence refs)
+- Subject to handoff payload budget limits
+
+### 3. Structural Memory
+
+Purpose: Long-term knowledge about the project, conventions, and domain rules.
+
+| Property | Value |
+|----------|-------|
+| Retention | `persistent` |
+| Compressible | No |
+| Max tokens | Defined per mode contract |
+| Cleared on | Never (persists across sessions) |
+
+Rules:
+- Contains project structure, coding conventions, architectural decisions
+- Must NOT be compressed or summarized
+- Referenced by hash/ID in handoff, not by full content
+- Updated only through explicit spec changes
+
+## Handoff Memory Economics
+
+### Compression Modes
+
+| Mode | Description | Use Case |
+|------|-------------|----------|
+| `none` | Full payload transfer | Small payloads, critical data |
+| `summary` | Text summary only | Quick status updates |
+| `summary+refs` | Summary + references to full data | Default for most handoffs |
+| `delta` | Only changes since last handoff | Iterative workflows |
+
+### Rehydration Protocol
+
+When a consumer mode receives a compressed handoff:
+1. Parse summary for immediate context
+2. Resolve references on-demand for detailed data
+3. Reconstruct session state from summary + refs
+4. Load structural memory by reference (never by full content)
+
+### Budget Conservation Law
+
+For any parent-child mode relationship:
+```
+sum(children budgets) <= parent budget
+```
+
+This ensures that delegated work cannot exceed the parent's resource allocation.
+
+## Memory Validation Rules
+
+| Rule ID | Description | Enforcement |
+|---------|-------------|-------------|
+| MEM-001 | Operational context must be compressible | Schema validation |
+| MEM-002 | Structural memory must NOT be compressible | Schema validation |
+| MEM-003 | Handoff payload budget <= context tokens | Runtime validation |
+| MEM-004 | Evidence references must never be compressed | Runtime enforcement |
+| MEM-005 | Session state must fit within handoff budget | CI validation |
+| MEM-006 | No secrets in any memory tier | Static analysis |

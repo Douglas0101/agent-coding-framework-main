@@ -1,0 +1,149 @@
+# Agent Mode Contract - Schema Specification
+# This file defines the schema for all operational mode contracts.
+# Each mode contract MUST conform to this schema.
+
+**Spec Version:** 1.0.0
+**Kind:** ModeContractSchema
+**Domain:** core.mode
+**Status:** Active
+
+---
+
+## Schema Definition
+
+```yaml
+agent_mode_contract:
+  # ── Metadata ──────────────────────────────────────────────
+  metadata:
+    name: string                          # Unique mode identifier (e.g., "explore", "reviewer")
+    version: string                       # Semantic version (MAJOR.MINOR.PATCH)
+    parent_contract: string              # Reference to parent contract (e.g., "orchestration-contract.yaml")
+    created: ISO8601                     # Creation timestamp
+    last_modified: ISO8601               # Last modification timestamp
+    author: string                       # Author or team responsible
+
+  # ── Mission ───────────────────────────────────────────────
+  mission:
+    description: string                  # Single-sentence mission statement
+    success_criteria: list[string]       # Explicit conditions that define success
+    failure_conditions: list[string]     # Explicit conditions that define failure
+    priority: enum [critical, high, medium, low]
+
+  # ── Scope ─────────────────────────────────────────────────
+  scope:
+    input_schema:
+      required_fields: list[FieldDef]    # Fields that MUST be present in input
+      optional_fields: list[FieldDef]    # Fields that MAY be present in input
+      forbidden_fields: list[string]     # Fields that MUST NOT be present
+
+    output_schema:
+      required_fields: list[FieldDef]    # Fields that MUST be present in output
+      optional_fields: list[FieldDef]    # Fields that MAY be present in output
+      format: string                     # Expected output format (e.g., "json", "markdown", "yaml")
+
+    tools_allowlist: list[string]        # Tools this mode is permitted to use
+    tools_denylist: list[string]         # Tools this mode is explicitly forbidden to use
+
+  # ── Resources (Budget) ────────────────────────────────────
+  resources:
+    max_input_tokens: integer            # Maximum input tokens allowed
+    max_output_tokens: integer           # Maximum output tokens allowed
+    max_context_tokens: integer          # Maximum context window tokens
+    max_retrieval_chunks: integer        # Maximum retrieval chunks per query
+    max_iterations: integer              # Maximum execution iterations
+    max_handoffs: integer                # Maximum handoffs to other modes
+    timeout_seconds: integer             # Maximum wall-clock execution time
+
+  # ── Memory Policy ─────────────────────────────────────────
+  memory:
+    operational_context:
+      max_tokens: integer                # Max tokens for current operation context
+      retention: enum [ephemeral, session, persistent]
+      compressible: boolean              # Whether this can be summarized
+
+    session_state:
+      max_tokens: integer                # Max tokens for session-level state
+      retention: enum [ephemeral, session, persistent]
+      compressible: boolean
+
+    structural_memory:
+      max_tokens: integer                # Max tokens for long-term structural knowledge
+      retention: enum [ephemeral, session, persistent]
+      compressible: boolean
+
+    handoff_payload_budget:
+      max_tokens: integer                # Max tokens in a single handoff payload
+      compression_mode: enum [none, summary, summary+refs, delta]
+      rehydration_supported: boolean     # Whether consumer can rehydrate compressed data
+
+  # ── Satisficing Strategy ──────────────────────────────────
+  satisficing:
+    mode: enum [URGENT, ECONOMICAL, BALANCED, DEEP]
+    quality_threshold: float             # Minimum quality score (0.0-1.0)
+    early_exit:
+      enabled: boolean                   # Whether early exit is permitted
+      conditions: list[string]           # Conditions that trigger early exit
+    trade_off: string                    # Description of quality/cost trade-off
+
+  # ── Handoff ───────────────────────────────────────────────
+  handoff:
+    allowed_targets: list[string]        # Modes this mode can hand off to
+    compression: enum [none, summary, summary+refs, delta]
+    verifier_required: boolean           # Whether verifier gate is required before handoff
+
+  # ── Error Policy ──────────────────────────────────────────
+  error_policy:
+    retry_max: integer                   # Maximum retry attempts
+    timeout_seconds: integer             # Per-operation timeout
+    on_budget_exceeded: enum [fail_fast, degrade_gracefully, notify_and_continue]
+    on_tool_failure: enum [fail, retry, skip, degrade]
+    on_schema_violation: enum [reject, warn_and_continue, fail_fast]
+
+  # ── Skills (Incremental Capabilities) ─────────────────────
+  skills:
+    - name: string                       # Unique skill identifier
+      description: string                # What the skill does
+      source: string                     # Origin (e.g., "opencode-builtin:impact-analyst")
+      trigger: string                    # When the skill activates (automatic, manual, conditional)
+      input_contract: string             # Expected input schema for the skill
+      output_contract: string            # Expected output schema for the skill
+      budget_share: float                # Fraction of mode budget this skill may consume (0.0-1.0)
+      verifier_required: boolean         # Whether verifier gate applies to skill output
+
+  # ── FieldDef (reusable type) ─────────────────────────────
+  FieldDef:
+    name: string
+    type: string
+    description: string
+    required: boolean
+```
+
+---
+
+## Validation Rules
+
+| Rule ID | Description | Enforcement |
+|---------|-------------|-------------|
+| MC-001 | All required sections must be present | Schema validation |
+| MC-002 | Version must follow semver | CI validation |
+| MC-003 | Budget values must be positive integers | Runtime validation |
+| MC-004 | tools_allowlist and tools_denylist must be disjoint | Static analysis |
+| MC-005 | Handoff targets must reference existing mode contracts | CI validation |
+| MC-006 | Satisficing mode must be one of: URGENT, ECONOMICAL, BALANCED, DEEP | Schema validation |
+| MC-007 | Memory retention must be one of: ephemeral, session, persistent | Schema validation |
+| MC-008 | handoff_payload_budget.max_tokens <= max_context_tokens | Runtime validation |
+| MC-009 | retry_max must be >= 0 and <= 3 | Static analysis |
+| MC-010 | quality_threshold must be in range [0.0, 1.0] | Schema validation |
+| MC-011 | Skills must have valid budget_share (0.0-1.0) | Schema validation |
+| MC-012 | Skills source must reference known origin (opencode-builtin, internal, domain-pack) | CI validation |
+| MC-013 | Sum of skill budget_share must not exceed 1.0 | Static analysis |
+
+---
+
+## Versioning
+
+- **Major:** Breaking changes to schema structure or required fields
+- **Minor:** New optional fields, backward-compatible extensions
+- **Patch:** Documentation, clarifications, examples
+
+All mode contracts must declare their schema version and will be validated against it in CI.

@@ -1,0 +1,159 @@
+# Agent Mode Contract: reviewer
+# Technical review and quality gate mode
+
+agent_mode_contract:
+  metadata:
+    name: "reviewer"
+    version: "1.1.0"
+    parent_contract: "orchestration-contract.yaml"
+    created: "2026-04-03T00:00:00Z"
+    last_modified: "2026-04-04T00:00:00Z"
+    author: "core-team"
+
+  mission:
+    description: "Review code changes, identify risks, validate compliance with specs and contracts, and produce structured review reports."
+    success_criteria:
+      - "All changed files reviewed against applicable specs"
+      - "Risks categorized by severity"
+      - "Compliance with constitutional invariants verified"
+      - "Review report conforms to output_schema"
+    failure_conditions:
+      - "No changes to review"
+      - "Budget exceeded before review completes"
+      - "Cannot resolve spec references for validation"
+    priority: "critical"
+
+  scope:
+    input_schema:
+      required_fields:
+        - name: "review_scope"
+          type: "dict"
+          description: "Files, diffs, or PR to review"
+          required: true
+        - name: "applicable_specs"
+          type: "list[string]"
+          description: "Spec IDs to validate against"
+          required: true
+      optional_fields:
+        - name: "review_focus"
+          type: "list[string]"
+          description: "Specific aspects to focus on (security, performance, etc.)"
+          required: false
+        - name: "previous_review"
+          type: "string"
+          description: "Reference to prior review for comparison"
+          required: false
+      forbidden_fields:
+        - "secrets"
+        - "credentials"
+
+    output_schema:
+      required_fields:
+        - name: "status"
+          type: "enum [approved, changes_requested, blocked]"
+          description: "Overall review decision"
+          required: true
+        - name: "findings"
+          type: "list[Finding]"
+          description: "Detailed review findings with severity"
+          required: true
+        - name: "compliance_report"
+          type: "dict"
+          description: "Constitutional and spec compliance status"
+          required: true
+        - name: "summary"
+          type: "string"
+          description: "Human-readable review summary"
+          required: true
+      optional_fields:
+        - name: "suggestions"
+          type: "list[Suggestion]"
+          description: "Actionable improvement suggestions"
+          required: false
+        - name: "risk_assessment"
+          type: "dict"
+          description: "Overall risk level and rationale"
+          required: false
+      format: "json"
+
+    tools_allowlist:
+      - "read"
+      - "grep"
+      - "glob"
+      - "bash"
+      - "task"
+      - "examine-algorithm"
+      - "codesearch"
+    tools_denylist:
+      - "edit"
+      - "write"
+      - "MCP_DOCKER_create_or_update_file"
+      - "MCP_DOCKER_push_files"
+
+  resources:
+    max_input_tokens: 12000
+    max_output_tokens: 16000
+    max_context_tokens: 24000
+    max_retrieval_chunks: 30
+    max_iterations: 20
+    max_handoffs: 1
+    timeout_seconds: 600
+
+  memory:
+    operational_context:
+      max_tokens: 6000
+      retention: "ephemeral"
+      compressible: true
+    session_state:
+      max_tokens: 3000
+      retention: "session"
+      compressible: true
+    structural_memory:
+      max_tokens: 2000
+      retention: "persistent"
+      compressible: false
+    handoff_payload_budget:
+      max_tokens: 4000
+      compression_mode: "summary+refs"
+      rehydration_supported: true
+
+  satisficing:
+    mode: "DEEP"
+    quality_threshold: 0.90
+    early_exit:
+      enabled: false
+      conditions: []
+    trade_off: "Prioritizes thoroughness and accuracy over speed; no early exit for critical reviews"
+
+  handoff:
+    allowed_targets:
+      - "autocoder"
+      - "orchestrator"
+    compression: "summary+refs"
+    verifier_required: true
+
+  error_policy:
+    retry_max: 1
+    timeout_seconds: 120
+    on_budget_exceeded: "fail_fast"
+    on_tool_failure: "retry"
+    on_schema_violation: "fail_fast"
+
+  skills:
+    - name: "conformance_audit"
+      description: "Validate code changes against specs, contracts, constitutional invariants, and API contracts"
+      source: "opencode-builtin:conformance-auditor"
+      trigger: "automatic when reviewing changes that touch spec-controlled files or public interfaces"
+      input_contract: "ConformanceInput { changed_files, applicable_specs, invariant_list }"
+      output_contract: "ConformanceReport { spec_violations, invariant_checks, drift_detected, compliance_score }"
+      budget_share: 0.35
+      verifier_required: true
+
+    - name: "policy_gate"
+      description: "Security policy enforcement — secrets scan, forbidden patterns, OWASP checks, credential leakage"
+      source: "opencode-builtin:policy-guardian"
+      trigger: "automatic on all reviews; mandatory before handoff to autocoder or orchestrator"
+      input_contract: "PolicyInput { file_contents, pattern_library, security_rules }"
+      output_contract: "PolicyReport { secrets_found, policy_violations, risk_score, blocked_patterns }"
+      budget_share: 0.25
+      verifier_required: true

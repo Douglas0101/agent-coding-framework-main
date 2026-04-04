@@ -1,0 +1,169 @@
+# Agent Mode Contract: orchestrator
+# Swarm orchestration and workflow coordination mode
+
+agent_mode_contract:
+  metadata:
+    name: "orchestrator"
+    version: "1.1.0"
+    parent_contract: "orchestration-contract.yaml"
+    created: "2026-04-03T00:00:00Z"
+    last_modified: "2026-04-04T00:00:00Z"
+    author: "core-team"
+
+  mission:
+    description: "Orchestrate multi-agent workflows, manage handoffs, enforce verifier gates, and coordinate synthesis of final artifacts."
+    success_criteria:
+      - "All agents in workflow executed with valid handoffs"
+      - "Verifier gate passed before synthesis"
+      - "Final artifact produced and validated"
+      - "Evidence trail complete and immutable"
+    failure_conditions:
+      - "Required agent unavailable"
+      - "Verifier rejects intermediate result"
+      - "Budget exceeded before workflow completes"
+      - "Handoff contract violation detected"
+    priority: "critical"
+
+  scope:
+    input_schema:
+      required_fields:
+        - name: "workflow"
+          type: "WorkflowDefinition"
+          description: "Workflow to orchestrate"
+          required: true
+        - name: "run_id"
+          type: "string"
+          description: "Unique run identifier"
+          required: true
+      optional_fields:
+        - name: "session_snapshot"
+          type: "dict"
+          description: "Session state override"
+          required: false
+        - name: "domain_pack"
+          type: "string"
+          description: "Domain pack to activate"
+          required: false
+      forbidden_fields:
+        - "secrets"
+        - "credentials"
+        - "raw_tokens"
+
+    output_schema:
+      required_fields:
+        - name: "run_result"
+          type: "dict"
+          description: "Final run outcome with artifacts"
+          required: true
+        - name: "evidence_trail"
+          type: "list[Evidence]"
+          description: "Complete evidence trail"
+          required: true
+        - name: "execution_summary"
+          type: "dict"
+          description: "Execution metrics and timeline"
+          required: true
+        - name: "handoff_log"
+          type: "list[Handoff]"
+          description: "All handoffs performed during run"
+          required: true
+      optional_fields:
+        - name: "warnings"
+          type: "list[string]"
+          description: "Non-fatal warnings during execution"
+          required: false
+      format: "json"
+
+    tools_allowlist:
+      - "read"
+      - "task"
+      - "bash"
+      - "glob"
+      - "grep"
+      - "codesearch"
+      - "MCP_DOCKER_browser_snapshot"
+      - "MCP_DOCKER_browser_navigate"
+    tools_denylist:
+      - "edit"
+      - "write"
+
+  resources:
+    max_input_tokens: 16000
+    max_output_tokens: 20000
+    max_context_tokens: 32000
+    max_retrieval_chunks: 50
+    max_iterations: 30
+    max_handoffs: 10
+    timeout_seconds: 1800
+
+  memory:
+    operational_context:
+      max_tokens: 8000
+      retention: "session"
+      compressible: true
+    session_state:
+      max_tokens: 4000
+      retention: "session"
+      compressible: true
+    structural_memory:
+      max_tokens: 3000
+      retention: "persistent"
+      compressible: false
+    handoff_payload_budget:
+      max_tokens: 5000
+      compression_mode: "summary+refs"
+      rehydration_supported: true
+
+  satisficing:
+    mode: "BALANCED"
+    quality_threshold: 0.85
+    early_exit:
+      enabled: true
+      conditions:
+        - "All workflow steps completed successfully"
+        - "Critical failure in any agent"
+        - "Budget utilization exceeds 90%"
+    trade_off: "Balances workflow completeness with resource efficiency; prioritizes verifier integrity"
+
+  handoff:
+    allowed_targets:
+      - "explore"
+      - "reviewer"
+      - "autocoder"
+    compression: "summary+refs"
+    verifier_required: true
+
+  error_policy:
+    retry_max: 2
+    timeout_seconds: 120
+    on_budget_exceeded: "fail_fast"
+    on_tool_failure: "retry"
+    on_schema_violation: "fail_fast"
+
+  skills:
+    - name: "memory_curation"
+      description: "Manage session memory — compress operational context, preserve evidence refs, curate structural knowledge"
+      source: "opencode-builtin:memory-curator"
+      trigger: "automatic when context utilization exceeds 60% or before handoff to preserve budget"
+      input_contract: "MemoryInput { operational_context, session_state, evidence_refs, compression_policy }"
+      output_contract: "MemoryReport { compressed_context, preserved_refs, memory_budget, retention_policy }"
+      budget_share: 0.15
+      verifier_required: false
+
+    - name: "spec_architecture"
+      description: "Create and evolve formal specifications — behavior specs, contract definitions, interface schemas"
+      source: "opencode-builtin:spec-architect"
+      trigger: "automatic when task requires new specs or spec evolution before implementation"
+      input_contract: "SpecArchInput { requirements, existing_specs, domain_context, spec_type }"
+      output_contract: "SpecDraft { spec_id, spec_content, version, dependencies, review_required }"
+      budget_share: 0.25
+      verifier_required: true
+
+    - name: "spec_compilation"
+      description: "Compile formal specs into executable plans with step sequencing, dependencies, and agent assignments"
+      source: "opencode-builtin:spec-compiler"
+      trigger: "automatic after spec_architecture produces a draft spec; required before delegating to child modes"
+      input_contract: "SpecCompInput { spec_draft, available_modes, parent_budget, constraints }"
+      output_contract: "ExecutionPlan { plan_id, steps, dependencies, budget_allocation, risk_assessment }"
+      budget_share: 0.20
+      verifier_required: true

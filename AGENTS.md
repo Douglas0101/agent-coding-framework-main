@@ -1,7 +1,7 @@
 # Native Swarm Rules — Agent Orchestration Framework
 
-**Architecture:** Core domain-agnostic + Domain Packs (contractual extensions)  
-**Reference:** `.internal/specs/core/orchestration-contract.yaml`, `docs/CONSTITUTION_emendada.md`  
+**Architecture:** Core domain-agnostic + Domain Packs (contractual extensions) + Agent Mode Contracts (operational layer)  
+**Reference:** `.internal/specs/core/orchestration-contract.yaml`, `.internal/specs/core/agent-mode-contract.yaml`, `docs/CONSTITUTION_emendada.md`  
 **Policy:** Only `docs/` is public surface. All improvements go to `.internal/`.
 
 ## Core Protocols (Nivel 0)
@@ -15,6 +15,37 @@ The following are **protocols** defined by the Core. Domain Packs may provide im
 | `Handoff` | Formal transfer of control between agents | 12 required fields, 6 validation rules |
 | `Evidence` | Immutable, auditable data produced by agents | Cryptographic integrity, cross-domain, forbidden operations |
 
+## Agent Mode Contracts (Nivel 1)
+
+Each operational mode is governed by a formal contract in `.internal/specs/modes/`. Contracts define mission, scope, budgets, memory policy, satisficing strategy, and handoff rules.
+
+| Mode | Contract | Satisficing | Budget (tokens) | Priority |
+|------|----------|-------------|-----------------|----------|
+| `explore` | `modes/explore.yaml` | BALANCED | 36,000 | high |
+| `reviewer` | `modes/reviewer.yaml` | DEEP | 52,000 | critical |
+| `orchestrator` | `modes/orchestrator.yaml` | BALANCED | 68,000 | critical |
+| `autocoder` | `modes/autocoder.yaml` | BALANCED | 72,000 | critical |
+
+Mode contracts are validated in CI against the schema in `.internal/specs/core/agent-mode-contract.yaml`.
+
+### Budget Governance
+- Each mode declares explicit multidimensional budgets (input/output/context tokens, iterations, handoffs, timeout)
+- Budget exceeded triggers `fail_fast` by default
+- Handoff payloads use `summary+refs` compression with rehydration support
+- Budget conservation: `sum(children) <= parent` for delegated workflows
+
+### Memory Model
+- **Operational Context:** Ephemeral, compressible, current operation state
+- **Session State:** Session-scoped, compressible, run-level accumulations
+- **Structural Memory:** Persistent, non-compressible, project conventions and architecture
+- Evidence references must NEVER be compressed in handoffs
+
+### Satisficing Profiles
+- **URGENT:** Speed over quality, early exit permitted
+- **ECONOMICAL:** Cost-optimized, acceptable quality floor
+- **BALANCED:** Trade-off between quality and cost (default)
+- **DEEP:** Thoroughness over speed, no early exit (reviewer)
+
 ## Swarm Rules
 
 - Use MCP only for context that lives outside the repository or changes frequently.
@@ -25,6 +56,7 @@ The following are **protocols** defined by the Core. Domain Packs may provide im
 - `verifier` is the mandatory gate before `synthesizer`.
 - `synthesizer` is the single final writer for the run package.
 - When live session state matters, pass a `--session-snapshot` JSON file to `.internal/scripts/codex_swarm_prepare.py` so the run manifest records the effective overrides.
+- Mode contracts in `opencode.json` are light bindings; the source of truth is the YAML contract.
 
 ## Domain Packs
 
@@ -91,10 +123,27 @@ This project now enforces stable execution through a comprehensive specification
 - 6 validation rules: no_partial_payload, no_missing_provenance, evidence_refs_resolvable, versioning_required, write_scope_disjoint, verifier_gate
 
 ### Test Coverage
-- 33 Python tests across 7 classes in 5 suites: TestCommandRoutingRegression, TestStableExecutionGuardrails, TestOpenCodeConfigParity, TestRuntimeIntegration, TestPublicVsInternalBoundary, TestSanitizedPublicConfigurationContract, TestPublicRepoAllowlistGovernance, TestOpencodeGovernance
+- 99 Python tests across 12 classes in 6 suites: TestModeContractExistence, TestModeContractSchema, TestModeContractDrift, TestModeContractHandoffs, TestModeContractConstitutionalCompliance, TestCommandRoutingRegression, TestStableExecutionGuardrails, TestOpenCodeConfigParity, TestRuntimeIntegration, TestPublicVsInternalBoundary, TestSanitizedPublicConfigurationContract, TestPublicRepoAllowlistGovernance, TestOpencodeGovernance
 - Run: `python -m pytest .internal/tests/ -v`
+- Budget validation: `python .internal/scripts/validate_mode_budgets.py --fail-on-violation`
 
 ### CI Integration
 - Routing regression: `.github/workflows/routing-regression.yml`
 - Constitutional compliance: `.github/workflows/constitutional-compliance.yml`
+- Mode contract compliance: `.github/workflows/mode-contract-compliance.yml`
 - Config parity validated by critical routing fields only (not full JSON equality)
+
+## Built-in OpenCode Agents — Ignorar
+
+O runtime do OpenCode injeta automaticamente agentes built-in que aparecem no cycling via Tab mas **não devem ser usados** neste framework. Eles são redundantes com as skills integradas nos nossos modos contratuais:
+
+| Built-in OpenCode | Substituído por | Modo |
+|---|---|---|
+| `conformance-auditor` | Skill `conformance_audit` | `reviewer` |
+| `impact-analyst` | Skill `impact_analysis` | `explore` |
+| `memory-curator` | Skill `memory_curation` | `orchestrator` |
+| `policy-guardian` | Skill `policy_gate` | `reviewer` |
+| `spec-architect` | Skill `spec_architecture` | `orchestrator` |
+| `spec-compiler` | Skill `spec_compilation` | `orchestrator` |
+
+**Regra:** Use apenas os 4 modos contratuais (`explore`, `reviewer`, `orchestrator`, `autocoder`) + `general` como fallback. Os built-ins são injetados pelo runtime e não podem ser desabilitados via `opencode.json` (ver [upstream issue #12498](https://github.com/anomalyco/opencode/issues/12498)).
