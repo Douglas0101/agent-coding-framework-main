@@ -27,7 +27,12 @@
     "code_review",
     "vulnerability_detection",
     "documentation_generation",
-    "dependency_management"
+    "dependency_management",
+    "backend_reliability",
+    "data_structures_rigor",
+    "dba_governance",
+    "design_patterns",
+    "test_coverage"
   ],
   "agents": [
     {
@@ -45,6 +50,13 @@
       "role": "execution",
       "capabilities": ["code_generation", "refactoring", "test_creation"]
     }
+  ],
+  "operational_skills": [
+    "backend-reliability",
+    "data-structures-rigor",
+    "dba-governance",
+    "refactor-patterns",
+    "test-coverage"
   ],
   "gates": [
     {
