@@ -492,6 +492,18 @@ O projeto inclui `.editorconfig` aplicado automaticamente.
 
 ---
 
+## Public vs Internal Artifacts
+
+Only `docs/` is the public documentary surface. All operational code, contracts, and runtime state live in `.internal/`. This repository is intended for **private repository only** use — do not expose `.internal/` contents publicly.
+
+| Surface | Allowed | Prohibited |
+|---|---|---|
+| `docs/` | Sanitized PRDs, constitutions, runbooks | Internal specs, contracts, evidence |
+| `README.md` | Architecture overview, setup guide | Routing details, internal endpoints |
+| `.internal/` | Full operational structure | Must never be published |
+
+---
+
 ## Contribuindo
 
 ### Fluxo de Trabalho
