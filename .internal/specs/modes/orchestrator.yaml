@@ -4,10 +4,10 @@
 agent_mode_contract:
   metadata:
     name: "orchestrator"
-    version: "1.1.0"
+    version: "1.2.0"
     parent_contract: "orchestration-contract.yaml"
     created: "2026-04-03T00:00:00Z"
-    last_modified: "2026-04-04T00:00:00Z"
+    last_modified: "2026-04-04T02:00:00Z"
     author: "core-team"
 
   mission:
@@ -141,13 +141,40 @@ agent_mode_contract:
     on_schema_violation: "fail_fast"
 
   skills:
-    - name: "memory_curation"
-      description: "Manage session memory — compress operational context, preserve evidence refs, curate structural knowledge"
-      source: "opencode-builtin:memory-curator"
-      trigger: "automatic when context utilization exceeds 60% or before handoff to preserve budget"
-      input_contract: "MemoryInput { operational_context, session_state, evidence_refs, compression_policy }"
-      output_contract: "MemoryReport { compressed_context, preserved_refs, memory_budget, retention_policy }"
+    - name: "explicit_planner"
+      description: "Produce structured execution plans with step decomposition, budget allocation, dependency graphs, and risk assessment"
+      source: "internal:explicit_planner"
+      trigger: "automatic when orchestrating multi-step workflows"
+      input_contract: "PlanInput { task, available_modes, parent_budget, constraints }"
+      output_contract: "ExecutionPlan { plan_id, steps, dependencies, budget_allocation, risk_assessment }"
       budget_share: 0.15
+      verifier_required: true
+
+    - name: "budget_allocator"
+      description: "Hierarchical budget allocation across workflow steps with conservation enforcement (sum(children) <= parent)"
+      source: "internal:budget_allocator"
+      trigger: "automatic after explicit_planner produces a plan"
+      input_contract: "BudgetInput { parent_budget, children, overhead_pct }"
+      output_contract: "BudgetAllocationReport { children, total_allocated, conservation_violations, overall_status }"
+      budget_share: 0.10
+      verifier_required: true
+
+    - name: "handoff_compressor"
+      description: "Selective compression for handoff payloads with rehydration support (none, summary, summary+refs, delta)"
+      source: "internal:handoff_compressor"
+      trigger: "automatic before each handoff to optimize token usage"
+      input_contract: "CompressInput { content, mode, refs, delta_base }"
+      output_contract: "CompressedPayload { payload_id, compression_mode, original_size, compressed_size, compression_ratio }"
+      budget_share: 0.10
+      verifier_required: false
+
+    - name: "memory_curator_v2"
+      description: "Three-tier memory management (operational_context, session_state, structural_memory) with selective compression and evidence preservation"
+      source: "internal:memory_curator_v2"
+      trigger: "automatic when context utilization exceeds 60% or before handoff"
+      input_contract: "MemoryInput { tier, content, producer, evidence_refs, compressible }"
+      output_contract: "MemoryCuratorReport { tiers, total_entries, total_size, compressed_entries, evidence_preserved }"
+      budget_share: 0.10
       verifier_required: false
 
     - name: "spec_architecture"
@@ -156,7 +183,7 @@ agent_mode_contract:
       trigger: "automatic when task requires new specs or spec evolution before implementation"
       input_contract: "SpecArchInput { requirements, existing_specs, domain_context, spec_type }"
       output_contract: "SpecDraft { spec_id, spec_content, version, dependencies, review_required }"
-      budget_share: 0.25
+      budget_share: 0.15
       verifier_required: true
 
     - name: "spec_compilation"
@@ -165,5 +192,5 @@ agent_mode_contract:
       trigger: "automatic after spec_architecture produces a draft spec; required before delegating to child modes"
       input_contract: "SpecCompInput { spec_draft, available_modes, parent_budget, constraints }"
       output_contract: "ExecutionPlan { plan_id, steps, dependencies, budget_allocation, risk_assessment }"
-      budget_share: 0.20
+      budget_share: 0.10
       verifier_required: true

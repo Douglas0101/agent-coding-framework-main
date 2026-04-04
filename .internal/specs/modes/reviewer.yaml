@@ -4,10 +4,10 @@
 agent_mode_contract:
   metadata:
     name: "reviewer"
-    version: "1.1.0"
+    version: "1.2.0"
     parent_contract: "orchestration-contract.yaml"
     created: "2026-04-03T00:00:00Z"
-    last_modified: "2026-04-04T00:00:00Z"
+    last_modified: "2026-04-04T02:00:00Z"
     author: "core-team"
 
   mission:
@@ -146,7 +146,7 @@ agent_mode_contract:
       trigger: "automatic when reviewing changes that touch spec-controlled files or public interfaces"
       input_contract: "ConformanceInput { changed_files, applicable_specs, invariant_list }"
       output_contract: "ConformanceReport { spec_violations, invariant_checks, drift_detected, compliance_score }"
-      budget_share: 0.35
+      budget_share: 0.15
       verifier_required: true
 
     - name: "policy_gate"
@@ -155,5 +155,32 @@ agent_mode_contract:
       trigger: "automatic on all reviews; mandatory before handoff to autocoder or orchestrator"
       input_contract: "PolicyInput { file_contents, pattern_library, security_rules }"
       output_contract: "PolicyReport { secrets_found, policy_violations, risk_score, blocked_patterns }"
-      budget_share: 0.25
+      budget_share: 0.10
+      verifier_required: true
+
+    - name: "contract_drift_audit"
+      description: "Detect drift between mode contracts, config bindings, and actual enforcement with severity classification"
+      source: "internal:contract_drift_audit"
+      trigger: "automatic when reviewing changes to mode contracts or config files"
+      input_contract: "DriftInput { mode_files, config_files }"
+      output_contract: "DriftReport { findings, modes_checked, has_drift }"
+      budget_share: 0.20
+      verifier_required: true
+
+    - name: "policy_gate_plus"
+      description: "Extended policy gate combining security scanning, contract compliance, OWASP checks, and change validation"
+      source: "internal:policy_gate_plus"
+      trigger: "automatic on critical changes; conditional when contract_drift_audit detects drift"
+      input_contract: "GatePlusInput { review_scope, target_paths, policy_findings, drift_findings }"
+      output_contract: "GateReport { checks, gate_status, can_proceed, total_checks, passed, failed }"
+      budget_share: 0.20
+      verifier_required: true
+
+    - name: "boundary_leak_detector"
+      description: "Detect boundary leaks between public and internal surfaces, sensitive data exposure, and architectural violations"
+      source: "internal:boundary_leak_detector"
+      trigger: "automatic when reviewing changes to docs/ or public config files"
+      input_contract: "BoundaryInput { public_paths, internal_paths }"
+      output_contract: "BoundaryLeakReport { leaks, categories, has_leaks, has_critical_leaks }"
+      budget_share: 0.15
       verifier_required: true

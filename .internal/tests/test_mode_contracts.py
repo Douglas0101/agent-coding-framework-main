@@ -295,9 +295,27 @@ class TestModeContractConstitutionalCompliance:
 
 
 EXPECTED_SKILLS = {
-    "explore": ["impact_analysis"],
-    "reviewer": ["conformance_audit", "policy_gate"],
-    "orchestrator": ["memory_curation", "spec_architecture", "spec_compilation"],
+    "explore": [
+        "impact_analysis",
+        "repo_topology_map",
+        "dependency_surface",
+        "change_impact_deep",
+    ],
+    "reviewer": [
+        "conformance_audit",
+        "policy_gate",
+        "contract_drift_audit",
+        "policy_gate_plus",
+        "boundary_leak_detector",
+    ],
+    "orchestrator": [
+        "explicit_planner",
+        "budget_allocator",
+        "handoff_compressor",
+        "memory_curator_v2",
+        "spec_architecture",
+        "spec_compilation",
+    ],
 }
 
 VALID_SKILL_SOURCES = {"opencode-builtin", "internal", "domain-pack"}
